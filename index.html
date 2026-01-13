@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXTRATJUD - Hub de Serviços</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --primary-hover: #059669;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-secondary: #666666;
+            --border-color: #dfe1e5;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background-color: var(--card-bg);
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .container {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .welcome-text {
+            margin-bottom: 30px;
+        }
+
+        .welcome-text h2 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            color: #2c3e50;
+        }
+
+        .welcome-text p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .service-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .service-card:hover:not(.disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            border-color: var(--primary-color);
+        }
+
+        .service-card.disabled {
+            cursor: default;
+            opacity: 0.7;
+            background-color: #f8f9fa;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background-color: #ecfdf5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .service-card.disabled .card-icon {
+            background-color: #e9ecef;
+            color: #adb5bd;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .card-status {
+            margin-top: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            align-self: flex-start;
+        }
+
+        .status-active {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-soon {
+            background-color: #ffecb5;
+            color: #664d03;
+        }
+
+        .arrow-icon {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            color: var(--primary-color);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover:not(.disabled) .arrow-icon {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .platform-tag {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: inline-block;
+            align-self: flex-start;
+        }
+        
+        .tag-projudi { background-color: #fce7f3; color: #9d174d; }
+        .tag-pje { background-color: #e0e7ff; color: #3730a3; }
+        .tag-espaider { background-color: #ffedd5; color: #9a3412; }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
+            backdrop-filter: blur(2px);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 30px;
+            border: 1px solid #888;
+            width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        @keyframes slideIn {
+            from {transform: translateY(-50px); opacity: 0;}
+            to {transform: translateY(0); opacity: 1;}
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+        
+        .btn-about {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-about:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .info-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .info-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        .info-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+            color: #555;
+        }
+        .info-section li {
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="brand">
+            <img src="assets/logo.png" alt="Logo" style="height: 80px; width: auto;">
+            EXTRATJUD
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 14px; color: #666;">Versão 1.1.0</div>
+            <button id="btn-about" class="btn-about">Sobre</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome-text">
+            <h2>Bem-vindo ao Hub de Serviços</h2>
+            <p>Selecione uma ferramenta abaixo para iniciar sua automação.</p>
+        </div>
+
+        <div class="services-grid">
+            <!-- App 1: Extrator Projudi (Ativo) -->
+            <a href="extrator_projudi.html" class="service-card">
+                <span class="platform-tag tag-projudi">PROJUDI</span>
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="card-title">Extrator Citações e Intimações</div>
+                <div class="card-desc">
+                    Automação completa para extração de Citações e Intimações do Portal PROJUDI, com geração de tabelas e evidências em PDF.
+                </div>
+                <div class="card-status status-active">Disponível</div>
+                
+                <div class="arrow-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </div>
+            </a>
+
+            <!-- App 2: Processos Arquivados (Em Breve) -->
+            <div class="service-card disabled">
+                <span class="platform-tag tag-projudi">PROJUDI</span>
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                </div>
+                <div class="card-title">Processos Arquivados</div>
+                <div class="card-desc">
+                    Ferramenta de busca e extração em massa de processos já arquivados, permitindo auditoria de histórico.
+                </div>
+                <div class="card-status status-soon">Em Breve</div>
+            </div>
+
+            <!-- App 3: PJE Automação (Em Breve) -->
+            <div class="service-card disabled">
+                <span class="platform-tag tag-pje">PJE</span>
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                </div>
+                <div class="card-title">Automação PJE</div>
+                <div class="card-desc">
+                    Módulo em desenvolvimento para automação de tarefas no Processo Judicial Eletrônico (PJE).
+                </div>
+                <div class="card-status status-soon">Em Breve</div>
+            </div>
+
+            <!-- App 4: Espaider (Em Breve) -->
+            <div class="service-card disabled">
+                <span class="platform-tag tag-espaider">ESPAIDER</span>
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                </div>
+                <div class="card-title">Integração Espaider</div>
+                <div class="card-desc">
+                    Conector futuro para sincronização de dados e gestão jurídica no sistema Espaider.
+                </div>
+                <div class="card-status status-soon">Em Breve</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Desenvolvido por <strong>João Guilherme Almeida Viana</strong>
+    </div>
+
+    <!-- Modal Sobre -->
+    <div id="modal-about" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 style="color: var(--primary-color);">EXTRATJUD</h2>
+            <p style="color: #666; margin-top: -10px;">Automação Jurídica Integrada</p>
+            
+            <div class="info-section">
+                <h3>Desenvolvimento</h3>
+                <p style="font-size: 14px; margin: 0;"><strong>João Guilherme Almeida Viana</strong></p>
+                <p style="font-size: 12px; color: #555; margin: 2px 0 0 0;">Aprendiz Administrativo</p>
+                <p style="font-size: 13px; color: #888; margin: 5px 0 0 0;">joao.aviana@neoenergia.com</p>
+            </div>
+    
+            <div class="info-section">
+                <h3>Informações Técnicas</h3>
+                <ul>
+                    <li><strong>Versão do App:</strong> <span id="env-app-ver">1.1.0</span></li>
+                    <li><strong>Node.js:</strong> <span id="env-node"></span></li>
+                    <li><strong>Electron:</strong> <span id="env-electron"></span></li>
+                    <li><strong>Chrome:</strong> <span id="env-chrome"></span></li>
+                    <li><strong>Platform:</strong> <span id="env-plat"></span></li>
+                </ul>
+            </div>
+            
+            <p style="margin-top: 30px; font-size: 12px; color: #aaa; text-align: center;">© 2026 Todos os direitos reservados.</p>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById("modal-about");
+        const btn = document.getElementById("btn-about");
+        const span = document.getElementsByClassName("close")[0];
+
+        btn.onclick = function() {
+            modal.style.display = "block";
+            // Populate versions
+            document.getElementById('env-node').textContent = process.versions.node;
+            document.getElementById('env-electron').textContent = process.versions.electron;
+            document.getElementById('env-chrome').textContent = process.versions.chrome;
+            document.getElementById('env-plat').textContent = process.platform + ' (' + process.arch + ')';
+        }
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+
+</body>
+</html>

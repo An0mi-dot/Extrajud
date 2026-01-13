@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrator PROJUDI - Automação Jurídica</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --primary-hover: #059669;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #dfe1e5;
+            --log-bg: #1e1e1e;
+            --log-text: #00ff9d;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.02);
+            z-index: 10;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .brand svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: #666;
+            margin-bottom: 20px;
+            padding: 8px 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .btn-back:hover {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-back svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-back {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: #666;
+            margin-bottom: 30px;
+            padding: 8px 12px;
+            font-size: 13px;
+            justify-content: flex-start;
+        }
+        .btn-back:hover {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .menu-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #888;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: auto;
+        }
+
+        /* Buttons */
+        button {
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        #btn-start {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        #btn-start:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        #btn-confirm {
+            background-color: var(--success-color);
+            color: white;
+        }
+        #btn-confirm:hover:not(:disabled) {
+            background-color: #157347;
+        }
+
+        #btn-stop {
+            background-color: white;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+        #btn-stop:hover:not(:disabled) {
+            background-color: #fff5f5;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Stats Cards (Static for now, can be hooked up later) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h3 {
+            margin: 0 0 5px 0;
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        /* Status Bar */
+        .status-container {
+            background: var(--card-bg);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #e9ecef;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #adb5bd;
+        }
+
+        .status-running .status-dot { background-color: var(--success-color); box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.2); }
+        .status-stopped .status-dot { background-color: var(--danger-color); }
+        .status-waiting .status-dot { background-color: #ffc107; }
+
+        /* Logs Console */
+        .logs-wrapper {
+            flex: 1;
+            background-color: var(--log-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .logs-header {
+            background-color: #2d2d2d;
+            padding: 8px 15px;
+            font-size: 12px;
+            color: #aaa;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .red { background: #ff5f56; }
+        .yellow { background: #ffbd2e; }
+        .green { background: #27c93f; }
+
+        #logs {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: #d4d4d4;
+            line-height: 1.5;
+        }
+
+        .log-line {
+            margin-bottom: 2px;
+            word-break: break-all;
+        }
+        
+        /* Highlight specific logs */
+        .log-error { color: #ff6b6b; }
+        .log-success { color: #51cf66; font-weight: bold; }
+        .log-info { color: #74c0fc; }
+        .log-input { color: #fcc419; font-weight: bold; padding: 5px 0; border-top: 1px dashed #444; border-bottom: 1px dashed #444; margin: 10px 0; }
+
+        /* Scrollbar */
+        #logs::-webkit-scrollbar {
+            width: 10px;
+        }
+        #logs::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        #logs::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 5px;
+        }
+        #logs::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Controls -->
+    <div class="sidebar">
+        <div class="brand">
+            <img src="assets/logo.png" alt="Logo" style="height: 65px; width: auto;">
+            Extrator PROJUDI
+        </div>
+
+        <button class="btn-back" onclick="window.location.href='index.html'">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Voltar ao Hub
+        </button>
+
+        <div class="menu-label">Credenciais</div>
+        <div style="margin-bottom: 20px;">
+            <label style="display:block; font-size:11px; margin-bottom:4px; color:#666; font-weight:600;">Usuário</label>
+            <input type="text" id="inp-user" value="05296357558.rep" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:10px; font-size: 13px;">
+            
+            <label style="display:block; font-size:11px; margin-bottom:4px; color:#666; font-weight:600;">Senha</label>
+            <input type="password" id="inp-pass" value="neocoelba@2023" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size: 13px;">
+
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
+                <label style="display:block; font-size:11px; margin-bottom:4px; color:#666; font-weight:600;">Período (De):</label>
+                <input type="date" id="inp-date-start" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:8px; font-size: 13px; cursor: pointer;">
+                
+                <label style="display:block; font-size:11px; margin-bottom:4px; color:#666; font-weight:600;">Período (Até):</label>
+                <input type="date" id="inp-date-end" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; margin-bottom:10px; font-size: 13px; cursor: pointer;">
+            </div>
+        </div>
+
+        <div class="menu-label">Controles</div>
+        <div class="control-group">
+            <button id="btn-start">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                </svg>
+                Iniciar Automação
+            </button>
+            
+            <button id="btn-confirm" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Confirmar (ENTER)
+            </button>
+
+            <button id="btn-stop" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" />
+                </svg>
+                Parar Processo
+            </button>
+        </div>
+
+        <div class="menu-label" style="margin-top: auto;">Info</div>
+        <div style="font-size: 12px; color: #888; line-height: 1.4;">
+            Versão: 2.0.0<br>
+            Ambiente: Electron/Python<br>
+            IBERDROLA / COELBA
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <!-- Status Bar -->
+        <div class="status-container">
+            <div style="font-weight: 600; color: #555;">Status do Robô</div>
+            <div class="status-badge" id="status-badge">
+                <span class="status-dot"></span>
+                <span id="status-text">Pronto para iniciar</span>
+            </div>
+        </div>
+
+        <!-- Logs Console -->
+        <div class="logs-wrapper">
+            <div class="logs-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span style="margin-left: 10px;">Console de Execução (Automacao)</span>
+                <button id="btn-copy-log" style="margin-left:auto;background:transparent;border:1px solid #666;color:#ccc;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;transition:all 0.2s;">Copiar Log</button>
+            </div>
+            <div id="logs">
+                <div class="log-line">> Aguardando comando de inicialização...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        const btnStart = document.getElementById('btn-start');
+        const btnConfirm = document.getElementById('btn-confirm');
+        const btnStop = document.getElementById('btn-stop');
+        const logsDiv = document.getElementById('logs');
+        const statusText = document.getElementById('status-text');
+        
+        const btnCopyLog = document.getElementById('btn-copy-log');
+        if(btnCopyLog) {
+            btnCopyLog.addEventListener('click', () => {
+                const text = logsDiv.innerText;
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = btnCopyLog.textContent;
+                    btnCopyLog.textContent = "Copiado!";
+                    btnCopyLog.style.borderColor = "#27c93f";
+                    btnCopyLog.style.color = "#27c93f";
+                    setTimeout(() => {
+                        btnCopyLog.textContent = originalText;
+                        btnCopyLog.style.borderColor = "#666";
+                        btnCopyLog.style.color = "#ccc";
+                    }, 2000);
+                });
+            });
+        }
+        
+        const statusBadge = document.getElementById('status-badge');
+
+        // Initializer Date Inputs with Today and Click Handler
+        window.addEventListener('DOMContentLoaded', () => {
+            const dateStart = document.getElementById('inp-date-start');
+            const dateEnd = document.getElementById('inp-date-end');
+            
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const strDate = `${yyyy}-${mm}-${dd}`;
+            
+            dateStart.value = strDate;
+            dateEnd.value = strDate;
+
+            // Make entire input clickable to show picker
+            [dateStart, dateEnd].forEach(el => {
+                el.addEventListener('click', function() {
+                    this.showPicker();
+                });
+            });
+        });
+
+        function updateStatus(state, text) {
+            statusBadge.className = 'status-badge'; // reset
+            statusText.textContent = text;
+            if (state === 'running') statusBadge.classList.add('status-running');
+            else if (state === 'stopped') statusBadge.classList.add('status-stopped');
+            else statusBadge.classList.add('status-waiting'); // default
+        }
+
+        function addLog(text) {
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            
+            // Simple highlighting based on keywords
+            if (text.includes('Erro') || text.includes('Exception')) line.classList.add('log-error');
+            if (text.includes('Sucesso') || text.includes('Concluída')) line.classList.add('log-success');
+            if (text.includes('INICIANDO') || text.includes('Extraindo')) line.classList.add('log-info');
+            if (text.includes('Pressione ENTER')) line.classList.add('log-input');
+
+            line.textContent = text;
+            logsDiv.appendChild(line);
+            
+            // Only scroll if user is not looking at history
+            if (!isUserScrolling) {
+                logsDiv.scrollTop = logsDiv.scrollHeight;
+            }
+        }
+
+        btnStart.addEventListener('click', () => {
+            const user = document.getElementById('inp-user').value;
+            const pass = document.getElementById('inp-pass').value;
+            const dateStart = document.getElementById('inp-date-start').value; // yyyy-mm-dd
+            const dateEnd = document.getElementById('inp-date-end').value;     // yyyy-mm-dd
+
+            ipcRenderer.send('run-script', { user, pass, dateStart, dateEnd });
+            btnStart.disabled = true;
+            btnConfirm.disabled = false;
+            btnStop.disabled = false;
+            
+            logsDiv.innerHTML = ''; // Clear logs on start
+            addLog("> Iniciando subsistema Node.js...");
+            updateStatus('running', 'Executando Automação...');
+        });
+        
+        btnConfirm.addEventListener('click', () => {
+            ipcRenderer.send('send-input', '\n');
+            addLog(">> [COMANDO DO USUÁRIO]: CONFIRMAÇÃO (ENTER) ENVIADA.");
+        });
+
+        btnStop.addEventListener('click', () => {
+            ipcRenderer.send('stop-script');
+            btnStop.disabled = true;
+            btnConfirm.disabled = true;
+            updateStatus('stopped', 'Parando processos...');
+        });
+
+        ipcRenderer.on('log-message', (event, message) => {
+            const lines = message.split('\n');
+            lines.forEach(l => {
+                if(l.trim()) addLog(l);
+            });
+        });
+
+        ipcRenderer.on('script-finished', (event, code) => {
+            btnStart.disabled = false;
+            btnConfirm.disabled = true;
+            btnStop.disabled = true;
+            
+            if (code === 0) {
+                updateStatus('waiting', 'Finalizado com Sucesso');
+                addLog(`> Processo finalizado corretamente (Exit Code: ${code})`);
+            } else {
+                updateStatus('stopped', `Erro na execução (Exit Code: ${code})`);
+                addLog(`> Processo abortado ou com erro (Exit Code: ${code})`);
+            }
+        });
+
+        // Auto-scroll safety
+        let isUserScrolling = false;
+        logsDiv.addEventListener('scroll', () => {
+             // Se o usuário rolou para cima (não está no fim), ativa flag
+             if (logsDiv.scrollTop + logsDiv.clientHeight < logsDiv.scrollHeight - 50) {
+                 isUserScrolling = true;
+             } else {
+                 isUserScrolling = false;
+             }
+        });
+
+        setInterval(() => {
+            if (!isUserScrolling) {
+                logsDiv.scrollTop = logsDiv.scrollHeight;
+            }
+        }, 500);
+
+    </script>
+</body>
+</html>
