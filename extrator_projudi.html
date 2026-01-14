@@ -28,6 +28,12 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            opacity: 0; /* Fade in start */
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        body.loaded {
+            opacity: 1;
         }
 
         /* Sidebar */
@@ -40,6 +46,7 @@
             padding: 20px;
             box-shadow: 2px 0 5px rgba(0,0,0,0.02);
             z-index: 10;
+            overflow-y: auto; /* Adicionado Scroll */
         }
 
         .brand {
@@ -277,37 +284,62 @@
             flex: 1;
             padding: 15px;
             overflow-y: auto;
-            font-family: 'Consolas', 'Monaco', monospace;
+            font-family: 'Segoe UI', sans-serif; /* Fonte mais amigável que monospace */
             font-size: 13px;
             color: #d4d4d4;
             line-height: 1.5;
+            background-color: #1e1e1e;
         }
 
-        .log-line {
-            margin-bottom: 2px;
-            word-break: break-all;
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-left: 3px solid transparent;
+            background: rgba(255,255,255,0.03);
+            border-radius: 0 4px 4px 0;
+            animation: fadeIn 0.3s ease;
         }
         
-        /* Highlight specific logs */
-        .log-error { color: #ff6b6b; }
-        .log-success { color: #51cf66; font-weight: bold; }
-        .log-info { color: #74c0fc; }
-        .log-input { color: #fcc419; font-weight: bold; padding: 5px 0; border-top: 1px dashed #444; border-bottom: 1px dashed #444; margin: 10px 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Scrollbar */
-        #logs::-webkit-scrollbar {
-            width: 10px;
+        .log-main {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        #logs::-webkit-scrollbar-track {
-            background: #1e1e1e;
+
+        .log-tech {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+            margin-left: 2px;
+            display: block;
         }
-        #logs::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 5px;
-        }
-        #logs::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+
+        /* Tipos de Log */
+        .log-type-info { border-left-color: #74c0fc; }
+        .log-type-info .log-main { color: #a5d8ff; }
+
+        .log-type-success { border-left-color: #27c93f; background: rgba(39, 201, 63, 0.05); }
+        .log-type-success .log-main { color: #27c93f; }
+
+        .log-type-error { border-left-color: #ff5f56; background: rgba(255, 95, 86, 0.05); }
+        .log-type-error .log-main { color: #ff5f56; }
+        
+        .log-type-input { border-left-color: #fcc419; background: rgba(252, 196, 25, 0.05); }
+        .log-type-input .log-main { color: #fcc419; }
+
+        /* Scrollbar Global */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        /* Specific override check not needed as universal selector handles it */
 
     </style>
 </head>
@@ -316,8 +348,10 @@
     <!-- Sidebar Controls -->
     <div class="sidebar">
         <div class="brand">
-            <img src="assets/logo.png" alt="Logo" style="height: 65px; width: auto;">
-            Extrator PROJUDI
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <div style="font-size:16px;">Extrator Citações e Intimações</div>
         </div>
 
         <button class="btn-back" onclick="window.location.href='index.html'">
@@ -334,6 +368,16 @@
             
             <label style="display:block; font-size:11px; margin-bottom:4px; color:#666; font-weight:600;">Senha</label>
             <input type="password" id="inp-pass" value="neocoelba@2023" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size: 13px;">
+
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
+                <label style="display:block; font-size:11px; margin-bottom:4px; color:#666; font-weight:600;">Salvar Arquivos Em:</label>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="inp-output-dir" readonly placeholder="Pasta padrão do App" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:11px; background:#f9f9f9; color:#888;">
+                    <button id="btn-select-dir" style="padding:0 8px; width:40px; border:1px solid #ccc; background:#eee; cursor:pointer;" title="Selecionar Pasta">
+                        <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
+                    </button>
+                </div>
+            </div>
 
             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
                 <label style="display:block; font-size:11px; margin-bottom:4px; color:#666; font-weight:600;">Período (De):</label>
@@ -353,13 +397,6 @@
                 Iniciar Automação
             </button>
             
-            <button id="btn-confirm" disabled>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Confirmar (ENTER)
-            </button>
-
             <button id="btn-stop" disabled>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" />
@@ -408,18 +445,30 @@
         const { ipcRenderer } = require('electron');
 
         const btnStart = document.getElementById('btn-start');
-        const btnConfirm = document.getElementById('btn-confirm');
         const btnStop = document.getElementById('btn-stop');
         const logsDiv = document.getElementById('logs');
         const statusText = document.getElementById('status-text');
+        let fullLogs = [];
         
+        // Output Directory Selection
+        const btnSelectDir = document.getElementById('btn-select-dir');
+        const inpOutputDir = document.getElementById('inp-output-dir');
+        
+        btnSelectDir.addEventListener('click', async () => {
+            const dir = await ipcRenderer.invoke('dialog:openDirectory');
+            if (dir) {
+                inpOutputDir.value = dir;
+                inpOutputDir.title = dir; // Tooltip for long paths
+            }
+        });
+
         const btnCopyLog = document.getElementById('btn-copy-log');
         if(btnCopyLog) {
             btnCopyLog.addEventListener('click', () => {
-                const text = logsDiv.innerText;
+                const text = JSON.stringify(fullLogs, null, 2);
                 navigator.clipboard.writeText(text).then(() => {
                     const originalText = btnCopyLog.textContent;
-                    btnCopyLog.textContent = "Copiado!";
+                    btnCopyLog.textContent = "JSON Copiado!";
                     btnCopyLog.style.borderColor = "#27c93f";
                     btnCopyLog.style.color = "#27c93f";
                     setTimeout(() => {
@@ -432,6 +481,20 @@
         }
         
         const statusBadge = document.getElementById('status-badge');
+
+        // Page Transitions
+        window.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.add('loaded');
+        });
+
+        // Intercept Back Button for smooth exit
+        document.querySelector('.btn-back').onclick = function(e) {
+            e.preventDefault();
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 400);
+        };
 
         // Initializer Date Inputs with Today and Click Handler
         window.addEventListener('DOMContentLoaded', () => {
@@ -463,18 +526,39 @@
             else statusBadge.classList.add('status-waiting'); // default
         }
 
-        function addLog(text) {
-            const line = document.createElement('div');
-            line.className = 'log-line';
+        // Nova Função de Log Inteligente
+        function addLog(data) {
+            // Suporte legado para strings simples
+            if (typeof data === 'string') {
+                data = { msg: data, tech: '', type: 'info' };
+                // Detecção automática simples para legado
+                if (data.msg.includes('Erro') || data.msg.includes('Exception')) data.type = 'error';
+                else if (data.msg.includes('Sucesso') || data.msg.includes('Salvo')) data.type = 'success';
+                else if (data.msg.includes('>>')) data.type = 'input';
+            }
             
-            // Simple highlighting based on keywords
-            if (text.includes('Erro') || text.includes('Exception')) line.classList.add('log-error');
-            if (text.includes('Sucesso') || text.includes('Concluída')) line.classList.add('log-success');
-            if (text.includes('INICIANDO') || text.includes('Extraindo')) line.classList.add('log-info');
-            if (text.includes('Pressione ENTER')) line.classList.add('log-input');
+            fullLogs.push({
+                timestamp: new Date().toISOString(),
+                ...data
+            });
 
-            line.textContent = text;
-            logsDiv.appendChild(line);
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-type-${data.type}`;
+            
+            // Icone baseado no tipo
+            let icon = '[i]';
+            if (data.type === 'success') icon = '[+]';
+            if (data.type === 'error') icon = '[x]';
+            if (data.type === 'input') icon = '[>]';
+
+            let html = `<div class="log-main"><span>${icon}</span> ${data.msg}</div>`;
+            
+            if (data.tech) {
+                html += `<div class="log-tech">> DEV_CONTEXT: ${data.tech}</div>`;
+            }
+
+            entry.innerHTML = html;
+            logsDiv.appendChild(entry);
             
             // Only scroll if user is not looking at history
             if (!isUserScrolling) {
@@ -487,47 +571,47 @@
             const pass = document.getElementById('inp-pass').value;
             const dateStart = document.getElementById('inp-date-start').value; // yyyy-mm-dd
             const dateEnd = document.getElementById('inp-date-end').value;     // yyyy-mm-dd
+            const outputDir = document.getElementById('inp-output-dir').value;
 
-            ipcRenderer.send('run-script', { user, pass, dateStart, dateEnd });
+            ipcRenderer.send('run-script', { user, pass, dateStart, dateEnd, outputDir });
             btnStart.disabled = true;
-            btnConfirm.disabled = false;
             btnStop.disabled = false;
             
             logsDiv.innerHTML = ''; // Clear logs on start
-            addLog("> Iniciando subsistema Node.js...");
+            fullLogs = [];
+            addLog({msg: "Iniciando Automação...", tech: "Spawn Node.js Worker Thread", type: "info"});
             updateStatus('running', 'Executando Automação...');
         });
         
-        btnConfirm.addEventListener('click', () => {
-            ipcRenderer.send('send-input', '\n');
-            addLog(">> [COMANDO DO USUÁRIO]: CONFIRMAÇÃO (ENTER) ENVIADA.");
-        });
-
         btnStop.addEventListener('click', () => {
             ipcRenderer.send('stop-script');
             btnStop.disabled = true;
-            btnConfirm.disabled = true;
             updateStatus('stopped', 'Parando processos...');
         });
 
         ipcRenderer.on('log-message', (event, message) => {
-            const lines = message.split('\n');
-            lines.forEach(l => {
-                if(l.trim()) addLog(l);
-            });
+            // Se vier string com \n, quebra as linhas (legado ou logs do sistema)
+            if (typeof message === 'string') {
+                 const lines = message.split('\n');
+                 lines.forEach(l => {
+                    if(l.trim()) addLog(l);
+                 });
+            } else {
+                // Objeto direto
+                addLog(message);
+            }
         });
 
         ipcRenderer.on('script-finished', (event, code) => {
             btnStart.disabled = false;
-            btnConfirm.disabled = true;
             btnStop.disabled = true;
             
             if (code === 0) {
                 updateStatus('waiting', 'Finalizado com Sucesso');
-                addLog(`> Processo finalizado corretamente (Exit Code: ${code})`);
+                addLog({msg: "Processo finalizado com sucesso.", tech: `Process Exit Code: ${code}`, type: "success"});
             } else {
-                updateStatus('stopped', `Erro na execução (Exit Code: ${code})`);
-                addLog(`> Processo abortado ou com erro (Exit Code: ${code})`);
+                updateStatus('stopped', `Erro na execução`);
+                addLog({msg: "Automação abortada ou com erro.", tech: `Process Exit Code: ${code}`, type: "error"});
             }
         });
 

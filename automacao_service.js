@@ -15,10 +15,19 @@ let context = null;
 let page = null;
 let isStopping = false;
 
-// Utilitários
-const log = (eventSender, msg) => {
-    console.log(msg);
-    if (eventSender) eventSender.send('log-message', msg);
+// Utilitários de Log Inteligente
+const log = (eventSender, msg, tech = null, type = 'info') => {
+    // Para o console do terminal, imprime apenas a mensagem
+    console.log(`[${type.toUpperCase()}] ${msg}`);
+    
+    // Para o Frontend, envia o objeto completo
+    if (eventSender) {
+        eventSender.send('log-message', {
+            msg: msg,
+            tech: tech || 'Function execution trace...',
+            type: type
+        });
+    }
 };
 
 // Delay inteligente que permite interrupção (Check a cada 100ms)
@@ -33,12 +42,12 @@ const delay = async (ms) => {
 // Função Principal
 async function runAutomation(eventSender, inputReceiver, args) {
     isStopping = false;
-    log(eventSender, ">>> INICIANDO AUTOMAÇÃO (NATIVE NODE.JS) <<<");
-    log(eventSender, "Configuração: Edge Browser | Modo Scanner | ExcelJS");
+    log(eventSender, "Iniciando Robô de Automação", "Thread Start | Loading Playwright Engine", 'info');
+    log(eventSender, "Carregando configurações...", "Edge Browser | Mode: Scanner | Lib: ExcelJS", 'info');
 
     try {
         // 1. Configurar Navegador
-        log(eventSender, "Abrindo navegador MS Edge...");
+        log(eventSender, "Inicializando Navegador Microsoft Edge...", "child_process.spawn(msedge.exe)", 'info');
         
         // Tenta achar o executável do Edge no Windows
         const edgePaths = [
@@ -74,12 +83,12 @@ async function runAutomation(eventSender, inputReceiver, args) {
         page.setDefaultNavigationTimeout(60000);
 
         // 2. Acesso e Login
-        log(eventSender, `Acessando ${PROJUDI_URL}...`);
+        log(eventSender, "Acessando Portal PROJUDI...", `Navigation: ${PROJUDI_URL}`, 'info');
         
         try {
             await page.goto(PROJUDI_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
         } catch (navError) {
-             log(eventSender, "Erro na conexão inicial. Tentando novamente em 5 segundos...");
+             log(eventSender, "Erro inicial de conexão. Tentando reconexão...", `Error: ${navError.message}`, 'error');
              await delay(5000);
              try {
                  await page.goto(PROJUDI_URL, { waitUntil: 'domcontentloaded', timeout: 90000 });
@@ -90,14 +99,14 @@ async function runAutomation(eventSender, inputReceiver, args) {
 
         // --- LOGIN AUTOMÁTICO (Novidade) ---
         if (args && args.user && args.pass) {
-            log(eventSender, "Detectadas credenciais. Tentando preenchimento automático...");
+            log(eventSender, "Tentando realizar login automático...", "Credentials injected via IPC args", 'info');
             try {
                 // Aguarda carregamento inicial de frames
                 await delay(2000);
                 
         // --- LOGIN AUTOMÁTICO (Novidade - Versão Robusta) ---
         if (args && args.user && args.pass) {
-            log(eventSender, "Detectadas credenciais. Iniciando varredura por campos de login...");
+            log(eventSender, "Detectadas credenciais. Iniciando varredura por campos de login...", "Searching frames for #login inputs", 'info');
             
             // Função auxiliar de busca em todos os frames (Main + Iframes)
             const findLoginInputs = async () => {
@@ -208,35 +217,34 @@ async function runAutomation(eventSender, inputReceiver, args) {
         const dfCita = await processCategoryRoutine(page, "Citações", 'cita', eventSender, inputReceiver, args);
         if (isStopping) return;
         
-        // Voltar Home (Obrigatório para encontrar o menu de Intimações)
+        // Voltar Home
+        log(eventSender, "Retornando ao Dashboard...", "Navigation: Home", 'info');
         await returnToDashboard(page, eventSender);
         if (isStopping) return;
 
         // --- FASE 2: INTIMAÇÕES ---
-        // Agora ativado e com suporte a filtro!
-        // log(eventSender, "!!! Intimações desativadas temporariamente !!!");
         const dfInti = await processCategoryRoutine(page, "Intimações", 'inti', eventSender, inputReceiver, args);
         if (isStopping) return;
 
         // --- SALVAR EXCEL ---
         await saveToExcel(dfCita, dfInti, eventSender, args);
 
-        log(eventSender, ">>> AUTOMAÇÃO FINALIZADA COM SUCESSO! <<<");
-        log(eventSender, "Você pode fechar o navegador se desejar.");
+        log(eventSender, "Automação finalizada com sucesso!", "Process complete. Saving artifacts...", 'success');
+        eventSender.send('script-finished', 0);
 
     } catch (error) {
         if (error.message === "STOP_REQUESTED" || isStopping) {
-             // Tenta salvar o PDF parcial se houver antes de sair
-             log(eventSender, ">>> AUTOMAÇÃO PARADA PELO USUÁRIO <<<");
+             log(eventSender, "Automação interrompida pelo usuário.", "STOP_SIGNAL received", 'error');
         } else {
-             log(eventSender, `ERRO CRÍTICO: ${error.message}`);
-             console.error(error);
+             log(eventSender, `ERRO CRÍTICO: ${error.message}`, error.stack, 'error');
              eventSender.send('script-finished', 1);
         }
     } finally {
-        // Encerra browser APENAS no final de tudo
-        if (browser && isStopping) { // Se parou forçado, fecha. Se sucesso, deixa aberto (opção do user)
-             await browser.close();
+        // Encerra browser sempre, conforme solicitado
+        if (browser) {
+             log(eventSender, "Fechando navegador e limpando memória...", "Browser instance teardown", 'info');
+             try { await browser.close(); } catch(e){}
+             browser = null;
         }
     }
 }
@@ -993,7 +1001,8 @@ async function saveToExcel(recordsCita, recordsInti, eventSender, args) {
     
     // Nome do arquivo de saída
     const filename = `CITAÇÕES E INTIMAÇÕES PROJUDI ${filenameDate}.xlsx`;
-    const outputPath = path.join(process.cwd(), filename);
+    const folder = (args && args.outputDir) ? args.outputDir : process.cwd();
+    const outputPath = path.join(folder, filename);
 
     // GERAÇÃO DO ARQUIVO DO ZERO (Sem depender de templates externos)
     // O usuário prefere criar a estrutura programaticamente para evitar dependências de arquivos.
@@ -1134,7 +1143,8 @@ async function saveEvidencePDF(screenshots, categoryName, args, eventSender) {
 
     const nameUpper = categoryName.toUpperCase(); // CITAÇÕES ou INTIMAÇÕES
     const pdfName = `EVIDENCIAS DAS ${nameUpper} - PROJUDI DIA ${filenameDate}.pdf`;
-    const pdfPath = path.join(process.cwd(), pdfName);
+    const folder = (args && args.outputDir) ? args.outputDir : process.cwd();
+    const pdfPath = path.join(folder, pdfName);
 
     try {
         // 2. Monta HTML para Impressão
@@ -1189,9 +1199,863 @@ async function saveEvidencePDF(screenshots, categoryName, args, eventSender) {
         log(eventSender, `PDF GERADO: ${pdfName}`);
 
     } catch (e) {
-        log(eventSender, `[ERRO] Falha ao gerar PDF de evidências: ${e.message}`);
+        log(eventSender, `[ERRO] Falha ao gerar PDF de evidências: ${e.message}`, null, 'error');
         console.error(e);
     }
 }
 
-module.exports = { runAutomation, stopAutomation };
+// =================================================================================================
+// --- MÓDULO: PROCESSOS ARQUIVADOS ---
+// =================================================================================================
+
+async function runArchivedAutomation(eventSender, inputReceiver, args) {
+    isStopping = false;
+    log(eventSender, "Iniciando Robô de Arquivados", "Thread Start | Mode: Archived", 'info');
+    
+    try {
+        // 1. Setup Browser (Cópia da função principal, idealmente seria refatorado)
+        const edgePaths = [
+            "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+            "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
+        ];
+        const edgeExe = edgePaths.find(p => fs.existsSync(p));
+        if (!edgeExe) throw new Error("Edge não encontrado.");
+
+        browser = await chromium.launch({
+            executablePath: edgeExe,
+            headless: false,
+            args: ["--start-maximized", "--disable-blink-features=AutomationControlled"]
+        });
+
+        context = await browser.newContext({ viewport: null });
+        page = await context.newPage();
+        page.setDefaultTimeout(60000);
+
+        // 2. Login
+        log(eventSender, "Realizando login...", "Navigating to Projudi", 'info');
+        await page.goto(PROJUDI_URL, { waitUntil: 'domcontentloaded' });
+        
+        // --- LOGIN AUTOMÁTICO (Versão Robusta) ---
+        if (args && args.user && args.pass) {
+            log(eventSender, "Detectadas credenciais. Varrendo frames...", "Searching inputs", 'info');
+            
+            const findLoginInputs = async () => {
+                const allFrames = [page, ...page.frames()];
+                for (const frame of allFrames) {
+                    try {
+                        const l = frame.locator('input#login').first();
+                        const s = frame.locator('input#senha').first();
+                        // Verifica count > 0
+                        if (await l.count() > 0 && await s.count() > 0) {
+                             // Check visibility is tricky in frames, assumimos ok se existe no DOM
+                            return { uInput: l, pInput: s };
+                        }
+                    } catch (e) { }
+                }
+                return null;
+            };
+
+            let inputs = null;
+            for (let i = 0; i < 15; i++) {
+                inputs = await findLoginInputs();
+                if (inputs) break;
+                await delay(1000);
+            }
+
+            if (inputs) {
+                const { uInput, pInput } = inputs;
+                log(eventSender, "Campos de Login Encontrados!");
+                try {
+                    await uInput.fill(args.user);
+                    await delay(500);
+                    await pInput.fill(args.pass);
+                    await delay(500);
+                    await pInput.press('Enter');
+                    log(eventSender, "Credenciais submetidas.");
+                } catch(e) {
+                    log(eventSender, `Erro no preenchimento: ${e.message}`, null, 'error');
+                }
+            } else {
+                log(eventSender, "Aviso: Campos de login automático não encontrados.", null, 'warn');
+            }
+        }
+        
+        // Espera estar logado (verifica Dashboard ou Botão COELBA)
+        log(eventSender, "Aguardando Dashboard ou Seleção de Perfil...", "Waiting for access", 'info');
+        
+        // Tenta clicar Representação se aparecer
+        for(let i=0; i<30; i++) { // 30 segundos polling
+             if (isStopping) break;
+             
+             // Check Dashboard
+             const txt = await page.evaluate(() => document.body.innerText).catch(() => "");
+             if (txt.includes('Mesa de Trabalho') || txt.includes('Aguardando Leitura')) {
+                 log(eventSender, "Dashboard detectado!", null, 'success');
+                 break;
+             }
+             
+             // Check Button Representation
+             const allFrames = page.frames();
+             for (const frame of allFrames) {
+                 try {
+                     const btn = frame.locator("a").filter({ hasText: /REPRESENTA.ÃO\s+COELBA/i }).first();
+                     if (await btn.count() > 0 && await btn.isVisible()) {
+                         log(eventSender, "Selecionando Perfil 'REPRESENTAÇÃO COELBA'...", null, 'info');
+                         await btn.click();
+                         await delay(5000); // Wait load
+                     }
+                 } catch(e) {}
+             }
+             await delay(1000);
+        }
+
+        // 3. Acessar URL direta de Arquivados
+        const urlArquivados = "https://projudi.tjba.jus.br/projudi/listagens/ProcessosParte?tipo=arquivados&isParteOrgaoRep=true";
+        log(eventSender, "Acessando Lista de Arquivados...", `URL: ${urlArquivados}`, 'info');
+        
+        // Tenta navegar no frame principal ou page
+        let mainFrame = page.frames().find(f => f.name() === 'userMainFrame');
+        if (mainFrame) {
+            await mainFrame.goto(urlArquivados);
+        } else {
+             // Tentar navegar a página toda se o frame não for achado (pode causar logout, cuidado)
+             // Melhor tentar achar o frame correto dinamicamente
+             await page.goto(urlArquivados); // As vezes a URL direta redireciona o top frame corretamente
+        }
+        await delay(3000);
+
+        // Atualiza referencia do frame
+        mainFrame = page.frames().find(f => f.name() === 'userMainFrame') || page.mainFrame();
+
+        // 4. Ordenação (Obrigatório)
+        log(eventSender, "Aplicando ordenação por DATA (Ascendente)...", "Exec: javascript:ordenarLista(...)", 'info');
+        try {
+            await mainFrame.evaluate("ordenarLista('Processo.DATARECEBIMENTO','ASC')");
+            await mainFrame.waitForNavigation({ waitUntil: 'domcontentloaded' }); // Recarrega
+        } catch(e) {
+            log(eventSender, "Erro ao ordenar lista. Tentando continuar...", e.message, 'warn');
+        }
+
+        // 5. Loop de Extração
+        const allRecords = [];
+        let currentPage = 1;
+        let stopLoop = false;
+        
+        // Configuração do Range
+        const mode = args.filterMode || 'pages'; // 'pages' | 'years'
+        
+        // Se for por PÁGINAS, definimos o start/end
+        let pageStart = 1;
+        let pageEnd = 1000;
+        if (mode === 'pages') {
+            pageStart = args.rangeStart || 1;
+            pageEnd = args.rangeEnd || 1;
+        }
+        
+        // Se for por ANOS, começamos da 1 e vamos até achar ano > yearEnd
+        // Mas o usuário pode ter pedido Page navigation too. 
+        // O prompt diz: "OU escolher paginas OU escolher anos"
+        
+        if (pageStart > 1) {
+             log(eventSender, `Navegando para página inicial ${pageStart}...`, "Jump to page", 'info');
+             try {
+                 await mainFrame.evaluate(`goToPage(${pageStart})`);
+                 await mainFrame.waitForNavigation();
+                 currentPage = pageStart;
+             } catch(e) {
+                 log(eventSender, "Falha ao pular página inicial.", e.message, 'error');
+             }
+        }
+
+        while (!stopLoop && !isStopping) {
+            log(eventSender, `Processando página ${currentPage}...`, `Scaling table data`, 'info');
+            
+            // Extração da Tabela
+            // Seletor baseado no HTML fornecido: tr contendo checkbox name="processos"
+            // As colunas são: Check(0), NPU(1), Promovente(2), Promovido(3), Distribuicao(4), Classe(5)
+            
+            const rows = await mainFrame.locator('tr').filter({ has: mainFrame.locator('input[name="processos"]') }).all();
+            
+            if (rows.length === 0) {
+                log(eventSender, "Nenhum processo encontrado nesta página.", null, 'warn');
+                // Se não achou nada e estamos no modo Paginas, talvez tenha acabado.
+                if (mode === 'pages' && currentPage >= pageEnd) break;
+            }
+
+            let recordsInPage = 0;
+
+            for (const row of rows) {
+                const tds = await row.locator('td').all();
+                if (tds.length < 6) continue;
+
+                // Extração dos Textos
+                const npuRaw = await tds[1].innerText(); // "0011774-48...\nNOME"
+                const npu = npuRaw.split('\n')[0].trim(); // Pega só o número
+                const promovente = (await tds[2].innerText()).replace(/\n/g, ' ').trim();
+                const promovido = (await tds[3].innerText()).replace(/\n/g, ' ').trim();
+                const dataDistripRaw = await tds[4].innerText(); // "26/07/10"
+                const classe = await tds[5].innerText();
+                
+                // Parse Data (dd/mm/yy -> YYYY)
+                const parts = dataDistripRaw.trim().split('/');
+                let year = 0;
+                let fullDate = dataDistripRaw.trim();
+                
+                if (parts.length === 3) {
+                    year = parseInt(parts[2]);
+                    if (year < 100) year += 2000; // Assumindo 20xx (Projudi antigo pode ter 19xx? O script assume 20xx)
+                    // Correção segura: "10" é 2010. "99" pode ser 1999. 
+                    // Melhor: Se ano < 50 assume 20xx, se > 50 assume 19xx?
+                    // O HTML mostra "26/07/10", que é 2010.
+                    
+                    // Formatação para Excel (Texto 123)
+                    fullDate = `${parts[0]}/${parts[1]}/${year}`;
+                }
+
+                // FILTRAGEM POR ANO
+                if (mode === 'years') {
+                    const yStart = args.rangeStart;
+                    const yEnd = args.rangeEnd;
+                    
+                    // Se o ano desta linha for MAIOR que o fim, e a lista é Ascendente (crescente), podemos PARAR TUDO.
+                    if (year > yEnd) {
+                        stopLoop = true;
+                        log(eventSender, `Ano ${year} excedeu o limite (${yEnd}). Parando extração.`, "Year limit reached", 'info');
+                        break; 
+                    }
+                    
+                    // Se o ano for MENOR que o inicio, continuamos para próxima linha/pagina
+                    if (year < yStart) continue; 
+                }
+
+                allRecords.push({
+                    npu, promovente, promovido, data: fullDate, classe
+                });
+                recordsInPage++;
+            }
+
+            if (stopLoop) break;
+
+            // Controle de Paginação
+            if (mode === 'pages') {
+                if (currentPage >= pageEnd) {
+                    log(eventSender, "Fim do intervalo de páginas solicitado.", null, 'success');
+                    break;
+                }
+            }
+            
+            // Navegar Próxima
+            try {
+                // Tenta botão próxima
+                const nextBtn = mainFrame.locator('a[title="próxima página"]').first();
+                
+                // Verifica visibilidade antes de clicar
+                if (await nextBtn.isVisible({ timeout: 5000 })) {
+                    // Start waiting for navigation *before* clicking to avoid race condition
+                    await Promise.all([
+                        mainFrame.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
+                        nextBtn.click()
+                    ]);
+                    currentPage++;
+                } else {
+                    log(eventSender, "Fim da paginação (Botão 'Próxima' não visível).", null, 'warn');
+                    break;
+                }
+            } catch(e) {
+                log(eventSender, `Erro de Navegação (Pág ${currentPage}->${currentPage+1}): ${e.message}`, null, 'error');
+                break;
+            }
+            
+            log(eventSender, `Página ${currentPage-1} processada. Total acumulado: ${allRecords.length}`, null, 'info');
+        }
+
+        // 6. Salvar Excel
+        if (allRecords.length > 0) {
+            await saveArchivedExcel(allRecords, args, eventSender);
+        } else {
+            log(eventSender, "Nenhum arquivo gerado (zero registros).", null, 'warn');
+        }
+
+        eventSender.send('script-finished', 0);
+
+    } catch (e) {
+        log(eventSender, `Erro Fatal: ${e.message}`, e.stack, 'error');
+        eventSender.send('script-finished', 1);
+    } finally {
+        if (browser) await browser.close();
+    }
+}
+
+async function saveArchivedExcel(records, args, eventSender) {
+    log(eventSender, "Filtrando e Gerando planilha Excel...", "Filter & Write", 'info');
+    
+    // --- Lógica de Filtragem de Anos Incompletos ---
+    // Agrupa por ano e mês para analisar distribuição
+    // records devem ter .data (dd/mm/yyyy)
+    const yearStats = {}; // { 2015: { months: Set(), count: 10 }, 2016: ... }
+    
+    records.forEach(r => {
+        try {
+            const parts = r.data.split('/'); // dd, mm, yyyy
+            if (parts.length === 3) {
+                const y = parseInt(parts[2]);
+                const m = parseInt(parts[1]);
+                if (!yearStats[y]) yearStats[y] = { months: new Set(), count: 0, minMonth: 12, maxMonth: 1 };
+                yearStats[y].months.add(m);
+                yearStats[y].count++;
+                if (m < yearStats[y].minMonth) yearStats[y].minMonth = m;
+                if (m > yearStats[y].maxMonth) yearStats[y].maxMonth = m;
+            }
+        } catch(e) {}
+    });
+    
+    const yearsFound = Object.keys(yearStats).map(y => parseInt(y)).sort((a,b) => a - b);
+    let finalRecords = records;
+
+    if (yearsFound.length > 1) {
+        log(eventSender, "Detectados múltiplos anos no range. Analisando consistência...", `Years: ${yearsFound.join(', ')}`, 'info');
+        const yearsToKeep = [];
+        
+        // Ordena anos. Geralmente queremos "miolo" ou anos substanciais.
+        // Regra: Remover anos das pontas se tiverem poucos meses representados, A MENOS que sejam os unicos.
+        // Se YearCount > 1.
+        
+        yearsFound.forEach((year, index) => {
+            const stat = yearStats[year];
+            const isEdge = (index === 0 || index === yearsFound.length - 1);
+            const monthSpan = (stat.maxMonth - stat.minMonth) + 1; // Ex: Jan(1) to Mar(3) = 3 months
+            const distinctMonths = stat.months.size;
+            
+            // Critério de Corte: Se for borda E tiver menos que 6 meses de amplitude E tiver outro ano "completo" no set.
+            // Para simplificar: Se a borda tiver só Dezembro (1 mês) ou só Janeiro (1 mês), removemos.
+            
+            let keep = true;
+            if (isEdge) {
+                // Se for borda e tiver menos de 4 meses distintos representados, consideramos "resto" de paginação.
+                // Ajustável conforme necessidade. O usuário citou "dezembro de um ano" e "janeiro do outro".
+                if (distinctMonths < 4) {
+                    keep = false;
+                    log(eventSender, `Filtrando ano ${year} (Borda Incompleta: ${distinctMonths} meses detectados).`, null, 'warn');
+                }
+            }
+            if (keep) yearsToKeep.push(year);
+        });
+
+        // Segurança: Se filtrar tudo, mantém o original (pelo menos algo é salvo)
+        if (yearsToKeep.length > 0) {
+            finalRecords = records.filter(r => {
+                 const y = parseInt(r.data.split('/')[2]);
+                 return yearsToKeep.includes(y);
+            });
+            log(eventSender, `Registros Filtrados: ${finalRecords.length} (Original: ${records.length})`, null, 'success');
+        } else {
+             log(eventSender, "Filtro removeria tudo. Mantendo todos os registros.", null, 'warn');
+        }
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Processos Arquivados');
+
+    // --- Título e Metadata ---
+    sheet.mergeCells('A1:E1');
+    const titleCell = sheet.getCell('A1');
+    titleCell.value = 'PROCESSOS ARQUIVADOS';
+    titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF10B981' } }; // Green Matches App
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    sheet.mergeCells('A2:E2');
+    const subCell = sheet.getCell('A2');
+    subCell.value = `Extraído em: ${dayjs().format('DD/MM/YYYY HH:mm')} | Total Registros: ${finalRecords.length}`;
+    subCell.font = { italic: true, size: 11 };
+    subCell.alignment = { horizontal: 'center' };
+
+    // --- Headers (Linha 4 agora) ---
+    // Definimos colunas mas escrevemos header manual para customizar linha 4
+    const headers = ['Nº PROCESSO', 'PROMOVENTE', 'PROMOVIDO', 'DISTRIBUIÇÃO', 'CLASSE'];
+    sheet.getRow(4).values = headers;
+    
+    // Configura Larguras
+    sheet.getColumn(1).width = 25;
+    sheet.getColumn(2).width = 40;
+    sheet.getColumn(3).width = 40;
+    sheet.getColumn(4).width = 15;
+    sheet.getColumn(5).width = 30;
+
+    // Estilo Header
+    const headerRow = sheet.getRow(4);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } }; // Dark Grey
+
+    // --- Dados ---
+    // Adiciona a partir da linha 5
+    finalRecords.forEach(r => {
+        const row = sheet.addRow([r.npu, r.promovente, r.promovido, r.data, r.classe]);
+        // Ajuste manual de index se usar addRow com array (addRow append no fim)
+        // Como definimos header na row 4 e cells 1/2 ocupados, addRow vai para row 5+ OK.
+    });
+
+    // Formatação NPU (Texto) - Iterar celulas da coluna A e setar formato
+    // (ExcelJS addRow não herda col specs se não usar key mapping, mas setup manual resolve)
+    sheet.getColumn(1).eachCell((cell, rowNumber) => {
+        if (rowNumber > 4) cell.numFmt = '@';
+    });
+
+    const filename = `ARQUIVADOS_PROJUDI_${dayjs().format('DD-MM-YYYY_HHmm')}.xlsx`;
+    const folder = (args && args.outputDir) ? args.outputDir : process.cwd();
+    const outputPath = path.join(folder, filename);
+    
+    await workbook.xlsx.writeFile(outputPath);
+    log(eventSender, `Arquivo Salvo: ${outputPath}`, null, 'success');
+}
+
+// --- INTEGRAÇÃO PJE ---
+
+// Helper para esperar input do usuário via IPC
+function waitForInput(eventSender, ipcReceiver, type, data) {
+    return new Promise((resolve) => {
+        // Envia requisição para Renderer
+        eventSender.send('request-pje-input', { type, ...data });
+
+        // Handler único para resolver essa promise
+        const handler = (response) => {
+            ipcReceiver.off('pje-input-received', handler); // Limpa listener
+            resolve(response);
+        };
+
+        ipcReceiver.on('pje-input-received', handler);
+    });
+}
+
+async function runPjeAutomation(eventSender, ipcReceiver, args) {
+    isStopping = false;
+    log(eventSender, "Iniciando Extrator PJE (1º e 2º Grau)...", "Start PJE Service", 'info');
+    
+    // Configurações e URLs
+    const PJE_1_URL = "https://pje.tjba.jus.br/pje/";
+    const PJE_2_URL = "https://pje2g.tjba.jus.br/pje/";
+
+    try {
+        // 1. Inicializar Browser
+        log(eventSender, "Abrindo navegador...", "Edge Chromium", 'info');
+        const edgePaths = [
+            "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+            "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
+        ];
+        const edgeExe = edgePaths.find(p => fs.existsSync(p));
+        
+        browser = await chromium.launch({
+            executablePath: edgeExe,
+            headless: false,
+            args: ["--start-maximized", "--disable-blink-features=AutomationControlled"]
+        });
+
+        const context = await browser.newContext({ viewport: null });
+        page = await context.newPage();
+        
+        // --- PARTE 1: PJE 2º GRAU ---
+        log(eventSender, "Acessando PJE 2º Grau...", PJE_2_URL, 'info');
+        await page.goto(PJE_2_URL, { waitUntil: 'domcontentloaded', timeout: 120000 });
+
+        // Solicita Login Manual
+        log(eventSender, "Aguardando login manual do usuário...", "Waiting User Input", 'warn');
+        await waitForInput(eventSender, ipcReceiver, 'confirm', {
+            title: 'Login PJE 2º Grau',
+            message: 'Realize o login no PJE 2 e aguarde a tela inicial carregar. Clique em Confirmar quando estiver pronto.'
+        });
+        
+        log(eventSender, "Confirmado. Iniciando varredura PJE 2...", null, 'info');
+
+        // Navegar até o local correto (Lógica do User: mariana campelo -> Expedientes -> Apenas pendentes)
+        await page.evaluate(async () => {
+            const esperar = ms => new Promise(r => setTimeout(r, ms));
+            console.log("Iniciando navegação interna PJE 2...");
+
+            // 1. Expedientes (Tab)
+            // Tenta clicar na aba Expedientes se ela existir
+            let tabExp = document.querySelector("td[class*='abaExpediendes']"); 
+            if(!tabExp) tabExp = document.evaluate("//td[contains(text(), 'Expedientes')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            
+            if (tabExp) {
+                tabExp.click();
+                await esperar(2000);
+            }
+
+            // 2. "Apenas pendentes de ciência"
+            // Procura o nó na árvore
+            let xpathNode = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Apenas pendentes de ciência')]";
+            let node = document.evaluate(xpathNode, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            
+            if (node) {
+                node.scrollIntoView({block: 'center'});
+                node.click();
+                await esperar(4000); // Aguarda carregar a sub-arvore
+            } else {
+                console.warn("Nó 'Apenas pendentes de ciência' não encontrado. Tentando 'Pendentes de ciência'...");
+                // Fallback
+                let xpathAlt = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Pendentes de ciência')]";
+                let nodeAlt = document.evaluate(xpathAlt, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                if(nodeAlt) {
+                     nodeAlt.click();
+                     await esperar(4000);
+                }
+            }
+        });
+
+        // NOTA: A automação de clique em menus RichFaces é complexa. Vamos tentar replicar os passos
+        // Mas a página já deve estar aberta. Se o user logou e está no painel.
+
+        // Injetamos a função de extração que retorna os dados encontrados para o Node decidir
+        // Vamos usar uma abordagem hibrida: Page.evaluate faz o scan, retorna metadados, Node pergunta qtd, Page.evaluate processa.
+
+        // --- SCAN PJE 2 ---
+        const scanPje2 = await page.evaluate(() => {
+            // Função para limpar nome
+            const limparNomeNo = (nomeCompleto) => {
+                let nome = nomeCompleto.toUpperCase().trim();
+                nome = nome.replace(/\s*\(\d+\)/g, '').trim();
+                return nome;
+            };
+
+            // Identificar Nós
+            let nosDaArvore = Array.from(document.querySelectorAll(".rich-tree-node-text a"));
+            let listaNos = nosDaArvore.filter(el => {
+                const nome = el.innerText.trim().toUpperCase();
+                return nome.includes("TRIBUNAL DE JUSTIÇA") || nome.includes("TURMAS RECURSAIS");
+            }).map((el, index) => ({
+                index: index, // para re-localizar
+                nomeOriginal: el.innerText.trim(),
+                nomeLimpo: limparNomeNo(el.innerText)
+            }));
+            
+            // Retorna lista serializável
+            return listaNos;
+        });
+
+        let dadosPje2 = {};
+
+        if (scanPje2 && scanPje2.length > 0) {
+            log(eventSender, `PJE 2: Encontrados ${scanPje2.length} nós.`, null, 'success');
+            
+            // Pergunta Quantidade
+            const qtd = await waitForInput(eventSender, ipcReceiver, 'number', {
+                title: 'PJE 2 - Quantidade',
+                message: `PJE 2: ${scanPje2.length} nós encontrados (${scanPje2.map(n=>n.nomeLimpo).join(', ')}). Quantos processar?`,
+                max: scanPje2.length
+            });
+            
+            const limite = parseInt(qtd);
+            log(eventSender, `Processando ${limite} nós do PJE 2...`, null, 'info');
+
+            // Loop de Extração PJE 2
+            // Precisamos rodar o script no browser para cada nó
+             for (let i = 0; i < limite; i++) {
+                const targetName = scanPje2[i].nomeOriginal;
+                log(eventSender, `(PJE 2) Extraindo: ${targetName}...`, null, 'info');
+
+                const processos = await page.evaluate(async (targetName) => {
+                    const esperar = (ms) => new Promise(res => setTimeout(res, ms));
+                    const limparTexto = (t) => t ? t.split('\n').map(l=>l.trim()).filter(l=>l.length>0).join('\n') : "";
+
+                    // Re-localizar elemento
+                    let elements = Array.from(document.querySelectorAll(".rich-tree-node-text a"));
+                    let el = elements.find(e => e.innerText.trim() === targetName);
+                    
+                    if(!el) return null;
+                    
+                    el.click();
+                    await esperar(3500); // 3.5s loading
+
+                    let processosDoNo = [];
+                    
+                    // Paginação Loop
+                    while (true) {
+                        let linhasTabela = document.querySelectorAll("table[id$='tbExpedientes'] > tbody > tr");
+                        if (linhasTabela.length > 0) {
+                            linhasTabela.forEach(linha => {
+                                let celulas = linha.querySelectorAll("td");
+                                if (celulas.length >= 3) {
+                                    let colDetalhes = celulas[1].innerText;
+                                    let colProcesso = celulas[2].innerText;
+                                    let textoCompleto = limparTexto(colDetalhes + "\n" + colProcesso);
+                                    if (!processosDoNo.includes(textoCompleto)) processosDoNo.push(textoCompleto);
+                                }
+                            });
+                        }
+
+                        // Avançar
+                        let botaoAvancar = document.querySelector(".rich-datascr-button[onclick*='fastforward']");
+                        if (botaoAvancar && !botaoAvancar.classList.contains('rich-datascr-inact')) {
+                            botaoAvancar.click();
+                            await esperar(1500);
+                        } else {
+                            break;
+                        }
+                    }
+                    return processosDoNo;
+                }, targetName);
+
+                if (processos) {
+                    dadosPje2[scanPje2[i].nomeLimpo] = processos;
+                    log(eventSender, `   > ${processos.length} expedientes coletados.`, null, 'success');
+                } else {
+                    log(eventSender, `   > Falha ao acessar nó.`, null, 'error');
+                }
+            }
+        } else {
+            log(eventSender, "PJE 2: Nenhum nó (Tribunal/Turmas) encontrado na tela atual.", null, 'warn');
+        }
+
+        // --- PARTE 2: PJE 1º GRAU ---
+        log(eventSender, "Preparando transição para PJE 1º Grau...", null, 'info');
+        await page.goto(PJE_1_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+        // Solicita Login Manual PJE 1
+        await waitForInput(eventSender, ipcReceiver, 'confirm', {
+            title: 'Login PJE 1º Grau',
+            message: 'Realize o login no PJE 1º Grau. Clique em Confirmar quando estiver na tela inicial (painel do advogado).'
+        });
+
+        log(eventSender, "Confirmado. Iniciando varredura PJE 1...", null, 'info');
+
+        // Navegação PJE 1
+        await page.evaluate(async () => {
+             const esperar = ms => new Promise(r => setTimeout(r, ms));
+             
+             // 1. Tentar selecionar perfil de Procuradoria (se houver lista)
+             // O user menciona clicar em "mariana campelo" depois "Procuradoria..."
+             // Vamos buscar algo com "Procuradoria" ou "Procurador" nos links de perfil
+             const perfis = Array.from(document.querySelectorAll("a")).filter(a => a.innerText.toUpperCase().includes("PROCURADOR"));
+             if (perfis.length > 0) {
+                 // Clica no primeiro que parecer ser do Coelba/Companhia se houver, ou o primeiro disponivel
+                 let target = perfis.find(a => a.innerText.toUpperCase().includes("ELETRICIDADE")) || perfis[0];
+                 target.click();
+                 await esperar(5000); // Mudança de perfil é lenta
+             }
+
+             // 2. Expedientes
+             let tabExp = document.querySelector("td[class*='abaExpediendes']"); 
+             if(!tabExp) tabExp = document.evaluate("//td[contains(text(), 'Expedientes')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+             if (tabExp) {
+                 tabExp.click();
+                 await esperar(2000);
+             }
+
+             // 3. Pendentes de ciência ou de resposta
+             let xpathNode = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Pendentes de ciência ou de resposta')]";
+             let node = document.evaluate(xpathNode, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+             if(node) {
+                 node.scrollIntoView({block: 'center'});
+                 node.click();
+                 await esperar(4000);
+             }
+        });
+
+        // SCAN PJE 1
+        // Lógica: User forneceu 2º script. Procura SPAN "Pendentes de ciência ou de resposta"
+        // Tem lógica de abrir arvore se fechada (script_pje_problema.js)
+        
+        // Vamos usar a lógica de procurar "cidades". O script do user procura "span.nomeTarefa" e filtra uma blacklist.
+        
+        const scanPje1 = await page.evaluate(async () => {
+            // Filtro Blacklist do user
+            let nosIniciais = Array.from(document.querySelectorAll("span.nomeTarefa"));
+            let listaAlvos = nosIniciais.filter(el => {
+                const nome = el.innerText.trim();
+                return nome &&
+                    !nome.includes("Caixa de entrada") &&
+                    !nome.includes("Pendentes") &&
+                    !nome.includes("Expedientes") &&
+                    !nome.includes("Acervo") &&
+                    !nome.includes("Minhas petições") &&
+                    !nome.includes("Ciência") &&
+                    !nome.includes("Prazo") &&
+                    !nome.includes("Respondidos") &&
+                    !nome.includes("Apenas") &&
+                    !nome.includes("Sem prazo") &&
+                    !nome.match(/^\d+$/);
+            }).map(el => el.innerText.trim());
+            
+            // Remove duplicatas e sorteia
+            listaAlvos = [...new Set(listaAlvos)];
+            listaAlvos.sort((a, b) => a.localeCompare(b));
+            return listaAlvos;
+        });
+
+        let dadosPje1 = {};
+
+        if (scanPje1 && scanPje1.length > 0) {
+            log(eventSender, `PJE 1: Encontradas ${scanPje1.length} jurisdições/cidades.`, null, 'success');
+            
+            const qtd1 = await waitForInput(eventSender, ipcReceiver, 'number', {
+                title: 'PJE 1 - Quantidade',
+                message: `PJE 1: ${scanPje1.length} locais encontrados. Quantos processar?`,
+                max: scanPje1.length
+            });
+            
+            const limite1 = parseInt(qtd1);
+            log(eventSender, `Processando ${limite1} locais do PJE 1...`, null, 'info');
+
+            for (let i = 0; i < limite1; i++) {
+                if(isStopping) break;
+                const cidadeNome = scanPje1[i];
+                log(eventSender, `(PJE 1) Extraindo: ${cidadeNome}...`, null, 'info');
+
+                // Lógica complexa do user (Recuperação de arvore, xpath, etc)
+                const processosCidade = await page.evaluate(async (cidadeNome) => {
+                    const esperar = (ms) => new Promise(res => setTimeout(res, ms));
+                    const limparTexto = (t) => t ? t.split('\n').map(l=>l.trim()).filter(l=>l.length>0).join('\n') : "";
+
+                    // XPath Search
+                    let xpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${cidadeNome}"]`;
+                    let result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                    let element = result.singleNodeValue;
+                    
+                    // Lógica de Recuperação (Tree Collapse Fix)
+                    if (!element) {
+                        // Tenta reabrir menus comuns
+                        const menus = ["Expedientes", "Pendentes de ciência", "Pendentes de resposta"];
+                        for (const menu of menus) {
+                            let mXpath = `//span[contains(@class, 'nomeTarefa') and contains(text(), "${menu}")]`;
+                            let mNode = document.evaluate(mXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                            if (mNode && mNode.offsetParent !== null) {
+                                mNode.click();
+                                await esperar(1000);
+                            }
+                        }
+                        // Retry find
+                        result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                        element = result.singleNodeValue;
+                    }
+
+                    if (!element) return null;
+
+                    element.scrollIntoView({ block: "center", behavior: "auto" });
+                    await esperar(500);
+                    element.click();
+                    // Force click event dispatch just in case
+                    let evt = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
+                    element.dispatchEvent(evt);
+
+                    await esperar(4000); // Load content
+
+                    let data = [];
+                    // Paginação
+                    while (true) {
+                        let linhas = document.querySelectorAll("table[id$='tbExpedientes'] > tbody > tr");
+                        if (linhas.length > 0) {
+                            linhas.forEach(linha => {
+                                let cels = linha.querySelectorAll("td");
+                                if (cels.length >= 3) {
+                                    let txt = limparTexto(cels[1].innerText + "\n" + cels[2].innerText);
+                                    if (!data.includes(txt)) data.push(txt);
+                                }
+                            });
+                        }
+                        let nextBtn = document.querySelector(".rich-datascr-button[onclick*='fastforward']");
+                        if (nextBtn && !nextBtn.classList.contains('rich-datascr-inact')) {
+                            nextBtn.click();
+                            await esperar(1500);
+                        } else {
+                            break;
+                        }
+                    }
+                    return data;
+
+                }, cidadeNome);
+
+                if (processosCidade) {
+                    dadosPje1[cidadeNome] = processosCidade;
+                    log(eventSender, `   > ${processosCidade.length} expedientes.`, null, 'success');
+                } else {
+                    log(eventSender, `   > Não foi possível acessar.`, null, 'error');
+                }
+            }
+
+        } else {
+            log(eventSender, "PJE 1: Nenhuma cidade encontrada (verifique se a árvore 'Expedientes' está aberta).", null, 'warn');
+        }
+
+        // --- GERAÇÃO DE ARQUIVOS (WORD) ---
+        // Combinar dados
+        const tudoVazio = Object.keys(dadosPje2).length === 0 && Object.keys(dadosPje1).length === 0;
+        
+        if (tudoVazio) {
+            log(eventSender, "Nenhum dado coletado. Finalizando sem arquivos.", null, 'warn');
+        } else {
+            // Pergunta Merge
+            const merge = await waitForInput(eventSender, ipcReceiver, 'select', {
+                title: 'Gerar Relatório',
+                message: 'Deseja juntar todos os processos (PJE 1 e 2) em um único arquivo Word?',
+                options: [
+                    { value: 'yes', label: 'Sim, arquivo único unificado' },
+                    { value: 'no', label: 'Não, arquivos separados por local' }
+                ]
+            });
+
+            const outputDir = (args && args.outputDir) ? args.outputDir : path.join(process.cwd(), 'Relatorios_PJE');
+            if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+
+            // Helper Gerador HTML
+            const gerarHTML = (tituloH1, processosList) => {
+                let html = `<h1 style="font-size:14pt;font-weight:bold;text-transform:uppercase;color:#000;margin-top:20px;margin-bottom:10px;background-color:#f0f0f0;padding:5px;">${tituloH1} (${processosList.length})</h1>`;
+                processosList.forEach(p => {
+                    html += `<div style="margin-bottom:25px;border-bottom:1px solid #ddd;padding-bottom:10px;"><p>${p.replace(/\n/g, "<br>")}</p></div>`;
+                });
+                return html;
+            };
+
+            const headerHTML = `<html><head><meta charset='utf-8'><title>Relatório PJe</title><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.2;}</style></head><body>`;
+            const footerHTML = "</body></html>";
+
+            if (merge === 'yes') {
+                log(eventSender, "Gerando arquivo unificado...", null, 'info');
+                let fullContent = headerHTML;
+                
+                // Add PJE 2
+                Object.keys(dadosPje2).forEach(key => {
+                    fullContent += gerarHTML(`[PJE 2º Grau] ${key}`, dadosPje2[key]);
+                    fullContent += "<br><hr><br>";
+                });
+                
+                // Add PJE 1
+                Object.keys(dadosPje1).forEach(key => {
+                    fullContent += gerarHTML(`[PJE 1º Grau] ${key}`, dadosPje1[key]);
+                    fullContent += "<br><hr><br>";
+                });
+
+                fullContent += footerHTML;
+                const fPath = path.join(outputDir, `Relatorio_PJE_Unificado_${dayjs().format('DD-MM-YYYY_HHmm')}.doc`);
+                fs.writeFileSync(fPath, fullContent, { encoding: 'utf8' }); // utf8 + meta charset handles accents usually, or use \ufeff
+                log(eventSender, `Arquivo salvo: ${fPath}`, null, 'success');
+
+            } else {
+                log(eventSender, "Gerando arquivos separados...", null, 'info');
+                // PJE 2 Separate
+                for(const [key, val] of Object.entries(dadosPje2)) {
+                    let c = headerHTML + gerarHTML(key, val) + footerHTML;
+                    let f = path.join(outputDir, `PJE2_${key.replace(/[^a-z0-9]/gi, '_')}.doc`);
+                    fs.writeFileSync(f, c);
+                }
+                // PJE 1 Separate
+                for(const [key, val] of Object.entries(dadosPje1)) {
+                    let c = headerHTML + gerarHTML(key, val) + footerHTML;
+                    let f = path.join(outputDir, `PJE1_${key.replace(/[^a-z0-9]/gi, '_')}.doc`);
+                    fs.writeFileSync(f, c);
+                }
+                log(eventSender, `Arquivos salvos em: ${outputDir}`, null, 'success');
+            }
+        }
+
+    } catch (e) {
+        log(eventSender, `Erro Fatal: ${e.message}`, e.stack, 'error');
+    } finally {
+        if (browser) await browser.close();
+        log(eventSender, "Fim da execução.", null, 'info');
+        eventSender.send('script-finished');
+    }
+}
+
+module.exports = { runAutomation, stopAutomation, runArchivedAutomation, runPjeAutomation };
+
+

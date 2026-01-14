@@ -1,0 +1,373 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0065)https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam -->
+<html xmlns="http://www.w3.org/1999/xhtml" class=" js csstransforms3d" style=""><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+		
+	
+	<title>
+		Painel do Procurador · Tribunal de Justiça do Estado da Bahia</title>
+	
+	
+	<script type="text/javascript" async="" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/adrum-ext.8ad16b8375327e66a32816a8ad7be617.js.baixados"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/framework.pack.js.baixados" type="text/javascript"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/ui.pack.js.baixados" type="text/javascript"></script><link class="component" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/eAELXT5DOhSIAQ!sA18_" rel="stylesheet" type="text/css"><link class="component" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/eAELXT5DOhSIAQ!sA18_(1)" rel="stylesheet" type="text/css"><link class="component" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/eAELXT5DOhSIAQ!sA18_(2)" rel="stylesheet" type="text/css"><script id="org.ajax4jsf.queue_script" type="text/javascript">if (typeof A4J != 'undefined') { if (A4J.AJAX) { with (A4J.AJAX) {if (!EventQueue.getQueue('org.richfaces.queue.global')) { EventQueue.addQueue(new EventQueue('org.richfaces.queue.global',null,null)) };}}};</script><script type="text/javascript">window.RICH_FACES_EXTENDED_SKINNING_ON=true;</script><link class="user" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/bootstrap.min.css" rel="stylesheet" type="text/css"><link class="user" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/dropzone.css" rel="stylesheet" type="text/css"><link class="user" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/tema.css" rel="stylesheet" type="text/css"><link class="user" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/padrao.css" rel="stylesheet" type="text/css"><link class="user" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/autos-digitais.css" rel="stylesheet" type="text/css"><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/modernizr.custom.js.baixados" type="text/javascript"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/jquery-ui-1.8.1.min.custom.js.baixados" type="text/javascript"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/jquery-2.1.4.min.js.baixados" type="text/javascript"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/bootstrap.min.js.baixados" type="text/javascript"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/jquery.maskedinput.min.js.baixados" type="text/javascript"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/mousetrap.min.js.baixados" type="text/javascript"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/mousetrap-global-bind.js.baixados" type="text/javascript"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/menu.js.baixados" type="text/javascript"></script><script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/global.js.baixados" type="text/javascript"></script><link rel="apple-touch-icon" sizes="57x57" href="https://pje2g.tjba.jus.br/pje/img/favicon/apple-touch-icon-57x57.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="https://pje2g.tjba.jus.br/pje/img/favicon/apple-touch-icon-60x60.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="https://pje2g.tjba.jus.br/pje/img/favicon/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="https://pje2g.tjba.jus.br/pje/img/favicon/apple-touch-icon-76x76.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="https://pje2g.tjba.jus.br/pje/img/favicon/apple-touch-icon-114x114.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="https://pje2g.tjba.jus.br/pje/img/favicon/apple-touch-icon-120x120.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="https://pje2g.tjba.jus.br/pje/img/favicon/apple-touch-icon-144x144.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="https://pje2g.tjba.jus.br/pje/img/favicon/apple-touch-icon-152x152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="https://pje2g.tjba.jus.br/pje/img/favicon/apple-touch-icon-180x180.png">
+	<link rel="icon" type="image/png" href="https://pje2g.tjba.jus.br/pje/img/favicon/favicon-32x32.png" sizes="32x32">
+	<link rel="icon" type="image/png" href="https://pje2g.tjba.jus.br/pje/img/favicon/favicon-194x194.png" sizes="194x194">
+	<link rel="icon" type="image/png" href="https://pje2g.tjba.jus.br/pje/img/favicon/favicon-96x96.png" sizes="96x96">
+	<link rel="icon" type="image/png" href="https://pje2g.tjba.jus.br/pje/img/favicon/android-chrome-192x192.png" sizes="192x192">
+	<link rel="icon" type="image/png" href="https://pje2g.tjba.jus.br/pje/img/favicon/favicon-16x16.png" sizes="16x16">
+	<link rel="manifest" href="https://pje2g.tjba.jus.br/pje/img/favicon/manifest.json">
+	<link rel="mask-icon" href="https://pje2g.tjba.jus.br/pje/img/favicon/safari-pinned-tab.svg" color="#0078aa">
+	<link rel="stylesheet" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/all.min.css">
+	<link rel="stylesheet" href="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/v4-shims.min.css">
+	<meta name="msapplication-TileColor" content="#0078aa">
+	<meta name="msapplication-TileImage" content="/pje/img/favicon/mstile-144x144.png">
+	<meta name="theme-color" content="#0078AA">
+	
+				        
+	
+	<meta name="keywords" content="processo judicial, processo, audiências, sessão, peticionar, expedientes, magistrado, procurador, oficial de justiça, advogado, perito, retificar autuação, OAB">
+    <meta name="description" content="Processo Judicial Eletrônico - Acompanhe processos judiciais independentemente de tramitações">
+    <meta property="og:title" content="PJe - Processo Judicial Eletrônico">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="/pje">
+	<meta property="og:image" itemprop="image" content="/pje/img/pjeMini.png">
+	<meta property="og:site_name" content="PJe - Processo Judicial Eletrônico">
+	<meta property="og:description" content="Acompanhe processos judiciais independentemente de tramitações">
+	<meta property="og:locale" content="pt_BR">
+	
+	<meta name="Robots" content="INDEX,FOLLOW">
+    <meta name="RESOURCE-TYPE" content="DOCUMENT">
+    <meta name="DISTRIBUTION" content="GLOBAL">
+    <meta name="AUTHOR" content="CNJ">
+    <meta name="COPYRIGHT" content="Copyright (c) CNJ">
+    <meta name="language" content="pt-br">
+    <meta name="RATING" content="GENERAL">
+	</head>
+
+	<body>
+	
+    <script type="text/javascript">
+    	jQuery('document').ready(function(){
+			new window.Menu({"Menu":[{"itens":[{"itens":[],"popup":false,"nome":"Painel do representante processual","url":"/pje/Painel/painel_usuario/advogado.seam"},{"itens":[],"popup":false,"nome":"Painel do procurador na sessão","url":"/pje/Painel/painel_usuario/Painel_Procurador_Sessao/painelProcuradorSessao.seam"},{"itens":[],"popup":false,"nome":"Painel do membro do Ministério Público  na sessão","url":"/pje/Painel/ProcuradorMP/sessaoAbertaProcuradorMP.seam"}],"popup":false,"nome":"Painel","url":"#"},{"itens":[{"itens":[],"popup":false,"nome":"Novo processo","url":"/pje/Processo/cadastrar.seam?newInstance=true"},{"itens":[],"popup":false,"nome":"Novo processo incidental","url":"/pje/Processo/CadastroProcessoIncidente/listView.seam?newInstance=true"},{"itens":[],"popup":false,"nome":"Não protocolado","url":"/pje/Processo/ConsultaProcessoNaoProtocolado/listView.seam"},{"itens":[{"itens":[],"popup":false,"nome":"Processo","url":"/pje/Processo/ConsultaProcesso/listView.seam"},{"itens":[],"popup":false,"nome":"Consulta processos de terceiros","url":"/pje/Processo/ConsultaProcessoTerceiros/listView.seam"}],"popup":false,"nome":"Pesquisar","url":"#"},{"itens":[{"itens":[],"popup":false,"nome":"Incluir no push","url":"/pje/Push/listView.seam"},{"itens":[],"popup":false,"nome":"Peticionar","url":"/pje/Processo/CadastroPeticaoAvulsa/peticaoavulsa.seam"},{"itens":[],"popup":false,"nome":"Solicitar habilitação","url":"/pje/Processo/CadastroPeticaoAvulsa/listView.seam"}],"popup":false,"nome":"Outras ações","url":"#"}],"popup":false,"nome":"Processo","url":"#"},{"itens":[{"itens":[],"popup":false,"nome":"Assinar documentos pendentes","url":"/pje/Painel/advogado/consultaDocnaoAssinado.seam"}],"popup":false,"nome":"Atividades","url":"#"},{"itens":[{"itens":[],"popup":false,"nome":"Pauta de audiência","url":"/pje/ProcessoAudiencia/PautaAudiencia/listView.seam"},{"itens":[],"popup":false,"nome":"Processos pautados em sessão","url":"/pje/ProcessoPautaJulgamento/listView.seam"}],"popup":false,"nome":"Audiências e sessões","url":"#"},{"itens":[{"itens":[{"itens":[],"popup":false,"nome":"Assistentes de procuradoria/defensoria","url":"/pje/PessoaAssistenteProcuradoria/listView.seam"},{"itens":[],"popup":false,"nome":"Procurador/Defensor","url":"/pje/PessoaProcurador/listView.seam"}],"popup":false,"nome":"Pessoa","url":"#"}],"popup":false,"nome":"Configuração","url":"#"},{"itens":[{"itens":[],"popup":false,"nome":"Área de download","url":"/pje/AreaDeDownload/listView.seam"}],"popup":false,"nome":"Download","url":"#"}]});
+       	});
+    </script>
+     <script charset="UTF-8" type="text/javascript">
+	window["adrum-start-time"] = new Date().getTime();
+	(function(config){
+	    config.appKey =  "GR-AAB-EKM";;
+	    config.adrumExtUrlHttp = "http://cdn.appdynamics.com";
+	    config.adrumExtUrlHttps = "https://cdn.appdynamics.com";
+	    config.beaconUrlHttp = "http://gru-col.eum-appdynamics.com";
+	    config.beaconUrlHttps = "https://gru-col.eum-appdynamics.com";
+	    config.useHTTPSAlways = true;
+	    config.resTiming = {"bufSize":200,"clearResTimingOnBeaconSend":true};
+	    config.maxUrlLength = 512;
+	})(window["adrum-config"] || (window["adrum-config"] = {}));
+	</script>
+<script src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/adrum-24.4.0.4454.js.baixados"></script><form id="j_id23" name="j_id23" method="post" action="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam" target=""><script id="j_id23:j_id24" type="text/javascript">//<![CDATA[
+		refreshPage=function(){A4J.AJAX.Submit('j_id23',null,{'similarityGroupingId':'j_id23:j_id24','parameters':{'j_id23:j_id24':'j_id23:j_id24'} ,'status':'_viewRoot:status'} )};
+		//]]></script><script id="j_id23:j_id25" type="text/javascript">//<![CDATA[
+		refreshTarefaTree=function(){A4J.AJAX.Submit('j_id23',null,{'similarityGroupingId':'j_id23:j_id25','oncomplete':function(request,event,data){document.getElementById('papeisUsuarioForm').submit();},'parameters':{'j_id23:j_id25':'j_id23:j_id25','ajaxSingle':'j_id23:j_id25'} } )};
+		//]]></script><script id="j_id23:j_id26" type="text/javascript">//<![CDATA[
+		defaultTarefa=function(){A4J.AJAX.Submit('j_id23',null,{'similarityGroupingId':'j_id23:j_id26','oncomplete':function(request,event,data){true},'parameters':{'j_id23:j_id26':'j_id23:j_id26'} } )};
+		//]]></script><script id="j_id23:j_id27" type="text/javascript">//<![CDATA[
+		fecharPopupAlertaCertificadoProximoDeExpirar=function(){A4J.AJAX.Submit('j_id23',null,{'similarityGroupingId':'j_id23:j_id27','oncomplete':function(request,event,data){Richfaces.hideModalPanel('popupAlertaCertificadoProximoDeExpirar');},'parameters':{'j_id23:j_id27':'j_id23:j_id27','ajaxSingle':'j_id23:j_id27'} } )};
+		//]]></script><input type="hidden" autocomplete="off" name="j_id23" value="j_id23"><input type="hidden" autocomplete="off" name="autoScroll" value=""><script type="text/javascript">function clear_j_id23() {
+_clearJSFFormParameters('j_id23','',['j_id23:j_idcl','j_id23:_link_hidden_']);
+}
+function clearFormHiddenParams_j_id23(){clear_j_id23();}
+function clearFormHiddenParams_j_id23(){clear_j_id23();}
+clear_j_id23();</script><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id5" autocomplete="off"></form>
+    
+    
+	<nav id="barraSuperiorPrincipal" class="navbar navbar-default navbar-static-top navtop">
+		<div class="container-fluid" style=";">
+			<div class="navbar-header">
+					<ul class="nav navbar-nav">
+						<li>
+							<a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" class="botao-menu" title="Abrir menu"><span>Abrir menu</span></a>
+						</li>
+					</ul>
+				
+				<div class="navbar-brand"><a href="https://pje2g.tjba.jus.br/pje/home.seam?actionMethod=Painel%2Fpainel_usuario%2Fadvogado.xhtml%3AcontrolePaginaInicialUsuario.redirectToPainel%28%29&amp;cid=72627&amp;conversationPropagation=end" id="home" class="logo"><img src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/pje2-branco.png" alt="Tribunal de Justiça do Estado da Bahia"></a>
+					<span class="titulo">
+		Painel do Procurador</span>
+				</div>
+			</div>
+				<div class="navbar-collapse" style=";">
+					<ul class="nav navbar-nav navbar-right mr-5">
+							<li class="dropdown menu-usuario">
+								<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="true" style=";"><span class="hidden-xs nome-sobrenome tip-bottom" title="" data-original-title="Procuradoria - COMPANHIA DE ELETRICIDADE DO ESTADO DA BAHIA / Procurador/Gestor">mariana campelo</span>
+									
+									<span class="avatar tip-bottom" title="" data-original-title="Acesso via usuário e senha - Laranja"><img src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/usuario-avatar.png"><span id="j_id55" class="tipo tipo-login"></span>
+									</span>
+								</a>
+								<div class="dropdown-menu">
+<form id="papeisUsuarioForm" name="papeisUsuarioForm" method="post" action="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="papeisUsuarioForm" value="papeisUsuarioForm">
+
+										<div class="form-group"><label style="font-size: 1.2em" class="nome">
+MARIANA SILVA CAMPELO</label><label id="papeisUsuarioForm:usuarioLocalizacao" style="font-size: 1.2em" class="nome">
+Procuradoria - COMPANHIA DE ELETRICIDADE DO ESTADO DA BAHIA / Procurador/Gestor</label><div id="papeisUsuarioForm:j_id60"><table style="float: right">
+<tbody>
+<tr>
+<td><input type="text" name="papeisUsuarioForm:j_id62" class="suggest" onkeyup="A4J.AJAX.Submit(&#39;papeisUsuarioForm&#39;,event,{&#39;similarityGroupingId&#39;:&#39;papeisUsuarioForm:j_id63&#39;,&#39;control&#39;:this,&#39;eventsQueue&#39;:&#39;perfilInicialQueue&#39;,&#39;parameters&#39;:{&#39;papeisUsuarioForm:j_id63&#39;:&#39;papeisUsuarioForm:j_id63&#39;,&#39;ajaxSingle&#39;:&#39;papeisUsuarioForm:j_id62&#39;} ,&#39;ignoreDupResponses&#39;:true,&#39;requestDelay&#39;:700} )"></td>
+</tr>
+</tbody>
+</table>
+<table class="rich-table " id="papeisUsuarioForm:dtPerfil" border="0" cellpadding="0" cellspacing="0"><colgroup span="2"></colgroup><thead class="rich-table-thead"></thead><tbody id="papeisUsuarioForm:dtPerfil:tb"><tr class="rich-table-row rich-table-firstrow "><td class="rich-table-cell text-center" id="papeisUsuarioForm:dtPerfil:0:perfilInicial" width="50"><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" id="papeisUsuarioForm:dtPerfil:0:j_id70" name="papeisUsuarioForm:dtPerfil:0:j_id70" onclick="A4J.AJAX.Submit(&#39;papeisUsuarioForm&#39;,event,{&#39;similarityGroupingId&#39;:&#39;papeisUsuarioForm:dtPerfil:0:j_id70&#39;,&#39;eventsQueue&#39;:&#39;perfilInicialQueue&#39;,&#39;parameters&#39;:{&#39;papeisUsuarioForm:dtPerfil:0:j_id70&#39;:&#39;papeisUsuarioForm:dtPerfil:0:j_id70&#39;,&#39;ajaxSingle&#39;:&#39;papeisUsuarioForm:dtPerfil:0:j_id70&#39;} } );return false;"><img src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/favorite-16x16-disabled.png" style="cursor:pointer"></a></td><td class="rich-table-cell " id="papeisUsuarioForm:dtPerfil:0:colPerfil" width="550px">
+<script type="text/javascript" language="Javascript">function dpf(f) {var adp = f.adp;if (adp != null) {for (var i = 0;i < adp.length;i++) {f.removeChild(adp[i]);}}};function apf(f, pvp) {var adp = new Array();f.adp = adp;var i = 0;for (k in pvp) {var p = document.createElement("input");p.type = "hidden";p.name = k;p.value = pvp[k];f.appendChild(p);adp[i++] = p;}};function jsfcljs(f, pvp, t) {apf(f, pvp);var ft = f.target;if (t) {f.target = t;}f.submit();f.target = ft;dpf(f);};</script>
+<a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" onclick="if(typeof jsfcljs == &#39;function&#39;){jsfcljs(document.getElementById(&#39;papeisUsuarioForm&#39;),{&#39;papeisUsuarioForm:dtPerfil:0:j_id72&#39;:&#39;papeisUsuarioForm:dtPerfil:0:j_id72&#39;},&#39;&#39;);}return false">MARIANA SILVA CAMPELO (059.973.075-73) / Advogado</a></td></tr><tr class="rich-table-row "><td class="rich-table-cell text-center" id="papeisUsuarioForm:dtPerfil:1:perfilInicial" width="50"><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" id="papeisUsuarioForm:dtPerfil:1:j_id70" name="papeisUsuarioForm:dtPerfil:1:j_id70" onclick="A4J.AJAX.Submit(&#39;papeisUsuarioForm&#39;,event,{&#39;similarityGroupingId&#39;:&#39;papeisUsuarioForm:dtPerfil:1:j_id70&#39;,&#39;eventsQueue&#39;:&#39;perfilInicialQueue&#39;,&#39;parameters&#39;:{&#39;papeisUsuarioForm:dtPerfil:1:j_id70&#39;:&#39;papeisUsuarioForm:dtPerfil:1:j_id70&#39;,&#39;ajaxSingle&#39;:&#39;papeisUsuarioForm:dtPerfil:1:j_id70&#39;} } );return false;"><img src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/favorite-16x16-disabled.png" style="cursor:pointer"></a></td><td class="rich-table-cell " id="papeisUsuarioForm:dtPerfil:1:colPerfil" width="550px"><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" onclick="if(typeof jsfcljs == &#39;function&#39;){jsfcljs(document.getElementById(&#39;papeisUsuarioForm&#39;),{&#39;papeisUsuarioForm:dtPerfil:1:j_id72&#39;:&#39;papeisUsuarioForm:dtPerfil:1:j_id72&#39;},&#39;&#39;);}return false">Procuradoria - COMPANHIA DE ELETRICIDADE DO ESTADO DA BAHIA / Procurador/Gestor</a></td></tr></tbody></table>
+
+<input type="hidden" name="papeisUsuarioForm:j_id74" value="papeisUsuarioForm:j_id74">
+<div class="rich-datascr " id="papeisUsuarioForm:j_id74:scPerfil" style=" ; display: none" align="center"><script type="text/javascript">new Richfaces.Datascroller('papeisUsuarioForm:j_id74:scPerfil', function(event){A4J.AJAX.Submit('papeisUsuarioForm:j_id74',event,{'similarityGroupingId':'papeisUsuarioForm:j_id74:scPerfil','implicitEventsQueue':'papeisUsuarioForm:j_id74:scPerfil','parameters':{'ajaxSingle':'papeisUsuarioForm:j_id74:scPerfil','papeisUsuarioForm:j_id74:scPerfil':event.memo.page} ,'ignoreDupResponses':true} ); return false;});</script></div><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id5" autocomplete="off">
+</div><span class="text-danger text-center btn-block">Seu acesso via CPF/CNPJ e senha expira em 3 dias. Solicite nova senha na tela de login do PJe.</span>
+										</div></form>
+										<div class="menu-sair">
+											<ul>
+											
+												
+												<li><a class="tip" title="" data-toggle="modal" data-target=".modal-atalhos" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" data-original-title="Atalhos"><i class="fa fa-keyboard-o"></i></a></li>
+												<li><a class="tip" title="" data-toggle="modal" data-target=".modal-versao" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" data-original-title="Sobre"><i class="fa fa-question"></i></a></li>
+												<li><a class="tip botao-contato" title="" data-toggle="modal" data-target=".modal-contato" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" data-original-title="Fale conosco"><i class="fa fa-envelope"></i></a></li>
+											</ul><a href="https://pje2g.tjba.jus.br/pje/logout.seam" title="sair" class="btn btn-default botao-sair">Sair</a>
+										</div><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id5" autocomplete="off">
+
+								</div>
+				            </li>
+					</ul>
+				</div>
+		</div>
+	</nav><span id="_viewRoot:status"><span id="_viewRoot:status.start" style="display: none">
+	        <div class="ajax-loader">
+	   			<div class="rich-mpnl-mask-div-opaque rich-mpnl-mask-div"></div>
+	   			<div class="rich-mpnl-panel">
+			        <div class="rich-mp-container">
+			        	<div class="rich-mpnl-content"></div>
+			        </div>
+	   			</div>
+	   		</div></span><span id="_viewRoot:status.stop"></span></span><div id="modalStatus" style="display: none;"><input autocomplete="off" id="modalStatusOpenedState" name="modalStatusOpenedState" type="hidden"><div class="rich-modalpanel ajax-loader" id="modalStatusContainer" style="position: absolute; display: none; z-index: 100; background-color: inherit;"><div class="rich-mpnl-mask-div-opaque rich-mpnl-mask-div" id="modalStatusDiv" style="z-index: -1;"><button class="rich-mpnl-button" id="modalStatusFirstHref"></button></div><div class="rich-mpnl-panel"><div class="rich-mp-container" id="modalStatusCDiv" style="position: absolute; left: 0px; top: 0px; z-index: 9;"><div class="rich-mpnl-shadow" id="modalStatusShadowDiv" style=" opacity:0.0; filter:alpha(opacity=0);"></div><div class="rich-mpnl-ovf-hd rich-mpnl-trim rich-mpnl-content" id="modalStatusContentDiv"><table border="0" cellpadding="0" cellspacing="0" class="rich-mp-content-table" id="modalStatusContentTable" style="height: 100%; width: 100%;"><tbody><tr style="height: 99%"><td class="rich-mpnl-body" valign="top"></td></tr></tbody></table></div><div class="rich-mpnl-resizer" id="modalStatusResizerN" style="width: 40px; height: 4px; cursor: n-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerE" style="height: 40px; width: 4px; cursor: e-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerS" style="width: 40px; height: 4px; cursor: s-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerW" style="height: 40px; width: 4px; cursor: w-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerNWU" style="width: 40px; height: 4px; cursor: nw-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerNEU" style="height: 40px; width: 4px; cursor: ne-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerNEL" style="width: 40px; height: 4px; cursor: ne-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerSEU" style="height: 40px; width: 4px; cursor: se-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerSEL" style="width: 40px; height: 4px; cursor: se-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerSWL" style="height: 40px; width: 4px; cursor: sw-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerSWU" style="width: 40px; height: 4px; cursor: sw-resize;"></div><div class="rich-mpnl-resizer" id="modalStatusResizerNWL" style="height: 40px; width: 4px; cursor: nw-resize;"></div></div></div><div class="rich-mpnl-mask-div rich-mpnl-mask-div-transparent" id="modalStatusCursorDiv" style="z-index: -200;"><button class="rich-mpnl-button" id="modalStatusLastHref"></button></div><script type="text/javascript">new ModalPanel('modalStatus',
+				{
+					width: -1,
+					height: -1,
+
+					minWidth: -1,
+					minHeight: -1,
+
+					resizeable: true,
+					moveable: true,
+
+					left: "auto",
+					top: "auto",
+
+					zindex: 100,onresize: '',onmove: '',onshow: '',onhide: '',onbeforeshow: '',onbeforehide: '',
+					domElementAttachment: "",				
+					keepVisualState: false,
+					showWhenRendered: false,
+					selectBehavior: "disable",
+
+					autosized: false,
+					overlapEmbedObjects: false});</script></div><script type="text/javascript"></script></div>
+	
+	<div class="modal fade modal-atalhos" tabindex="-1" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+			<div class="modal-header">
+				<a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" class="btn-fechar pull-right" data-dismiss="modal" aria-label="Fechar"><i class="icon-fechar"></i></a>
+				<h4 class="modal-title">Atalhos do sistema</h4>
+			</div>
+			<div class="modal-body">
+				<ul class="list-group">
+					<li class="list-group-item"><span class="badge">alt+1</span>Menu de navegação
+					</li>
+					<li class="list-group-item"><span class="badge">alt+2</span>Ir para página inicial
+					</li>
+					<li class="list-group-item"><span class="badge">alt+7</span>Auto-contraste
+					</li>
+					<li class="list-group-item"><span class="badge">alt+8</span>Fale conosco
+					</li>
+					<li class="list-group-item"><span class="badge">alt+9</span>Sair
+					</li>
+				</ul>
+			</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="modal fade modal-versao" tabindex="-1" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" class="btn-fechar pull-right" data-dismiss="modal" aria-label="Fechar"><i class="icon-fechar"></i></a>
+					<h4 class="modal-title">Processo Judicial Eletrônico</h4>
+				</div>
+				<div class="modal-body">
+					<div class="media">
+						<div class="media-left media-middle"><img src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/pjeMini.png" alt="Tribunal de Justiça do Estado da Bahia" class="media-object mr-10">
+						</div>
+						<div class="media-body">
+							<span class="media-heading mb-10 text-muted btn-block">
+		 <span class="transform-none">Versão</span> 2.2.0.0 - <a href="http://www5.tjba.jus.br/pjeinformacoes/index.php/sobre-pje/versoes-do-sistema" target="_blank" title="Histórico de versões do PJe/TJBA" style="text-transform: uppercase;">TJBA-1.1.62</a> <span class="transform-none">- Atualizado em </span> 18/12/2025 - 11:29
+							</span>
+							
+							<p>O Pje é um sistema de tramitação de processos judiciais que busca atender às necessidades dos diversos segmentos do Poder Judiciário brasileiro(Justiça Militar da União e dos Estados, Tribunais Superiores, Justiça do Trabalho, Justiça Eleitoral e Justiça Comum, Federal e Estadual)<br>
+							</p>
+							<p>O PJe é desenvolvido pela comunidade dos tribunais brasileiros sob a coordenação do 
+								<a class="btn-link" href="http://www.cnj.jus.br/">Conselho Nacional de Justiça (CNJ).</a><br>
+							</p>
+							<p>Para mais ajuda sobre o sistema acesse a 
+								<a class="btn-link" href="http://www.cnj.jus.br/wiki/index.php/P%C3%A1gina_principal">Wiki do projeto.</a><br>
+							</p>
+						</div>
+					</div>
+					<div class="modal-footer text-center pb-0">
+						<small class="text-muted">Verifique sobre as versões do sistema em</small><br>
+						<a class="btn btn-default" href="http://www.cnj.jus.br/wiki/index.php/Vers%C3%B5es">Mais informações</a>
+					</div>				
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="modal fade modal-contato" tabindex="-1" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+			<div class="modal-header">
+				<a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#" class="btn-fechar pull-right" data-dismiss="modal" aria-label="Fechar"><i class="icon-fechar"></i></a>
+				<h4 class="modal-title">Fale conosco</h4>
+			</div>
+			<div class="modal-body">Informações Fale Conosco 1º grau
+			</div>
+			</div>
+		</div>
+	</div><div id="j_id133" class="principal">
+			
+			<div class="content">
+		
+		<nav id="menu" class="sidemenu cover">
+			
+			<div class="menu-busca">
+				<div class="input-group form-busca">
+					<span class="input-group-addon"><i class="fa fa-search"></i></span>
+					<input type="text" class="form-control" placeholder="Acesso rápido">
+				</div>
+				
+				<div class="resultado-busca">
+					<ul class="lista"></ul>
+				</div>
+			</div>
+			
+			<div class="nivel" data-level="1">
+				<ul><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-desktop icone-nav"></i> Painel <i class="fa fa-angle-right"></i></a><div class="nivel" data-level="2"><a class="btn-voltar" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-caret-left"></i> <i class="fa fa-desktop icone-nav"></i> Painel</a><ul><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam"> Painel do representante processual </a></li><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/Painel_Procurador_Sessao/painelProcuradorSessao.seam"> Painel do procurador na sessão </a></li><li><a href="https://pje2g.tjba.jus.br/pje/Painel/ProcuradorMP/sessaoAbertaProcuradorMP.seam"> Painel do membro do Ministério Público  na sessão </a></li></ul></div></li><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-folder-open-o icone-nav"></i> Processo <i class="fa fa-angle-right"></i></a><div class="nivel" data-level="2"><a class="btn-voltar" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-caret-left"></i> <i class="fa fa-folder-open-o icone-nav"></i> Processo</a><ul><li><a href="https://pje2g.tjba.jus.br/pje/Processo/cadastrar.seam?newInstance=true"> Novo processo </a></li><li><a href="https://pje2g.tjba.jus.br/pje/Processo/CadastroProcessoIncidente/listView.seam?newInstance=true"> Novo processo incidental </a></li><li><a href="https://pje2g.tjba.jus.br/pje/Processo/ConsultaProcessoNaoProtocolado/listView.seam"> Não protocolado </a></li><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"> Pesquisar <i class="fa fa-angle-right"></i></a><div class="nivel" data-level="3"><a class="btn-voltar" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-caret-left"></i> <i class="fa fa-folder-open-o icone-nav"></i> Pesquisar</a><ul><li><a href="https://pje2g.tjba.jus.br/pje/Processo/ConsultaProcesso/listView.seam"> Processo </a></li><li><a href="https://pje2g.tjba.jus.br/pje/Processo/ConsultaProcessoTerceiros/listView.seam"> Consulta processos de terceiros </a></li></ul></div></li><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"> Outras ações <i class="fa fa-angle-right"></i></a><div class="nivel" data-level="3"><a class="btn-voltar" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-caret-left"></i> <i class="fa fa-folder-open-o icone-nav"></i> Outras ações</a><ul><li><a href="https://pje2g.tjba.jus.br/pje/Push/listView.seam"> Incluir no push </a></li><li><a href="https://pje2g.tjba.jus.br/pje/Processo/CadastroPeticaoAvulsa/peticaoavulsa.seam"> Peticionar </a></li><li><a href="https://pje2g.tjba.jus.br/pje/Processo/CadastroPeticaoAvulsa/listView.seam"> Solicitar habilitação </a></li></ul></div></li></ul></div></li><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-pencil-square-o icone-nav"></i> Atividades <i class="fa fa-angle-right"></i></a><div class="nivel" data-level="2"><a class="btn-voltar" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-caret-left"></i> <i class="fa fa-pencil-square-o icone-nav"></i> Atividades</a><ul><li><a href="https://pje2g.tjba.jus.br/pje/Painel/advogado/consultaDocnaoAssinado.seam"> Assinar documentos pendentes </a></li></ul></div></li><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="far fa-calendar-alt icone-nav"></i> Audiências e sessões <i class="fa fa-angle-right"></i></a><div class="nivel" data-level="2"><a class="btn-voltar" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-caret-left"></i> <i class="far fa-calendar-alt icone-nav"></i> Audiências e sessões</a><ul><li><a href="https://pje2g.tjba.jus.br/pje/ProcessoAudiencia/PautaAudiencia/listView.seam"> Pauta de audiência </a></li><li><a href="https://pje2g.tjba.jus.br/pje/ProcessoPautaJulgamento/listView.seam"> Processos pautados em sessão </a></li></ul></div></li><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-cog icone-nav"></i> Configuração <i class="fa fa-angle-right"></i></a><div class="nivel" data-level="2"><a class="btn-voltar" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-caret-left"></i> <i class="fa fa-cog icone-nav"></i> Configuração</a><ul><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"> Pessoa <i class="fa fa-angle-right"></i></a><div class="nivel" data-level="3"><a class="btn-voltar" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-caret-left"></i> <i class="fa fa-cog icone-nav"></i> Pessoa</a><ul><li><a href="https://pje2g.tjba.jus.br/pje/PessoaAssistenteProcuradoria/listView.seam"> Assistentes de procuradoria/defensoria </a></li><li><a href="https://pje2g.tjba.jus.br/pje/PessoaProcurador/listView.seam"> Procurador/Defensor </a></li></ul></div></li></ul></div></li><li><a href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-download icone-nav"></i> Download <i class="fa fa-angle-right"></i></a><div class="nivel" data-level="2"><a class="btn-voltar" href="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam#"><i class="fa fa-caret-left"></i> <i class="fa fa-download icone-nav"></i> Download</a><ul><li><a href="https://pje2g.tjba.jus.br/pje/AreaDeDownload/listView.seam"> Área de download </a></li></ul></div></li></ul>
+			</div>
+		</nav><div id="pageBody" class="scroll-y">
+						<div class="conteudo"><div id="j_id137" class="faixa-superior-painel-externo"></div>	
+							<div class="col-xs-12 col-sm-12 pb-80"><div id="j_id139"></div><script type="text/javascript">RichFaces.tabPanel['tabPanel']={'ontabchange':'','id':'tabPanel'} ;</script><table border="0" cellpadding="0" cellspacing="0" class="rich-tabpanel " id="tabPanel" style="width:"><tbody><tr><td align="left" class="rich-tab-bottom-line "><form id="tabPanel:_form" name="tabPanel:_form" method="post" style="margin:0; padding:0; display: inline;" action="https://pje2g.tjba.jus.br/pje/Painel/painel_usuario/advogado.seam"><!--table  border="0" cellpadding="0" cellspacing="0" style="position:relative;top:1px"--><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="width: 2px; ;border:0"></td><td id="tabPeticionar_cell" style="height: 100%; vertical-align: bottom;" class="rich-tabhdr-cell-active"><table border="0" cellpadding="0" cellspacing="0" id="tabPeticionar_shifted" onclick="if (RichFaces.isTabActive(&#39;tabPeticionar_lbl&#39;)) return false; if (!RichFaces.onTabChange(event, &#39;tabPanel&#39;,&#39;tabPeticionar&#39;)) return false;A4J.AJAX.Submit(null,event,{&#39;similarityGroupingId&#39;:&#39;tabPeticionar&#39;,&#39;actionUrl&#39;:&#39;/pje/Painel/painel_usuario/advogado.seam&#39;,&#39;parameters&#39;:{&#39;tabPeticionar&#39;:&#39;tabPeticionar&#39;,&#39;selectedTab&#39;:&#39;tabPeticionar&#39;} } ); return false; this.onclick = null;" style="position:relative; top:1px;;height : 100%; "><tbody><tr><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td><td class="rich-tabhdr-side-cell"><table border="0" cellpadding="0" cellspacing="0" style="height: 100%; width: 100%;"><tbody><tr><td id="tabPeticionar_lbl" onmouseover="RichFaces.overTab(this);" onmouseout="RichFaces.outTab(this);" class="rich-tab-header rich-tab-active    painel abaPeticionar">Peticionar</td></tr></tbody></table></td><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td></tr></tbody></table></td><td><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="width: 2px; ;border:0"></td><td id="tabExpedientes_cell" style="height: 100%; vertical-align: bottom;" class="rich-tabhdr-cell-inactive"><table border="0" cellpadding="0" cellspacing="0" id="tabExpedientes_shifted" onclick="if (RichFaces.isTabActive(&#39;tabExpedientes_lbl&#39;)) return false; if (!RichFaces.onTabChange(event, &#39;tabPanel&#39;,&#39;tabExpedientes&#39;)) return false;A4J.AJAX.Submit(null,event,{&#39;similarityGroupingId&#39;:&#39;tabExpedientes&#39;,&#39;actionUrl&#39;:&#39;/pje/Painel/painel_usuario/advogado.seam&#39;,&#39;parameters&#39;:{&#39;tabExpedientes&#39;:&#39;tabExpedientes&#39;,&#39;selectedTab&#39;:&#39;tabExpedientes&#39;,&#39;pend&#39;:&#39;true&#39;} } ); return false; this.onclick = null;" style="position:relative;;height : 100%; "><tbody><tr><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td><td class="rich-tabhdr-side-cell"><table border="0" cellpadding="0" cellspacing="0" style="height: 100%; width: 100%;"><tbody><tr><td id="tabExpedientes_lbl" onmouseover="RichFaces.overTab(this);" onmouseout="RichFaces.outTab(this);" class="rich-tab-header rich-tab-inactive    painel abaExpediendes">Expedientes</td></tr></tbody></table></td><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td></tr></tbody></table></td><td><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="width: 2px; ;border:0"></td><td id="tabNovoProcesso_cell" style="height: 100%; vertical-align: bottom;" class="rich-tabhdr-cell-inactive"><table border="0" cellpadding="0" cellspacing="0" id="tabNovoProcesso_shifted" onclick="if (RichFaces.isTabActive(&#39;tabNovoProcesso_lbl&#39;)) return false; if (!RichFaces.onTabChange(event, &#39;tabPanel&#39;,&#39;tabNovoProcesso&#39;)) return false;A4J.AJAX.Submit(null,event,{&#39;similarityGroupingId&#39;:&#39;tabNovoProcesso&#39;,&#39;actionUrl&#39;:&#39;/pje/Painel/painel_usuario/advogado.seam&#39;,&#39;parameters&#39;:{&#39;tabNovoProcesso&#39;:&#39;tabNovoProcesso&#39;,&#39;selectedTab&#39;:&#39;tabNovoProcesso&#39;} } ); return false; this.onclick = null;" style="position:relative;;height : 100%; "><tbody><tr><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td><td class="rich-tabhdr-side-cell"><table border="0" cellpadding="0" cellspacing="0" style="height: 100%; width: 100%;"><tbody><tr><td id="tabNovoProcesso_lbl" onmouseover="RichFaces.overTab(this);" onmouseout="RichFaces.outTab(this);" class="rich-tab-header rich-tab-inactive    painel abaNovoProcesso">Novo processo</td></tr></tbody></table></td><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td></tr></tbody></table></td><td><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="width: 2px; ;border:0"></td><td id="tabConsultaProcesso_cell" style="height: 100%; vertical-align: bottom;" class="rich-tabhdr-cell-inactive"><table border="0" cellpadding="0" cellspacing="0" id="tabConsultaProcesso_shifted" onclick="if (RichFaces.isTabActive(&#39;tabConsultaProcesso_lbl&#39;)) return false; if (!RichFaces.onTabChange(event, &#39;tabPanel&#39;,&#39;tabConsultaProcesso&#39;)) return false;A4J.AJAX.Submit(null,event,{&#39;similarityGroupingId&#39;:&#39;tabConsultaProcesso&#39;,&#39;actionUrl&#39;:&#39;/pje/Painel/painel_usuario/advogado.seam&#39;,&#39;parameters&#39;:{&#39;tabConsultaProcesso&#39;:&#39;tabConsultaProcesso&#39;,&#39;selectedTab&#39;:&#39;tabConsultaProcesso&#39;} } ); return false; this.onclick = null;" style="position:relative;;height : 100%; "><tbody><tr><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td><td class="rich-tabhdr-side-cell"><table border="0" cellpadding="0" cellspacing="0" style="height: 100%; width: 100%;"><tbody><tr><td id="tabConsultaProcesso_lbl" onmouseover="RichFaces.overTab(this);" onmouseout="RichFaces.outTab(this);" class="rich-tab-header rich-tab-inactive    painel abaConsultaProcesso">Consulta processos</td></tr></tbody></table></td><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td></tr></tbody></table></td><td><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="width: 2px; ;border:0"></td><td id="tabPush_cell" style="height: 100%; vertical-align: bottom;" class="rich-tabhdr-cell-inactive"><table border="0" cellpadding="0" cellspacing="0" id="tabPush_shifted" onclick="if (RichFaces.isTabActive(&#39;tabPush_lbl&#39;)) return false; if (!RichFaces.onTabChange(event, &#39;tabPanel&#39;,&#39;tabPush&#39;)) return false;A4J.AJAX.Submit(null,event,{&#39;similarityGroupingId&#39;:&#39;tabPush&#39;,&#39;actionUrl&#39;:&#39;/pje/Painel/painel_usuario/advogado.seam&#39;,&#39;parameters&#39;:{&#39;tabPush&#39;:&#39;tabPush&#39;,&#39;selectedTab&#39;:&#39;tabPush&#39;,&#39;pend&#39;:&#39;false&#39;} } ); return false; this.onclick = null;" style="position:relative;;height : 100%; "><tbody><tr><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td><td class="rich-tabhdr-side-cell"><table border="0" cellpadding="0" cellspacing="0" style="height: 100%; width: 100%;"><tbody><tr><td id="tabPush_lbl" onmouseover="RichFaces.overTab(this);" onmouseout="RichFaces.outTab(this);" class="rich-tab-header rich-tab-inactive    painel abaPush">Push</td></tr></tbody></table></td><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td></tr></tbody></table></td><td><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="width: 2px; ;border:0"></td><td id="tabAcervo_cell" style="height: 100%; vertical-align: bottom;" class="rich-tabhdr-cell-inactive"><table border="0" cellpadding="0" cellspacing="0" id="tabAcervo_shifted" onclick="if (RichFaces.isTabActive(&#39;tabAcervo_lbl&#39;)) return false; if (!RichFaces.onTabChange(event, &#39;tabPanel&#39;,&#39;tabAcervo&#39;)) return false;A4J.AJAX.Submit(null,event,{&#39;similarityGroupingId&#39;:&#39;tabAcervo&#39;,&#39;actionUrl&#39;:&#39;/pje/Painel/painel_usuario/advogado.seam&#39;,&#39;parameters&#39;:{&#39;tabAcervo&#39;:&#39;tabAcervo&#39;,&#39;selectedTab&#39;:&#39;tabAcervo&#39;,&#39;pend&#39;:&#39;false&#39;} } ); return false; this.onclick = null;" style="position:relative;;height : 100%; "><tbody><tr><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td><td class="rich-tabhdr-side-cell"><table border="0" cellpadding="0" cellspacing="0" style="height: 100%; width: 100%;"><tbody><tr><td id="tabAcervo_lbl" onmouseover="RichFaces.overTab(this);" onmouseout="RichFaces.outTab(this);" class="rich-tab-header rich-tab-inactive    painel abaAcervo">Acervo</td></tr></tbody></table></td><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td></tr></tbody></table></td><td><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="width: 2px; ;border:0"></td><td id="tabProcAdvPainelIntimacaoPendente_cell" style="height: 100%; vertical-align: bottom;" class="rich-tabhdr-cell-inactive"><table border="0" cellpadding="0" cellspacing="0" id="tabProcAdvPainelIntimacaoPendente_shifted" onclick="if (RichFaces.isTabActive(&#39;tabProcAdvPainelIntimacaoPendente_lbl&#39;)) return false; if (!RichFaces.onTabChange(event, &#39;tabPanel&#39;,&#39;tabProcAdvPainelIntimacaoPendente&#39;)) return false;A4J.AJAX.Submit(null,event,{&#39;similarityGroupingId&#39;:&#39;tabProcAdvPainelIntimacaoPendente&#39;,&#39;actionUrl&#39;:&#39;/pje/Painel/painel_usuario/advogado.seam&#39;,&#39;parameters&#39;:{&#39;tabProcAdvPainelIntimacaoPendente&#39;:&#39;tabProcAdvPainelIntimacaoPendente&#39;,&#39;selectedTab&#39;:&#39;tabProcAdvPainelIntimacaoPendente&#39;} ,&#39;status&#39;:&#39;_viewRoot:status&#39;} ); return false; this.onclick = null;" style="position:relative;;height : 100%; "><tbody><tr><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td><td class="rich-tabhdr-side-cell"><table border="0" cellpadding="0" cellspacing="0" style="height: 100%; width: 100%;"><tbody><tr><td id="tabProcAdvPainelIntimacaoPendente_lbl" onmouseover="RichFaces.overTab(this);" onmouseout="RichFaces.outTab(this);" class="rich-tab-header rich-tab-inactive">Intimações de pauta</td></tr></tbody></table></td><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td></tr></tbody></table></td><td><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="width: 2px; ;border:0"></td><td id="tabPeticoes_cell" style="height: 100%; vertical-align: bottom;" class="rich-tabhdr-cell-inactive"><table border="0" cellpadding="0" cellspacing="0" id="tabPeticoes_shifted" onclick="if (RichFaces.isTabActive(&#39;tabPeticoes_lbl&#39;)) return false; if (!RichFaces.onTabChange(event, &#39;tabPanel&#39;,&#39;tabPeticoes&#39;)) return false;A4J.AJAX.Submit(null,event,{&#39;similarityGroupingId&#39;:&#39;tabPeticoes&#39;,&#39;actionUrl&#39;:&#39;/pje/Painel/painel_usuario/advogado.seam&#39;,&#39;parameters&#39;:{&#39;tabPeticoes&#39;:&#39;tabPeticoes&#39;,&#39;selectedTab&#39;:&#39;tabPeticoes&#39;} } ); return false; this.onclick = null;" style="position:relative;;height : 100%; "><tbody><tr><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td><td class="rich-tabhdr-side-cell"><table border="0" cellpadding="0" cellspacing="0" style="height: 100%; width: 100%;"><tbody><tr><td id="tabPeticoes_lbl" onmouseover="RichFaces.overTab(this);" onmouseout="RichFaces.outTab(this);" class="rich-tab-header rich-tab-inactive">Minhas petições</td></tr></tbody></table></td><td class="rich-tabhdr-side-border"><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="border:0" width="1"></td></tr></tbody></table></td><td><img alt="" height="1" src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/spacer.gif" style="width: 2px; ;border:0"></td></tr></tbody></table><div style="display: none;"><script type="text/javascript">RichFaces.panelTabs['tabPanel']=[{'cellInactiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dinactive','name':'tabPeticionar','ontableave':'','id':'tabPeticionar','inactiveClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dinactive    painel abaPeticionar','activeClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dactive    painel abaPeticionar','cellActiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dactive','ontabenter':''} ,{'cellInactiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dinactive','name':'tabExpedientes','ontableave':'','id':'tabExpedientes','inactiveClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dinactive    painel abaExpediendes','activeClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dactive    painel abaExpediendes','cellActiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dactive','ontabenter':''} ,{'cellInactiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dinactive','name':'tabNovoProcesso','ontableave':'','id':'tabNovoProcesso','inactiveClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dinactive    painel abaNovoProcesso','activeClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dactive    painel abaNovoProcesso','cellActiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dactive','ontabenter':''} ,{'cellInactiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dinactive','name':'tabConsultaProcesso','ontableave':'','id':'tabConsultaProcesso','inactiveClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dinactive    painel abaConsultaProcesso','activeClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dactive    painel abaConsultaProcesso','cellActiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dactive','ontabenter':''} ,{'cellInactiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dinactive','name':'tabPush','ontableave':'','id':'tabPush','inactiveClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dinactive    painel abaPush','activeClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dactive    painel abaPush','cellActiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dactive','ontabenter':''} ,{'cellInactiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dinactive','name':'tabAcervo','ontableave':'','id':'tabAcervo','inactiveClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dinactive    painel abaAcervo','activeClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dactive    painel abaAcervo','cellActiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dactive','ontabenter':''} ,{'cellInactiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dinactive','name':'tabProcAdvPainelIntimacaoPendente','ontableave':'','id':'tabProcAdvPainelIntimacaoPendente','inactiveClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dinactive    ','activeClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dactive    ','cellActiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dactive','ontabenter':''} ,{'cellInactiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dinactive','name':'tabPeticoes','ontableave':'','id':'tabPeticoes','inactiveClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dinactive    ','activeClass':'rich\x2Dtab\x2Dheader rich\x2Dtab\x2Dactive    ','cellActiveClass':'rich\x2Dtabhdr\x2Dcell\x2Dactive','ontabenter':''} ] ;</script></div><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id5" autocomplete="off"></form></td></tr><tr><td id="tabPeticionar" style=";height:100%"><table border="0" cellpadding="10" cellspacing="0" class="rich-tabpanel-content-position" width="100%"><tbody><tr><td class="rich-tabpanel-content  painel abaPeticionar" style="; ">
+				<iframe src="./Painel do Procurador · Tribunal de Justiça do Estado da Bahia_files/listView.html" id="framePeticionar" width="100%" style="height: 85vh"></iframe>
+				<script type="text/javascript">checkIframeLoaded('framePeticionar');</script></td></tr></tbody></table></td>
+		
+	<script type="text/javascript">
+		/* <![CDATA[ */
+		
+		function abrirLink(link) {
+			window.open(link);
+			document.getElementById("tabPeticionar_shifted").click();
+		}
+		
+		document.addEventListener("DOMContentLoaded", function () {
+		    checkIframeLoaded("framePeticionar");
+		});
+		
+		function checkIframeLoaded(idFrame) {
+		    var iframe = document.getElementById(idFrame);
+		    iframe.onload = function () {
+			    var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+			    iframeDoc.querySelector(".faixa-superior").style.display = "none";
+			    iframeDoc.querySelector("#pageBody").style.paddingLeft = 0;
+			    iframeDoc.querySelector("#pageBody").style.paddingRight = 0;
+		    }
+		}
+			
+		var abaSelecionada = "";
+		
+		function alteraAbaSelecionada(selectedTab){
+			abaSelecionada = selectedTab;
+		}
+
+		function identificaAba(){
+			switch(abaSelecionada){
+				case "tabAcervo":
+					return "acervo";
+					break;
+				case "tabInt":
+					return "agrupadores";
+					break;
+				case "tabPeticoes":
+					return "minhas-peticoes";
+					break;
+				case "tabExpedientes":
+				default:
+					return "expedientes";
+			}
+		}
+		function getOrdenacao() {
+			idElemento = "select[id*='ordExp']";
+
+			if(identificaAba() == "acervo"){
+				idElemento = "select[id*='ord']"
+			}
+
+			if(jQuery_21(idElemento).length){
+				return jQuery_21(idElemento).val();
+			}else{
+				return null;
+			}
+		}
+		
+		function atualizaPesquisa(){
+			if(identificaAba() == "expedientes"){
+				atualizaPaginaExpedientes(getSituacaoExpediente(), getNumeroProcessoValidoParaConsulta(), /* limpa-cache */ true, getOrdenacao());
+			}else{
+				if(identificaAba() == "acervo"){
+					atualizaPaginaAcervo(getNumeroProcessoValidoParaConsulta(), /* limpa-cache */true, getOrdenacao());
+				}
+			}	
+		}
+				
+		/* funções relacionadas à combo de situação do expediente */		
+		function getSituacaoExpediente() {
+			var elemento=document.querySelector("select[id*='soSitExp']");
+			return elemento.options[elemento.selectedIndex].value;
+		}		
+			
+		// monitora quando o usuário digitar um número válido
+		jQuery_21( document ).on("pesquisa:numeroProcesso:valido", function(event, elemento, numeroProcesso){
+			trataNumeroProcessoValido(numeroProcesso, elemento);
+		});
+			
+		// monitora quando o usuário digitar um número inválido
+		jQuery_21( document ).on("pesquisa:numeroProcesso:invalido", function (event, elemento, numeroProcesso) {
+			trataNumeroDigitadoInvalido(numeroProcesso, elemento);
+		});
+
+		jQuery_21( document ).on("pesquisa:numeroProcesso:incompleto", function(event, elemento, numeroProcesso){
+			trataNumeroDigitadoIncompleto(numeroProcesso, elemento);
+		});
+
+		jQuery_21( document ).on("pesquisa:numeroProcesso:vazio", function(event, elemento, numeroProcesso){
+			trataNumeroVazio(elemento);
+		});
+
+		/* ]]> */
+	</script></tr></tbody></table>
+							</div>	
+						</div></div>
+			</div></div> 	
+	
+</body></html>

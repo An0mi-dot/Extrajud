@@ -16,6 +16,22 @@
             --border-color: #dfe1e5;
         }
 
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
         body {
             font-family: 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
@@ -25,6 +41,12 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            opacity: 0; /* Começa invisível para fade-in */
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        body.loaded {
+            opacity: 1;
         }
 
         .header {
@@ -332,8 +354,8 @@
                 </div>
             </a>
 
-            <!-- App 2: Processos Arquivados (Em Breve) -->
-            <div class="service-card disabled">
+            <!-- App 2: Processos Arquivados (Ativo) -->
+            <a href="arquivados_projudi.html" class="service-card">
                 <span class="platform-tag tag-projudi">PROJUDI</span>
                 <div class="card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
@@ -344,11 +366,17 @@
                 <div class="card-desc">
                     Ferramenta de busca e extração em massa de processos já arquivados, permitindo auditoria de histórico.
                 </div>
-                <div class="card-status status-soon">Em Breve</div>
-            </div>
+                <div class="card-status status-active">Disponível</div>
+                
+                <div class="arrow-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </div>
+            </a>
 
-            <!-- App 3: PJE Automação (Em Breve) -->
-            <div class="service-card disabled">
+            <!-- App 3: PJE Automação (Ativo) -->
+            <a href="pje_extrator.html" class="service-card">
                 <span class="platform-tag tag-pje">PJE</span>
                 <div class="card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
@@ -357,10 +385,16 @@
                 </div>
                 <div class="card-title">Automação PJE</div>
                 <div class="card-desc">
-                    Módulo em desenvolvimento para automação de tarefas no Processo Judicial Eletrônico (PJE).
+                    Extração de Expedientes PJE 1º e 2º Grau (Pendentes de Ciência e Resposta).
                 </div>
-                <div class="card-status status-soon">Em Breve</div>
-            </div>
+                <div class="card-status status-active">Disponível</div>
+
+                <div class="arrow-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </div>
+            </a>
 
             <!-- App 4: Espaider (Em Breve) -->
             <div class="service-card disabled">
@@ -413,6 +447,23 @@
     </div>
 
     <script>
+        // Transição de Entrada
+        window.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.add('loaded');
+        });
+
+        // Transição de Saída para Links
+        document.querySelectorAll('a.service-card').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.href;
+                document.body.style.opacity = '0';
+                setTimeout(() => {
+                    window.location.href = target;
+                }, 400); // Espera a animação
+            });
+        });
+
         const modal = document.getElementById("modal-about");
         const btn = document.getElementById("btn-about");
         const span = document.getElementsByClassName("close")[0];

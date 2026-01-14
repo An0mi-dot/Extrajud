@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const automacaoService = require('./automacao_service');
 
@@ -9,7 +9,7 @@ function createWindow() {
     width: 1000,
     height: 750,
     autoHideMenuBar: true, // Oculta a barra de menu padrão
-    icon: path.join(__dirname, 'assets', 'logo.png'), // Ícone da janela e barra de tarefas
+    icon: path.join(__dirname, 'assets', 'logo2.png'), // Ícone da janela e barra de tarefas
     webPreferences: {
         nodeIntegration: true,
         contextIsolation: false
@@ -38,11 +38,18 @@ app.on('window-all-closed', () => {
 
 // --- IPC Handler ---
 ipcMain.on('run-script', (event, args) => {
-  // Executa a automação nativa (Node.js)
-  // Passamos o messageSender (event.sender) para logs
-  // E o ipcMain como inputReceiver para ouvir eventos de input
-  // args contém { user, pass }
+  // Executa a automação nativa (Node.js) -> Citações/Intimações
   automacaoService.runAutomation(event.sender, ipcMain, args);
+});
+
+ipcMain.on('run-archived-script', (event, args) => {
+  // Executa a automação nativa (Node.js) -> Arquivados
+  automacaoService.runArchivedAutomation(event.sender, ipcMain, args);
+});
+
+ipcMain.on('run-pje-script', (event, args) => {
+    // Executa a automação nativa (Node.js) -> PJE
+    automacaoService.runPjeAutomation(event.sender, ipcMain, args);
 });
 
 ipcMain.on('stop-script', (event) => {
@@ -62,4 +69,20 @@ ipcMain.on('send-input', (event, input) => {
     // O service espera 'user-confirm-input'
     console.log("Recebido input do usuário, repassando...");
     ipcMain.emit('user-confirm-input');
+});
+
+ipcMain.on('pje-input-response', (event, response) => {
+    console.log("Recebido resposta PJE:", response);
+    ipcMain.emit('pje-input-received', response);
+});
+
+ipcMain.handle('dialog:openDirectory', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        properties: ['openDirectory']
+    });
+    if (canceled) {
+        return null;
+    } else {
+        return filePaths[0];
+    }
 });
