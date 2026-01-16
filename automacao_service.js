@@ -42,6 +42,10 @@ const delay = async (ms) => {
 // Função Principal
 async function runAutomation(eventSender, inputReceiver, args) {
     isStopping = false;
+    // Indica ao processo principal que uma automação está em execução
+    global.isAutomationRunning = true;
+    if (eventSender) eventSender.send('automation-status', true);
+
     log(eventSender, "Iniciando Robô de Automação", "Thread Start | Loading Playwright Engine", 'info');
     log(eventSender, "Carregando configurações...", "Edge Browser | Mode: Scanner | Lib: ExcelJS", 'info');
 
@@ -246,12 +250,16 @@ async function runAutomation(eventSender, inputReceiver, args) {
              try { await browser.close(); } catch(e){}
              browser = null;
         }
+        // Indica que a automação terminou
+        global.isAutomationRunning = false;
+        if (eventSender) eventSender.send('automation-status', false);
     }
 }
 
 async function stopAutomation(eventSender) {
     isStopping = true;
     log(eventSender, "!!! Solicitada parada da automação !!!");
+    if (eventSender) eventSender.send('automation-status', 'stopping');
     // Removido o fechamento imediato do browser aqui
     // Deixa o fluxo principal (runAutomation) cuidar de fechar/salvar
 }
@@ -1657,13 +1665,38 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
         log(eventSender, "Acessando PJE 2º Grau...", PJE_2_URL, 'info');
         await page.goto(PJE_2_URL, { waitUntil: 'domcontentloaded', timeout: 120000 });
 
-        // Solicita Login Manual
+        // Helper: safe page.evaluate with retries if execution context is destroyed (happens on navigation)
+        const safeEvaluate = async (fn, ...fnArgs) => {
+            const maxAttempts = 3;
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    return await page.evaluate(fn, ...fnArgs);
+                } catch (e) {
+                    const msg = (e && e.message) ? e.message : String(e);
+                    if (msg.includes('Execution context was destroyed') || msg.includes('Target closed') || msg.includes('Cannot find context')) {
+                        log(eventSender, `Aviso: Execution context destruído durante page.evaluate (tentativa ${attempt}). Aguardando recarregamento...`, null, 'warn');
+                        try { await page.waitForLoadState('domcontentloaded', { timeout: 5000 }); } catch(err){}
+                        await delay(1000);
+                        continue; // retry
+                    }
+                    throw e; // rethrow other errors
+                }
+            }
+            throw new Error('safeEvaluate: excedeu tentativas devido a Execution context destroyed');
+        };
+
+        // Solicita login manual do usuário (100% manual)
         log(eventSender, "Aguardando login manual do usuário...", "Waiting User Input", 'warn');
-        await waitForInput(eventSender, ipcReceiver, 'confirm', {
+        const loginResp = await waitForInput(eventSender, ipcReceiver, 'confirm', {
             title: 'Login PJE 2º Grau',
             message: 'Realize o login no PJE 2 e aguarde a tela inicial carregar. Clique em Confirmar quando estiver pronto.'
         });
-        
+
+        if (loginResp === false || loginResp === 'cancel') {
+            log(eventSender, "Login cancelado pelo usuário. Abortando PJE.", null, 'error');
+            return; // termina a execução do PJE
+        }
+
         log(eventSender, "Confirmado. Iniciando varredura PJE 2...", null, 'info');
 
         // Navegar até o local correto (Lógica do User: mariana campelo -> Expedientes -> Apenas pendentes)
@@ -1709,26 +1742,23 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
         // Vamos usar uma abordagem hibrida: Page.evaluate faz o scan, retorna metadados, Node pergunta qtd, Page.evaluate processa.
 
         // --- SCAN PJE 2 ---
-        const scanPje2 = await page.evaluate(() => {
-            // Função para limpar nome
+        const scanPje2 = await safeEvaluate(() => {
             const limparNomeNo = (nomeCompleto) => {
                 let nome = nomeCompleto.toUpperCase().trim();
                 nome = nome.replace(/\s*\(\d+\)/g, '').trim();
                 return nome;
             };
 
-            // Identificar Nós
             let nosDaArvore = Array.from(document.querySelectorAll(".rich-tree-node-text a"));
             let listaNos = nosDaArvore.filter(el => {
                 const nome = el.innerText.trim().toUpperCase();
                 return nome.includes("TRIBUNAL DE JUSTIÇA") || nome.includes("TURMAS RECURSAIS");
             }).map((el, index) => ({
-                index: index, // para re-localizar
+                index: index,
                 nomeOriginal: el.innerText.trim(),
                 nomeLimpo: limparNomeNo(el.innerText)
             }));
-            
-            // Retorna lista serializável
+
             return listaNos;
         });
 
@@ -1753,7 +1783,7 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                 const targetName = scanPje2[i].nomeOriginal;
                 log(eventSender, `(PJE 2) Extraindo: ${targetName}...`, null, 'info');
 
-                const processos = await page.evaluate(async (targetName) => {
+                const processos = await safeEvaluate(async (targetName) => {
                     const esperar = (ms) => new Promise(res => setTimeout(res, ms));
                     const limparTexto = (t) => t ? t.split('\n').map(l=>l.trim()).filter(l=>l.length>0).join('\n') : "";
 
@@ -1819,18 +1849,15 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
         log(eventSender, "Confirmado. Iniciando varredura PJE 1...", null, 'info');
 
         // Navegação PJE 1
-        await page.evaluate(async () => {
+        await safeEvaluate(async () => {
              const esperar = ms => new Promise(r => setTimeout(r, ms));
              
              // 1. Tentar selecionar perfil de Procuradoria (se houver lista)
-             // O user menciona clicar em "mariana campelo" depois "Procuradoria..."
-             // Vamos buscar algo com "Procuradoria" ou "Procurador" nos links de perfil
              const perfis = Array.from(document.querySelectorAll("a")).filter(a => a.innerText.toUpperCase().includes("PROCURADOR"));
              if (perfis.length > 0) {
-                 // Clica no primeiro que parecer ser do Coelba/Companhia se houver, ou o primeiro disponivel
                  let target = perfis.find(a => a.innerText.toUpperCase().includes("ELETRICIDADE")) || perfis[0];
                  target.click();
-                 await esperar(5000); // Mudança de perfil é lenta
+                 await esperar(5000);
              }
 
              // 2. Expedientes
@@ -1857,7 +1884,7 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
         
         // Vamos usar a lógica de procurar "cidades". O script do user procura "span.nomeTarefa" e filtra uma blacklist.
         
-        const scanPje1 = await page.evaluate(async () => {
+        const scanPje1 = await safeEvaluate(async () => {
             // Filtro Blacklist do user
             let nosIniciais = Array.from(document.querySelectorAll("span.nomeTarefa"));
             let listaAlvos = nosIniciais.filter(el => {
@@ -1876,7 +1903,6 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                     !nome.match(/^\d+$/);
             }).map(el => el.innerText.trim());
             
-            // Remove duplicatas e sorteia
             listaAlvos = [...new Set(listaAlvos)];
             listaAlvos.sort((a, b) => a.localeCompare(b));
             return listaAlvos;
@@ -1902,9 +1928,11 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                 log(eventSender, `(PJE 1) Extraindo: ${cidadeNome}...`, null, 'info');
 
                 // Lógica complexa do user (Recuperação de arvore, xpath, etc)
-                const processosCidade = await page.evaluate(async (cidadeNome) => {
-                    const esperar = (ms) => new Promise(res => setTimeout(res, ms));
-                    const limparTexto = (t) => t ? t.split('\n').map(l=>l.trim()).filter(l=>l.length>0).join('\n') : "";
+                let processosCidade = null;
+                try {
+                    processosCidade = await safeEvaluate(async (cidadeNome) => {
+                        const esperar = (ms) => new Promise(res => setTimeout(res, ms));
+                        const limparTexto = (t) => t ? t.split('\n').map(l=>l.trim()).filter(l=>l.length>0).join('\n') : "";
 
                     // XPath Search
                     let xpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${cidadeNome}"]`;
@@ -1963,6 +1991,10 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                     return data;
 
                 }, cidadeNome);
+                } catch (errCidade) {
+                    log(eventSender, `Erro ao extrair ${cidadeNome}: ${errCidade.message}`, errCidade.stack, 'error');
+                    continue; // prosseguir para próxima cidade
+                }
 
                 if (processosCidade) {
                     dadosPje1[cidadeNome] = processosCidade;

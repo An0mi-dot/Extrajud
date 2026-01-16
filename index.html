@@ -83,6 +83,10 @@
             box-sizing: border-box;
         }
 
+        /* Prevent overflow issues on dev reload */
+        .service-card { word-break: break-word; }
+
+
         .welcome-text {
             margin-bottom: 30px;
         }
@@ -172,6 +176,16 @@
             align-self: flex-start;
         }
 
+        /* Estimated time label inside service cards */
+        .estimated-time {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #374151; /* gray-700 */
+            font-weight: 600;
+        }
+        .estimated-time small { color: #6b7280; font-weight: 500; display:block; margin-top:2px; font-size:11px; }
+
+
         .status-active {
             background-color: #d1e7dd;
             color: #0f5132;
@@ -197,6 +211,9 @@
             transform: translateX(0);
         }
 
+        /* --- State persistence helpers (scroll) --- */
+        
+
         .platform-tag {
             font-size: 10px;
             text-transform: uppercase;
@@ -220,6 +237,42 @@
             border-top: 1px solid var(--border-color);
             background-color: var(--card-bg);
         }
+
+        /* Footer contact highlight (more discrete) */
+        .footer-contact {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 5px 8px;
+            background: rgba(16, 185, 129, 0.06); /* softer tint */
+            border-radius: 10px;
+            border: 1px solid rgba(16, 185, 129, 0.08);
+            color: #065f46; /* darker green */
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        /* Subtle variant for inline 'About' modal usage */
+        .contact-muted {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 4px 8px;
+            background: rgba(16, 185, 129, 0.04);
+            border-radius: 8px;
+            border: 1px solid rgba(16, 185, 129, 0.06);
+            color: #0b5e4a;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        /* Plain footer note (no highlight) */
+        .footer-note {
+            margin: 6px 0 0 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* App Clock removed per user request */
 
         /* Modal Styles */
         .modal {
@@ -314,6 +367,15 @@
     </style>
 </head>
 <body>
+    <script>
+        // Show top-level JS errors to user (no app-clock used)
+        window.onerror = function(message, source, lineno, colno, error) {
+            try {
+                alert('Erro de script na página: ' + message);
+            } catch (e) { /* ignore */ }
+            return false;
+        };
+    </script>
 
     <div class="header">
         <div class="brand">
@@ -345,6 +407,7 @@
                 <div class="card-desc">
                     Automação completa para extração de Citações e Intimações do Portal PROJUDI, com geração de tabelas e evidências em PDF.
                 </div>
+                <div class="estimated-time">Tempo estimado: <strong>00:01:38</strong> <small>(Aproximadamente)</small></div>
                 <div class="card-status status-active">Disponível</div>
                 
                 <div class="arrow-icon">
@@ -366,6 +429,7 @@
                 <div class="card-desc">
                     Ferramenta de busca e extração em massa de processos já arquivados, permitindo auditoria de histórico.
                 </div>
+                <div class="estimated-time">Tempo estimado: <strong>Variável</strong> <small>(depende do volume; pode levar até horas)</small></div>
                 <div class="card-status status-active">Disponível</div>
                 
                 <div class="arrow-icon">
@@ -379,14 +443,21 @@
             <a href="pje_extrator.html" class="service-card">
                 <span class="platform-tag tag-pje">PJE</span>
                 <div class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" aria-hidden="true" focusable="false">
+                        <!-- Courthouse / Forum Icon -->
+                        <path d="M3 11l9-6 9 6" />
+                        <path d="M4 12v6" />
+                        <path d="M9 12v6" />
+                        <path d="M14 12v6" />
+                        <path d="M19 12v6" />
+                        <path d="M2 20h20" />
                     </svg>
                 </div>
                 <div class="card-title">Automação PJE</div>
                 <div class="card-desc">
                     Extração de Expedientes PJE 1º e 2º Grau (Pendentes de Ciência e Resposta).
                 </div>
+                <div class="estimated-time">Tempo estimado: <strong>Não estimado</strong> <small>(ainda não avaliado)</small></div>
                 <div class="card-status status-active">Disponível</div>
 
                 <div class="arrow-icon">
@@ -414,7 +485,7 @@
     </div>
 
     <div class="footer">
-        Desenvolvido por <strong>João Guilherme Almeida Viana</strong>
+        <p class="footer-note">Caso queira solicitar mais serviços, fale com <strong>João Guilherme Almeida Viana</strong> (Aprendiz Administrativo).</p>
     </div>
 
     <!-- Modal Sobre -->
@@ -424,6 +495,15 @@
             <h2 style="color: var(--primary-color);">EXTRATJUD</h2>
             <p style="color: #666; margin-top: -10px;">Automação Jurídica Integrada</p>
             
+            <div class="info-section">
+                <h3>Sobre o Aplicativo</h3>
+                <p style="color:#555; margin-bottom:8px;">O <strong>EXTRATJUD</strong> é uma aplicação desktop construída em Electron para automatizar a extração de informações processuais de portais judiciais (como PROJUDI e PJE), gerar relatórios (Excel, Word) e capturar evidências em PDF para auditoria e controle.</p>
+                <p style="color:#555; margin-bottom:8px;">Principais funcionalidades: extração de citações e intimações, varredura de processos arquivados, geração de planilhas e relatórios, e um console de execução com logs detalhados. A automação usa o Microsoft Edge via Playwright para navegar e coletar os dados.</p>
+                <p style="color:#555; margin-bottom:8px;">Objetivo: facilitar atividades demoradas ou massivas do Setor Jurídico, automatizando a coleta, consolidação e geração de relatórios para reduzir o trabalho manual e acelerar a entrega de resultados.</p>
+                <p style="color:#555; margin-bottom:8px;">Observações de segurança: o PJE exige login manual (incluindo 2FA); o app aguarda a confirmação do usuário antes de iniciar a varredura. Por padrão não armazenamos senhas ou credenciais sensíveis sem consentimento explícito do usuário.</p>
+                <p class="contact-muted">Caso queira solicitar mais serviços, fale com <strong>João Guilherme Almeida Viana</strong> (Aprendiz Administrativo).</p>
+            </div>
+
             <div class="info-section">
                 <h3>Desenvolvimento</h3>
                 <p style="font-size: 14px; margin: 0;"><strong>João Guilherme Almeida Viana</strong></p>
@@ -447,22 +527,54 @@
     </div>
 
     <script>
+        const { ipcRenderer } = require('electron');
         // Transição de Entrada
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             document.body.classList.add('loaded');
+            // Restore scroll state
+            try {
+                const state = await ipcRenderer.invoke('load-app-state');
+                if (state && state.index && typeof state.index.scrollTop === 'number') {
+                    document.querySelector('.container').scrollTop = state.index.scrollTop;
+                }
+            } catch (e) { console.error('Error restoring index state', e); }
         });
 
         // Transição de Saída para Links
         document.querySelectorAll('a.service-card').forEach(link => {
-            link.addEventListener('click', function(e) {
+            link.addEventListener('click', async function(e) {
                 e.preventDefault();
                 const target = this.href;
+                // Remember last clicked service
+                try {
+                    const cur = await ipcRenderer.invoke('load-app-state') || {};
+                    cur.index = cur.index || {};
+                    cur.index.lastService = target;
+                    ipcRenderer.send('save-app-state', cur);
+                } catch (e) { /* ignore */ }
+
                 document.body.style.opacity = '0';
                 setTimeout(() => {
                     window.location.href = target;
                 }, 400); // Espera a animação
             });
         });
+
+        // Persist scroll with throttle
+        const container = document.querySelector('.container');
+        let saveIdxTimer = null;
+        function scheduleSaveIndex() {
+            if (saveIdxTimer) clearTimeout(saveIdxTimer);
+            saveIdxTimer = setTimeout(async () => {
+                try {
+                    const cur = await ipcRenderer.invoke('load-app-state') || {};
+                    cur.index = cur.index || {};
+                    cur.index.scrollTop = container.scrollTop;
+                    ipcRenderer.send('save-app-state', cur);
+                } catch (e) { console.error('scheduleSaveIndex error', e); }
+            }, 400);
+        }
+        container.addEventListener('scroll', scheduleSaveIndex);
 
         const modal = document.getElementById("modal-about");
         const btn = document.getElementById("btn-about");
@@ -486,6 +598,8 @@
                 modal.style.display = "none";
             }
         }
+
+        // App clock removed per user request
     </script>
 
 </body>

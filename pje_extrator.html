@@ -237,9 +237,12 @@
             gap: 10px;
         }
 
+        /* App clock removed per user request */
+
     </style>
 </head>
 <body>
+    <!-- app-clock removed per user request -->
 
     <div class="header">
         <button class="back-btn" onclick="window.location.href='index.html'">
@@ -267,6 +270,17 @@
             <button id="btnStop" class="btn btn-danger" onclick="stopAutomation()">
                 <i class="fas fa-stop"></i> Parar
             </button>
+
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
+                <label style="display:block; font-size:11px; margin-bottom:4px; color:#666; font-weight:600;">Salvar Arquivos Em:</label>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="inp-output-dir" readonly placeholder="Pasta padrão do App" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:11px; background:#f9f9f9; color:#888;">
+                    <button id="btn-select-dir" style="padding:0 8px; width:40px; border:1px solid #ccc; background:#eee; cursor:pointer;" title="Selecionar Pasta">
+                        <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
+                    </button>
+                </div>
+            </div>
+
         </div>
 
         <!-- Painel de Logs -->
@@ -305,24 +319,77 @@
         const modalBody = document.getElementById('modalBody');
         const modalConfirmBtn = document.getElementById('modalConfirmBtn');
 
+        // --- State & Logs Persistence ---
+        let fullLogs = [];
+        let saveTimer = null;
+        const MAX_SAVED_LOGS = 300;
+
+        function scheduleSave() {
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                try {
+                    const state = ipcRenderer.invoke('load-app-state'); // ensure we have latest
+                    (async () => {
+                        const cur = await state;
+                        cur.pje = cur.pje || {};
+                        cur.pje.logs = fullLogs.slice(-MAX_SAVED_LOGS);
+                        cur.pje.isRunning = (btnStop.style.display !== 'none');
+                        cur.pje.scrollTop = logArea.scrollTop;
+                        cur.pje.outputDir = (document.getElementById('inp-output-dir') && document.getElementById('inp-output-dir').value) ? document.getElementById('inp-output-dir').value : '';
+                        ipcRenderer.send('save-app-state', cur);
+                    })();
+                } catch (e) { console.error('scheduleSave error', e); }
+            }, 800);
+        }
+
+        async function restoreState() {
+            try {
+                const state = await ipcRenderer.invoke('load-app-state');
+                const s = state && state.pje ? state.pje : null;
+                if (!s) return;
+                if (Array.isArray(s.logs)) {
+                    s.logs.forEach(l => addLog(l.msg || l, l.type ? ('log-'+l.type) : 'log-info', false));
+                    if (s.scrollTop) logArea.scrollTop = s.scrollTop;
+                }
+                if (s.outputDir) {
+                    const out = document.getElementById('inp-output-dir');
+                    if (out) { out.value = s.outputDir; out.title = s.outputDir; }
+                }
+                if (s.isRunning) {
+                    btnStart.style.display = 'none'; btnStop.style.display = 'flex';
+                }
+            } catch (e) { console.error('Error restoring PJE state', e); }
+        }
+
         // Escuta Logs
         ipcRenderer.on('log-message', (event, data) => {
             if (typeof data === 'string') {
                 // Legado ou simples string
-                addLog(data, 'info');
+                addLog(data, 'log-info');
             } else {
                 // Objeto estruturado { msg, tech, type }
                 let icon = '[i]'; 
                 let cssClass = 'log-info';
 
-                switch(data.type) {
-                    case 'success': icon = '[+]'; cssClass = 'log-success'; break;
-                    case 'error': icon = '[x]'; cssClass = 'log-error'; break;
-                    case 'warning': icon = '[!]'; cssClass = 'log-warning'; break;
-                }
+                if(data.type === 'success') { icon = '[+]'; cssClass = 'log-success'; }
+                else if(data.type === 'error') { icon = '[x]'; cssClass = 'log-error'; }
+                else if(data.type === 'warning') { icon = '[!]'; cssClass = 'log-warning'; }
 
                 addLog(`${icon} ${data.msg}`, cssClass);
             }
+        });
+
+        // Expose automation-status updates
+        ipcRenderer.on('automation-status', (event, status) => {
+            if (status === true) { btnStart.style.display = 'none'; btnStop.style.display = 'flex'; }
+            else if (status === false) { btnStart.style.display = 'flex'; btnStop.style.display = 'none'; }
+            else if (status === 'stopping') { btnStop.disabled = true; }
+            scheduleSave();
+        });
+
+        // Restore saved state on load
+        window.addEventListener('DOMContentLoaded', () => {
+            restoreState();
         });
 
         ipcRenderer.on('script-finished', () => {
@@ -330,6 +397,7 @@
             btnStart.disabled = false;
             btnStop.style.display = 'none';
             addLog('[i] Execução finalizada.', 'log-info');
+            scheduleSave();
         });
 
         // Requisição de Input (Número de Processos / Opção de Merge)
@@ -337,12 +405,30 @@
             showModal(data);
         });
 
-        function addLog(msg, typeClass) {
+        function addLog(msg, typeClass, doSave = true) {
             const div = document.createElement('div');
             div.className = `log-entry ${typeClass}`;
             div.textContent = msg; // TextContent evita XSS
             logArea.appendChild(div);
             logArea.scrollTop = logArea.scrollHeight;
+
+            // Save structured logs to memory
+            fullLogs.push({ timestamp: new Date().toISOString(), msg, type: typeClass.replace(/^log-/, '') });
+            // Cap kept logs
+            if (fullLogs.length > 1000) fullLogs.shift();
+            if (doSave) scheduleSave();
+        }
+
+        // Select output dir handler
+        const inpOutputDir = document.getElementById('inp-output-dir');
+        const btnSelectDir = document.getElementById('btn-select-dir');
+        if (btnSelectDir) {
+            btnSelectDir.addEventListener('click', async () => {
+                try {
+                    const dir = await ipcRenderer.invoke('dialog:openDirectory');
+                    if (dir) { inpOutputDir.value = dir; inpOutputDir.title = dir; scheduleSave(); }
+                } catch (e) { console.error('btnSelectDir error', e); }
+            });
         }
 
         function startAutomation() {
@@ -350,14 +436,16 @@
             btnStart.style.display = 'none';
             btnStop.style.display = 'flex';
             addLog('[i] Iniciando serviço PJE...', 'log-info');
-            
-            ipcRenderer.send('run-pje-script', {});
+            scheduleSave();
+            const outputDir = (document.getElementById('inp-output-dir') && document.getElementById('inp-output-dir').value) ? document.getElementById('inp-output-dir').value : '';
+            ipcRenderer.send('run-pje-script', { outputDir });
         }
 
         function stopAutomation() {
             ipcRenderer.send('stop-script');
             btnStop.disabled = true; 
             addLog('[!] Solicitando parada...', 'log-warning');
+            scheduleSave();
         }
 
         function copyLog() {
@@ -413,6 +501,21 @@
             }
 
             // Handler do botão Confirmar
+            // Ensure Cancel button exists for confirm dialogs
+            let modalCancelBtn = document.getElementById('modalCancelBtn');
+            if (!modalCancelBtn) {
+                modalCancelBtn = document.createElement('button');
+                modalCancelBtn.id = 'modalCancelBtn';
+                modalCancelBtn.className = 'btn';
+                modalCancelBtn.style = 'margin-right:8px;background:#fff;border:1px solid #ddd;color:#333;padding:8px 12px;border-radius:6px;';
+                modalCancelBtn.textContent = 'Cancelar';
+                modalCancelBtn.onclick = () => {
+                    modal.style.display = 'none';
+                    ipcRenderer.send('pje-input-response', false);
+                };
+                modal.querySelector('.modal-actions').insertBefore(modalCancelBtn, modalConfirmBtn);
+            }
+
             modalConfirmBtn.onclick = () => {
                 let result = null;
                 const inputEl = document.getElementById('modalInputVal');
@@ -425,8 +528,16 @@
 
                 modal.style.display = 'none';
                 ipcRenderer.send('pje-input-response', result);
+
+                // Hide cancel after use
+                if (modalCancelBtn) modalCancelBtn.style.display = 'none';
             };
+
+            // Hide cancel button for non-confirm types
+            if (data.type !== 'confirm' && modalCancelBtn) modalCancelBtn.style.display = 'none';
         }
+
+        // App clock removed per user request
 
     </script>
 </body>

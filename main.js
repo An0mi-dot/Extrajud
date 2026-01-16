@@ -1,8 +1,70 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const automacaoService = require('./automacao_service');
 
 let mainWindow;
+
+// --- Dev Live-Reload (only in development) ---
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    require('electron-reload')(__dirname, {
+      electron: require(path.join(__dirname, 'node_modules', 'electron')),
+      awaitWriteFinish: true,
+      ignored: /node_modules|[\/\\]\./
+    });
+    console.log('Dev: electron-reload enabled');
+  } catch (e) {
+    console.log('Dev: electron-reload not available or failed to initialize', e);
+  }
+}
+
+// Global flag set by automation service to indicate a running automation
+global.isAutomationRunning = false;
+
+// Prevent quitting when automation is active
+app.on('before-quit', (e) => {
+  if (global.isAutomationRunning) {
+    e.preventDefault();
+    const choice = dialog.showMessageBoxSync({
+      type: 'warning',
+      buttons: ['Cancelar', 'Forçar Saída'],
+      defaultId: 0,
+      cancelId: 0,
+      title: 'Automação em Execução',
+      message: 'Uma automação está em execução. Deseja forçar a saída (isso pode deixar processos órfãos)?',
+      detail: 'Escolha "Cancelar" para interromper a automação com segurança antes de sair.'
+    });
+    if (choice === 1) {
+      // User chose to force quit - allow quit to continue
+      global.isAutomationRunning = false;
+      app.exit(0);
+    }
+  }
+});
+
+// --- Persistência de Estado via app.getPath('userData') ---
+const STATE_FILE = path.join(app.getPath('userData'), 'state.json');
+
+ipcMain.handle('load-app-state', async () => {
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      const raw = fs.readFileSync(STATE_FILE, 'utf8');
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.error('load-app-state error', e);
+  }
+  return {};
+});
+
+ipcMain.on('save-app-state', (event, state) => {
+  try {
+    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
+  } catch (e) {
+    console.error('save-app-state error', e);
+  }
+});
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -18,6 +80,11 @@ function createWindow() {
 
   mainWindow.setMenu(null); // Remove o menu completamente
   mainWindow.loadFile('index.html');
+
+  // Send initial automation status to renderer after load
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('automation-status', global.isAutomationRunning || false);
+  });
 }
 
 app.whenReady().then(() => {
