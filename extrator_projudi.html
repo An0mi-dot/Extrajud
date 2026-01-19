@@ -579,31 +579,70 @@
             } catch (e) { console.error('saveAppState error', e); }
         }
 
-        // Save on input changes
-        ['inp-user','inp-output-dir','inp-date-start','inp-date-end'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('change', saveAppState);
-        });
+        // Bind UI interactions when DOM is ready
+        function bindUiInteractions() {
+            // Save on input changes
+            ['inp-user','inp-output-dir','inp-date-start','inp-date-end'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', saveAppState);
+            });
 
-        btnStart.addEventListener('click', () => {
-            // Persist state before starting
-            saveAppState();
+            const btnStartEl = document.getElementById('btn-start');
+            const btnStopEl = document.getElementById('btn-stop');
+            const btnClearLog = document.getElementById('btn-clear-log');
 
-            const user = document.getElementById('inp-user').value;
-            const pass = document.getElementById('inp-pass').value;
-            const dateStart = document.getElementById('inp-date-start').value; // yyyy-mm-dd
-            const dateEnd = document.getElementById('inp-date-end').value;     // yyyy-mm-dd
-            const outputDir = document.getElementById('inp-output-dir').value;
+            if (btnStartEl) {
+                btnStartEl.addEventListener('click', () => {
+                    // Persist state before starting
+                    saveAppState();
 
-            ipcRenderer.send('run-script', { user, pass, dateStart, dateEnd, outputDir });
-            btnStart.disabled = true;
-            btnStop.disabled = false;
-            
-            logsDiv.innerHTML = ''; // Clear logs on start
-            fullLogs = [];
-            addLog({msg: "Iniciando Automação...", tech: "Spawn Node.js Worker Thread", type: "info"});
-            updateStatus('running', 'Executando Automação...');
-        });
+                    const user = document.getElementById('inp-user').value;
+                    const pass = document.getElementById('inp-pass').value;
+                    const dateStart = document.getElementById('inp-date-start').value; // yyyy-mm-dd
+                    const dateEnd = document.getElementById('inp-date-end').value;     // yyyy-mm-dd
+                    const outputDir = document.getElementById('inp-output-dir').value;
+
+                    ipcRenderer.send('run-script', { user, pass, dateStart, dateEnd, outputDir });
+                    btnStartEl.disabled = true;
+                    if (btnStopEl) btnStopEl.disabled = false;
+                    
+                    if (logsDiv) logsDiv.innerHTML = ''; // Clear logs on start
+                    fullLogs = [];
+                    addLog({msg: "Iniciando Automação...", tech: "Spawn Node.js Worker Thread", type: "info"});
+                    updateStatus('running', 'Executando Automação...');
+                });
+            }
+
+            if (btnClearLog) {
+                btnClearLog.addEventListener('click', () => {
+                    if (logsDiv) logsDiv.innerHTML = '';
+                    fullLogs = [];
+                    addLog({msg: 'Logs limpos pelo usuário.', type: 'info'});
+                });
+            }
+
+            if (btnStopEl) {
+                btnStopEl.addEventListener('click', () => {
+                    ipcRenderer.send('stop-script');
+                    btnStopEl.disabled = true;
+                    updateStatus('stopped', 'Parando processos...');
+                });
+            }
+
+            // logs scrolling
+            if (logsDiv) {
+                logsDiv.addEventListener('scroll', () => {
+                    if (logsDiv.scrollTop + logsDiv.clientHeight < logsDiv.scrollHeight - 50) isUserScrolling = true;
+                    else isUserScrolling = false;
+                });
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindUiInteractions);
+        } else {
+            bindUiInteractions();
+        }
 
         window.addEventListener('beforeunload', () => {
             // Ensure state persisted if window is closed/reloaded
