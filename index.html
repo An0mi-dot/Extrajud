@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EXTRATJUD - Hub de Serviços</title>
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Apply saved theme early to avoid flash
+        try {
+            const t = localStorage.getItem('extjt-theme');
+            if (t === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) { /* ignore */ }
+    </script>
     <style>
         :root {
             --primary-color: #10b981;
@@ -14,6 +21,36 @@
             --text-color: #333333;
             --text-secondary: #666666;
             --border-color: #dfe1e5;
+            /* card icon colors */
+            --card-icon-bg: #ecfdf5;
+            --card-icon-color: var(--primary-color);
+            --card-icon-disabled-bg: #e9ecef;
+            --card-icon-disabled-color: #adb5bd;
+        }
+
+        /* Dark theme overrides when 'dark' class is on html: soft gray tones, keep green */
+        html.dark {
+            --bg-color: #1f2428; /* soft dark gray */
+            --card-bg: #24282c;
+            --text-color: #e6edf0;
+            --text-secondary: #a8b0b5;
+            --border-color: #313639;
+            --primary-color: #10b981; /* keep original green */
+            --primary-hover: #059669;
+            --card-icon-bg: #22282a;
+            --card-icon-color: var(--primary-color);
+            --card-icon-disabled-bg: #2b2f31;
+            --card-icon-disabled-color: #6b7280;
+        }
+
+        /* Remove harsh "beam" effects in dark mode: neutralize heavy shadows/filters */
+        html.dark * {
+            box-shadow: none !important;
+            text-shadow: none !important;
+            filter: none !important;
+            -webkit-filter: none !important;
+            backdrop-filter: none !important;
+            background-image: none !important;
         }
 
         /* Custom Scrollbar */
@@ -83,6 +120,18 @@
             box-sizing: border-box;
         }
 
+        .btn-theme {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-theme:hover { border-color: var(--primary-color); color: var(--primary-color); }
+
         /* Prevent overflow issues on dev reload */
         .service-card { word-break: break-word; }
 
@@ -139,19 +188,21 @@
         .card-icon {
             width: 48px;
             height: 48px;
-            background-color: #ecfdf5;
+            background-color: var(--card-icon-bg);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--primary-color);
+            color: var(--card-icon-color);
             margin-bottom: 20px;
         }
 
         .service-card.disabled .card-icon {
-            background-color: #e9ecef;
-            color: #adb5bd;
+            background-color: var(--card-icon-disabled-bg);
+            color: var(--card-icon-disabled-color);
         }
+
+        .card-icon svg { width: 24px; height: 24px; color: inherit; }
 
         .card-title {
             font-size: 18px;
@@ -258,11 +309,45 @@
             padding: 4px 8px;
             background: rgba(16, 185, 129, 0.04);
             border-radius: 8px;
-            border: 1px solid rgba(16, 185, 129, 0.06);
-            color: #0b5e4a;
-            font-weight: 600;
-            font-size: 12px;
         }
+
+        /* --- Loader Overlay --- */
+        #app-loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.85);
+            z-index: 9999;
+            transition: opacity 0.35s ease, visibility 0.35s ease;
+        }
+
+        #app-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .loader-box {
+            background: #ffffff;
+            padding: 18px 22px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(2,6,23,0.08);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-direction: row;
+        }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 5px solid #e6eef2;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loader-text { font-weight: 600; color: #2b3440; }
 
         /* Plain footer note (no highlight) */
         .footer-note {
@@ -377,13 +462,23 @@
         };
     </script>
 
+    <!-- Loader overlay shown while app loads -->
+    <div id="app-loader" role="status" aria-live="polite">
+        <div class="loader-box">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="loader-text">Carregando aplicação...</div>
+        </div>
+    </div>
+
     <div class="header">
         <div class="brand">
             <img src="assets/logo.png" alt="Logo" style="height: 80px; width: auto;">
             EXTRATJUD
         </div>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div style="font-size: 14px; color: #666;">Versão 1.1.0</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 14px; color: #666;">Versão <span id="app-version">?</span></div>
+            <button id="btn-check-updates" class="btn-theme" title="Verificar atualizações">Verificar atualizações</button>
+            <button id="btn-theme" class="btn-theme" title="Alternar tema">Tema</button>
             <button id="btn-about" class="btn-about">Sobre</button>
         </div>
     </div>
@@ -458,7 +553,7 @@
                     Extração de Expedientes PJE 1º e 2º Grau (Pendentes de Ciência e Resposta).
                 </div>
                 <div class="estimated-time">Tempo estimado: <strong>Não estimado</strong> <small>(ainda não avaliado)</small></div>
-                <div class="card-status status-active">Disponível</div>
+                <div class="card-status status-soon">Em desenvolvimento</div>
 
                 <div class="arrow-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
@@ -483,6 +578,24 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Hide loader when page fully loads; fallback timeout to avoid stuck loader
+        (function(){
+            const loader = document.getElementById('app-loader');
+            if(!loader) return;
+            function hideLoader(){
+                if(!loader.classList.contains('hidden')){
+                    loader.classList.add('hidden');
+                    document.body.classList.add('loaded');
+                    setTimeout(()=>{ try{ loader.remove(); }catch(e){} }, 500);
+                }
+            }
+            window.addEventListener('load', hideLoader);
+            // Also hide after 8s as fallback
+            setTimeout(hideLoader, 8000);
+        })();
+    </script>
 
     <div class="footer">
         <p class="footer-note">Caso queira solicitar mais serviços, fale com <strong>João Guilherme Almeida Viana</strong> (Aprendiz Administrativo).</p>
@@ -587,6 +700,14 @@
             document.getElementById('env-electron').textContent = process.versions.electron;
             document.getElementById('env-chrome').textContent = process.versions.chrome;
             document.getElementById('env-plat').textContent = process.platform + ' (' + process.arch + ')';
+            // Fill app version from main
+            try {
+                ipcRenderer.invoke('get-app-version').then(ver => {
+                    const el = document.getElementById('env-app-ver');
+                    if (el) el.textContent = ver || '?.?.?';
+                    const headVer = document.getElementById('app-version'); if (headVer) headVer.textContent = ver || '?.?.?';
+                });
+            } catch(e){}
         }
 
         span.onclick = function() {
@@ -600,6 +721,150 @@
         }
 
         // App clock removed per user request
+    </script>
+    <!-- Theme selector modal -->
+    <div id="modal-theme" class="modal">
+        <div class="modal-content">
+            <h3>Escolha o tema</h3>
+            <div style="margin-top:12px; display:flex; gap:10px;">
+                <button id="theme-light" class="btn-theme">Claro</button>
+                <button id="theme-dark" class="btn-theme">Escuro (Cinza)</button>
+                <button id="theme-default" class="btn-theme">Padrão do sistema</button>
+            </div>
+            <div style="margin-top:14px; text-align:right;">
+                <button id="theme-close" class="btn-about">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme selector handling: show modal and persist choice
+        (function(){
+            const btnTheme = document.getElementById('btn-theme');
+            const modal = document.getElementById('modal-theme');
+            const btnLight = document.getElementById('theme-light');
+            const btnDark = document.getElementById('theme-dark');
+            const btnDefault = document.getElementById('theme-default');
+            const btnClose = document.getElementById('theme-close');
+
+            function openModal(){ if(modal) modal.style.display = 'block'; }
+            function closeModal(){ if(modal) modal.style.display = 'none'; }
+
+            if(btnTheme) btnTheme.addEventListener('click', openModal);
+            if(btnClose) btnClose.addEventListener('click', closeModal);
+
+            if(btnLight) btnLight.addEventListener('click', () => {
+                document.documentElement.classList.remove('dark');
+                try{ localStorage.setItem('extjt-theme', 'light'); }catch(e){}
+                closeModal();
+            });
+
+            if(btnDark) btnDark.addEventListener('click', () => {
+                document.documentElement.classList.add('dark');
+                try{ localStorage.setItem('extjt-theme', 'dark'); }catch(e){}
+                closeModal();
+            });
+
+            if(btnDefault) btnDefault.addEventListener('click', () => {
+                try{ localStorage.removeItem('extjt-theme'); }catch(e){}
+                // attempt to follow system preference
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if(prefersDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark');
+                closeModal();
+            });
+
+            // close when clicking outside
+            window.addEventListener('click', (ev) => { if(ev.target === modal) closeModal(); });
+        })();
+    </script>
+
+    <!-- Update / Changelog modal -->
+    <div id="modal-update" class="modal">
+        <div class="modal-content">
+            <h3>Atualizações</h3>
+            <div style="margin-top:10px;">
+                <label style="font-size:13px; color:#444; display:block;">Servidor de atualização (JSON):</label>
+                <input id="upd-server" type="text" style="width:100%; padding:8px; margin-top:6px; box-sizing:border-box;" placeholder="https://example.com/updates.json">
+                <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+                    <input id="upd-auto" type="checkbox"><label for="upd-auto">Habilitar Auto-Update (abrir link automaticamente)</label>
+                </div>
+                <div id="upd-result" style="margin-top:12px; color:#333;"></div>
+            </div>
+            <div style="margin-top:14px; display:flex; gap:8px; justify-content:space-between;">
+                <div>
+                    <button id="upd-check" class="btn-theme">Verificar agora</button>
+                    <button id="upd-open" class="btn-about">Abrir link</button>
+                </div>
+                <div>
+                    <button id="upd-save" class="btn-theme">Salvar</button>
+                    <button id="upd-close" class="btn-about">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update modal behaviour and IPC integration
+        (function(){
+            const btnCheck = document.getElementById('btn-check-updates');
+            const modalUpd = document.getElementById('modal-update');
+            const updClose = document.getElementById('upd-close');
+            const updCheck = document.getElementById('upd-check');
+            const updSave = document.getElementById('upd-save');
+            const updOpen = document.getElementById('upd-open');
+            const updServer = document.getElementById('upd-server');
+            const updAuto = document.getElementById('upd-auto');
+            const updResult = document.getElementById('upd-result');
+            let lastUrl = null;
+
+            function openModal(){ if(modalUpd) modalUpd.style.display = 'block'; }
+            function closeModal(){ if(modalUpd) modalUpd.style.display = 'none'; }
+
+            if(btnCheck) btnCheck.addEventListener('click', async ()=>{
+                // load current config and show modal
+                try{
+                    const cfg = await ipcRenderer.invoke('get-update-config');
+                    if(cfg && cfg.updateServer) updServer.value = cfg.updateServer;
+                    updAuto.checked = !!(cfg && cfg.autoUpdate);
+                }catch(e){}
+                openModal();
+            });
+
+            if(updClose) updClose.addEventListener('click', closeModal);
+
+            if(updSave) updSave.addEventListener('click', async ()=>{
+                try{
+                    await ipcRenderer.invoke('set-update-config', { updateServer: updServer.value || null, autoUpdate: !!updAuto.checked });
+                    updResult.textContent = 'Configurações salvas.';
+                }catch(e){ updResult.textContent = 'Erro salvando config.'; }
+            });
+
+            if(updCheck) updCheck.addEventListener('click', async ()=>{
+                updResult.textContent = 'Verificando...'; lastUrl = null; updOpen.style.display = 'none';
+                try{
+                    // if user changed server in input, use it temporarily
+                    if(updServer.value) await ipcRenderer.invoke('set-update-config', { updateServer: updServer.value });
+                    const res = await ipcRenderer.invoke('check-for-updates');
+                    if(res && res.updateAvailable){
+                        updResult.innerHTML = '<strong>Atualização disponível:</strong> ' + (res.latestVersion||'?') + '<br>' + (res.changelog||'Sem changelog');
+                        lastUrl = res.url || null; if(lastUrl) updOpen.style.display = 'inline-block';
+                    } else if(res && res.updateAvailable === false){
+                        updResult.textContent = 'Nenhuma atualização disponível.';
+                    } else if(res && res.error){
+                        updResult.textContent = 'Erro: ' + res.error;
+                    } else {
+                        updResult.textContent = 'Resposta inesperada.';
+                    }
+                }catch(e){ updResult.textContent = 'Erro na verificação.'; }
+            });
+
+            if(updOpen) updOpen.addEventListener('click', ()=>{
+                if(lastUrl) ipcRenderer.send('perform-update', lastUrl);
+            });
+
+            // close when clicking outside
+            window.addEventListener('click', (ev) => { if(ev.target === modalUpd) closeModal(); });
+        })();
     </script>
 
 </body>

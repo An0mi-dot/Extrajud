@@ -1,6 +1,7 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 const automacaoService = require('./automacao_service');
 
 let mainWindow;
@@ -66,6 +67,88 @@ ipcMain.on('save-app-state', (event, state) => {
   }
 });
 
+// State helpers used by update routines
+function readStateFile() {
+  try {
+    if (fs.existsSync(STATE_FILE)) return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) || {};
+  } catch (e) { console.error('readStateFile', e); }
+  return {};
+}
+
+function writeStateFile(state) {
+  try { fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8'); }
+  catch (e) { console.error('writeStateFile', e); }
+}
+
+function fetchJson(url, timeout = 8000) {
+  return new Promise((resolve, reject) => {
+    try {
+      const req = https.get(url, { timeout, headers: { 'User-Agent': 'EXTRATJUD-Updater' } }, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+        });
+      });
+      req.on('error', reject);
+      req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    } catch (e) { reject(e); }
+  });
+}
+
+// --- Update IPC Handlers ---
+ipcMain.handle('get-app-version', async () => {
+  try { return require(path.join(__dirname, 'package.json')).version || '0.0.0'; }
+  catch (e) { return '0.0.0'; }
+});
+
+ipcMain.handle('get-update-config', async () => {
+  try {
+    const state = readStateFile();
+    let pkg = {};
+    try { pkg = require(path.join(__dirname, 'package.json')); } catch (e) { pkg = {}; }
+    return {
+      updateServer: (state.update && state.update.updateServer) || pkg.updateServer || null,
+      autoUpdate: (state.update && state.update.autoUpdate) || false
+    };
+  } catch (e) { console.error('get-update-config', e); return { updateServer: null, autoUpdate: false }; }
+});
+
+ipcMain.handle('set-update-config', async (event, cfg) => {
+  try {
+    const state = readStateFile();
+    state.update = state.update || {};
+    if (typeof cfg.updateServer === 'string') state.update.updateServer = cfg.updateServer;
+    if (typeof cfg.autoUpdate === 'boolean') state.update.autoUpdate = cfg.autoUpdate;
+    writeStateFile(state);
+    return { ok: true };
+  } catch (e) { console.error('set-update-config', e); return { ok: false, error: e.message }; }
+});
+
+ipcMain.handle('check-for-updates', async () => {
+  try {
+    const state = readStateFile();
+    const updateServer = (state.update && state.update.updateServer) || (require(path.join(__dirname, 'package.json')).updateServer) || null;
+    if (!updateServer) return { error: 'no_update_server' };
+    const meta = await fetchJson(updateServer);
+    const localVer = require(path.join(__dirname, 'package.json')).version || '0.0.0';
+    const latest = meta.version || meta.tag_name || null;
+    if (!latest) return { error: 'no_version_in_meta', meta };
+    const toParts = (v) => (''+v).replace(/^v/i,'').split('.').map(n => parseInt(n)||0);
+    const L = toParts(latest), C = toParts(localVer);
+    for (let i=0;i<Math.max(L.length,C.length);i++) {
+      if ((L[i]||0) > (C[i]||0)) return { updateAvailable: true, latestVersion: latest, changelog: meta.notes || meta.body || meta.changelog || '', url: meta.url || meta.html_url || meta.download_url || updateServer };
+      if ((L[i]||0) < (C[i]||0)) return { updateAvailable: false };
+    }
+    return { updateAvailable: false };
+  } catch (e) { console.error('check-for-updates error', e); return { error: e.message }; }
+});
+
+ipcMain.on('perform-update', (event, url) => {
+  try { if (url) shell.openExternal(url); }
+  catch (e) { console.error('perform-update', e); }
+});
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1000,
@@ -89,6 +172,32 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+
+  // check auto-update on startup if enabled (opt-in)
+  (async () => {
+    try {
+      const state = readStateFile();
+      const updateCfg = (state.update && state.update) || {};
+      const updateServer = updateCfg.updateServer || (require(path.join(__dirname, 'package.json')).updateServer) || null;
+      if (updateCfg.autoUpdate && updateServer) {
+        try {
+          const meta = await fetchJson(updateServer);
+          const localVer = require(path.join(__dirname, 'package.json')).version || '0.0.0';
+          const latest = meta.version || meta.tag_name || null;
+          const toParts = (v) => (''+v).replace(/^v/i,'').split('.').map(n => parseInt(n)||0);
+          const L = toParts(latest), C = toParts(localVer);
+          let newer = false;
+          for (let i=0;i<Math.max(L.length,C.length);i++) {
+            if ((L[i]||0) > (C[i]||0)) { newer = true; break; }
+            if ((L[i]||0) < (C[i]||0)) break;
+          }
+          if (newer && (meta.url || meta.html_url || meta.download_url)) {
+            shell.openExternal(meta.url || meta.html_url || meta.download_url);
+          }
+        } catch (e) { /* ignore */ }
+      }
+    } catch (e) { /* ignore */ }
+  })();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

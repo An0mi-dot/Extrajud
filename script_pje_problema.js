@@ -2,845 +2,1130 @@
 // Existe uma cidade (Acho que cruz das almas, mas nao acho que tenha algo a ver com uma cidade em especifico) que ao clique, ela registra algo como se a cidade não existisse ou algo assim, da um erro...
 // Isso leva a pagina pro inicio dela e desseleciona a aba das ciadades e o script de vez lé as outras cidades, mas como não ta selecionado na aba Pendentes de ciencias ou de resposta, ele nao acha nada.
 // Consegue resolver?
+// Esse erro em questao ja foi resolvido, pelo menos eu achava, mas hoje,
+// enquanto eu extraia as cidades, o erro surgiu novamente, porem ele claramente está diferente,
+// ele agora funciona em algumas cidades, mas em outras ele simplesmente não consegue registrar.
 
 // Log do erro abaixo:
 
-// 🚀 Iniciando Extrator PJe - Versão JS Corrigida (Seletor SPAN, Paginação e Word)
-// VM162806:56  ▶ Processando 187 cidades...
-// VM162806:66 ⏳ (1/187) Buscando: ALAGOINHAS...
+//  🚀 Iniciando Extrator PJe - Versão JS Corrigida (Seletor SPAN, Paginação e Word)
+// VM1244:55  ▶ Processando 186 cidades...
+// VM1244:65 ⏳ (1/186) Buscando: ALAGOINHAS...
 // Promise {<pending>}
-// 97[Violation]'readystatechange' handler demorou <N>ms
-// 99[Violation]'setTimeout' handler demorou <N>ms
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 5 expedientes coletados no total.
-// VM162806:66 ⏳ (2/187) Buscando: AMARGOSA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 20 expedientes coletados no total.
-// VM162806:66 ⏳ (3/187) Buscando: AMÉLIA RODRIGUES...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 1 expedientes coletados no total.
-// VM162806:66 ⏳ (4/187) Buscando: ANAGÉ...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 1 expedientes coletados no total.
-// VM162806:66 ⏳ (5/187) Buscando: ANDARAÍ...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 7 expedientes coletados no total.
-// VM162806:66 ⏳ (6/187) Buscando: ANTAS...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 2 expedientes coletados no total.
-// VM162806:66 ⏳ (7/187) Buscando: ARACI...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 5 expedientes coletados no total.
-// VM162806:66 ⏳ (8/187) Buscando: BAIANÓPOLIS...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 3 expedientes coletados no total.
-// VM162806:66 ⏳ (9/187) Buscando: BARRA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 1 expedientes coletados no total.
-// VM162806:66 ⏳ (10/187) Buscando: BARRA DA ESTIVA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 2 expedientes coletados no total.
-// VM162806:66 ⏳ (11/187) Buscando: BARRA DO MENDES...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 36 expedientes coletados no total.
-// VM162806:66 ⏳ (12/187) Buscando: BARREIRAS...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 30 expedientes coletados no total.
-// VM162806:66 ⏳ (13/187) Buscando: BELMONTE...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 7 expedientes coletados no total.
-// VM162806:66 ⏳ (14/187) Buscando: BOM JESUS DA LAPA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 2 expedientes coletados no total.
-// VM162806:66 ⏳ (15/187) Buscando: BRUMADO...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 3 expedientes coletados no total.
-// VM162806:66 ⏳ (16/187) Buscando: BUERAREMA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 3 expedientes coletados no total.
-// VM162806:66 ⏳ (17/187) Buscando: CACHOEIRA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 6 expedientes coletados no total.
-// VM162806:66 ⏳ (18/187) Buscando: CACULÉ...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 21 expedientes coletados no total.
-// VM162806:66 ⏳ (19/187) Buscando: CAETITÉ...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 2 expedientes coletados no total.
-// VM162806:66 ⏳ (20/187) Buscando: CAMACAN...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 37 expedientes coletados no total.
-// VM162806:66 ⏳ (21/187) Buscando: CAMAÇARI...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 25 expedientes coletados no total.
-// VM162806:66 ⏳ (22/187) Buscando: CAMAMU...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 5 expedientes coletados no total.
-// VM162806:66 ⏳ (23/187) Buscando: CAMPO FORMOSO...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 2 expedientes coletados no total.
-// VM162806:66 ⏳ (24/187) Buscando: CANARANA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 15 expedientes coletados no total.
-// VM162806:66 ⏳ (25/187) Buscando: CANAVIEIRAS...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 15 expedientes coletados no total.
-// VM162806:66 ⏳ (26/187) Buscando: CANDEIAS...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 28 expedientes coletados no total.
-// VM162806:66 ⏳ (27/187) Buscando: CANSANÇÃO...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 3 expedientes coletados no total.
-// VM162806:66 ⏳ (28/187) Buscando: CAPELA DO ALTO ALEGRE...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 8 expedientes coletados no total.
-// VM162806:66 ⏳ (29/187) Buscando: CAPIM GROSSO...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 39 expedientes coletados no total.
-// VM162806:66 ⏳ (30/187) Buscando: CARAVELAS...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 4 expedientes coletados no total.
-// VM162806:66 ⏳ (31/187) Buscando: CARINHANHA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 15 expedientes coletados no total.
-// VM162806:66 ⏳ (32/187) Buscando: CASA NOVA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 10 expedientes coletados no total.
-// VM162806:66 ⏳ (33/187) Buscando: CASTRO ALVES...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 6 expedientes coletados no total.
-// VM162806:66 ⏳ (34/187) Buscando: CATU...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 10 expedientes coletados no total.
-// VM162806:66 ⏳ (35/187) Buscando: CENTRAL...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 8 expedientes coletados no total.
-// VM162806:66 ⏳ (36/187) Buscando: CHORROCHÓ...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 2 expedientes coletados no total.
-// VM162806:66 ⏳ (37/187) Buscando: CÍCERO DANTAS...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 2 expedientes coletados no total.
-// VM162806:66 ⏳ (38/187) Buscando: CIPÓ...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 31 expedientes coletados no total.
-// VM162806:66 ⏳ (39/187) Buscando: COARACI...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 3 expedientes coletados no total.
-// VM162806:66 ⏳ (40/187) Buscando: CONCEIÇÃO DO ALMEIDA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 1 expedientes coletados no total.
-// VM162806:66 ⏳ (41/187) Buscando: CONCEIÇÃO DO COITÉ...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 4 expedientes coletados no total.
-// VM162806:66 ⏳ (42/187) Buscando: CONCEIÇÃO DO JACUÍPE...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 14 expedientes coletados no total.
-// VM162806:66 ⏳ (43/187) Buscando: CONDE...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 4 expedientes coletados no total.
-// VM162806:66 ⏳ (44/187) Buscando: CONDEÚBA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 4 expedientes coletados no total.
-// VM162806:66 ⏳ (45/187) Buscando: CORAÇÃO DE MARIA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 2 expedientes coletados no total.
-// VM162806:66 ⏳ (46/187) Buscando: CORIBE...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 3 expedientes coletados no total.
-// VM162806:66 ⏳ (47/187) Buscando: CORRENTINA...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 1 expedientes coletados no total.
-// VM162806:66 ⏳ (48/187) Buscando: COTEGIPE...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 4 expedientes coletados no total.
-// VM162806:66 ⏳ (49/187) Buscando: CRUZ DAS ALMAS...
-// VM162806:94       Página 1...
-// VM162806:120    ✅ 14 expedientes coletados no total.
-// VM162806:66 ⏳ (50/187) Buscando: Cujo prazo findou nos últimos 10 dias - sem resposta...
-// VM162806:94       Página 1...
-// VM162806:122    ⚠ Nenhum expediente encontrado.
-// VM162806:66 ⏳ (51/187) Buscando: CURAÇA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "CURAÇA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (52/187) Buscando: DIAS D'AVILA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "DIAS D'AVILA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (53/187) Buscando: ENTRE RIOS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ENTRE RIOS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (54/187) Buscando: ESPLANADA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ESPLANADA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (55/187) Buscando: EUCLIDES DA CUNHA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "EUCLIDES DA CUNHA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (56/187) Buscando: EUNAPOLIS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "EUNAPOLIS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (57/187) Buscando: FEIRA DE SANTANA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "FEIRA DE SANTANA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (58/187) Buscando: FORMOSA DO RIO PRETO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "FORMOSA DO RIO PRETO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (59/187) Buscando: GANDU...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "GANDU" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (60/187) Buscando: GOVERNADOR MANGABEIRA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "GOVERNADOR MANGABEIRA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (61/187) Buscando: GUANAMBI...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "GUANAMBI" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (62/187) Buscando: GUARATINGA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "GUARATINGA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (63/187) Buscando: IAÇU...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IAÇU" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (64/187) Buscando: IBIRAPUÃ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IBIRAPUÃ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (65/187) Buscando: IBIRATAIA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IBIRATAIA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (66/187) Buscando: IBOTIRAMA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IBOTIRAMA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (67/187) Buscando: IGAPORÃ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IGAPORÃ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (68/187) Buscando: IGUAI...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IGUAI" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (69/187) Buscando: ILHÉUS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ILHÉUS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (70/187) Buscando: INHAMBUPE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "INHAMBUPE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (71/187) Buscando: INTIMAÇÕES...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "INTIMAÇÕES" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (72/187) Buscando: IPIAU...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IPIAU" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (73/187) Buscando: IPIRÁ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IPIRÁ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (74/187) Buscando: IRARÁ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IRARÁ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (75/187) Buscando: IRECÊ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "IRECÊ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (76/187) Buscando: ITABELA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITABELA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (77/187) Buscando: ITABERABA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITABERABA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (78/187) Buscando: ITABUNA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITABUNA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (79/187) Buscando: ITACARÉ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITACARÉ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (80/187) Buscando: ITAGIBÁ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITAGIBÁ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (81/187) Buscando: ITAJUÍPE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITAJUÍPE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (82/187) Buscando: ITAMBÉ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITAMBÉ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (83/187) Buscando: ITANHÉM...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITANHÉM" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (84/187) Buscando: ITAPARICA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITAPARICA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (85/187) Buscando: ITAPETINGA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITAPETINGA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (86/187) Buscando: ITAPICURU...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITAPICURU" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (87/187) Buscando: ITARANTIM...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITARANTIM" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (88/187) Buscando: ITORORÓ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITORORÓ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (89/187) Buscando: ITUAÇU...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITUAÇU" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (90/187) Buscando: ITUBERÁ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "ITUBERÁ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (91/187) Buscando: JACARACI...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "JACARACI" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (92/187) Buscando: JACOBINA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "JACOBINA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (93/187) Buscando: JAGUAQUARA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "JAGUAQUARA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (94/187) Buscando: JAGUARARI...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "JAGUARARI" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (95/187) Buscando: JEQUIÉ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "JEQUIÉ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (96/187) Buscando: JEREMOABO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "JEREMOABO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (97/187) Buscando: JITAÚNA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "JITAÚNA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (98/187) Buscando: JOÃO DOURADO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "JOÃO DOURADO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (99/187) Buscando: JUAZEIRO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "JUAZEIRO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (100/187) Buscando: LAJE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "LAJE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (101/187) Buscando: LAPÃO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "LAPÃO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (102/187) Buscando: LAURO DE FREITAS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "LAURO DE FREITAS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (103/187) Buscando: LENÇÓIS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "LENÇÓIS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (104/187) Buscando: LIVRAMENTO DE NOSSA SENHORA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "LIVRAMENTO DE NOSSA SENHORA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (105/187) Buscando: LUÍS EDUARDO MAGALHÃES...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "LUÍS EDUARDO MAGALHÃES" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (106/187) Buscando: MACARANI...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MACARANI" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (107/187) Buscando: MACAÚBAS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MACAÚBAS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (108/187) Buscando: MAIRI...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MAIRI" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (109/187) Buscando: MARACAS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MARACAS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (110/187) Buscando: MATA DE SÃO JOÃO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MATA DE SÃO JOÃO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (111/187) Buscando: MIGUEL CALMON...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MIGUEL CALMON" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (112/187) Buscando: MONTE SANTO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MONTE SANTO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (113/187) Buscando: MORRO DO CHAPÉU...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MORRO DO CHAPÉU" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (114/187) Buscando: MUCURI...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MUCURI" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (115/187) Buscando: MUNDO NOVO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MUNDO NOVO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (116/187) Buscando: MURITIBA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MURITIBA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (117/187) Buscando: MUTUÍPE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "MUTUÍPE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (118/187) Buscando: NAZARÉ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "NAZARÉ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (119/187) Buscando: NOVA SOURE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "NOVA SOURE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (120/187) Buscando: NOVA VIÇOSA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "NOVA VIÇOSA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (121/187) Buscando: OLINDINA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "OLINDINA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (122/187) Buscando: OLIVEIRA DOS BREJINHOS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "OLIVEIRA DOS BREJINHOS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (123/187) Buscando: PARAMIRIM...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PARAMIRIM" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (124/187) Buscando: PARIPIRANGA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PARIPIRANGA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (125/187) Buscando: PAULO AFONSO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PAULO AFONSO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (126/187) Buscando: Pendente de ciência pelo judiciário...
-// VM162806:94       Página 1...
-// VM162806:122    ⚠ Nenhum expediente encontrado.
-// VM162806:66 ⏳ (127/187) Buscando: PIATÃ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PIATÃ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (128/187) Buscando: PILÃO ARCADO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PILÃO ARCADO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (129/187) Buscando: PINDOBAÇÚ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PINDOBAÇÚ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (130/187) Buscando: PIRITIBA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PIRITIBA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (131/187) Buscando: PLANALTO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PLANALTO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (132/187) Buscando: POÇÕES...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "POÇÕES" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (133/187) Buscando: POJUCA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "POJUCA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (134/187) Buscando: PORTO SEGURO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PORTO SEGURO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (135/187) Buscando: PRADO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PRADO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (136/187) Buscando: PRESIDENTE JÂNIO QUADROS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "PRESIDENTE JÂNIO QUADROS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (137/187) Buscando: QUEIMADAS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "QUEIMADAS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (138/187) Buscando: REMANSO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "REMANSO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (139/187) Buscando: RETIROLÂNDIA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "RETIROLÂNDIA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (140/187) Buscando: RIACHÃO DO JACUÍPE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "RIACHÃO DO JACUÍPE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (141/187) Buscando: RIACHO DE SANTANA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "RIACHO DE SANTANA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (142/187) Buscando: RIBEIRA DO POMBAL...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "RIBEIRA DO POMBAL" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (143/187) Buscando: RIO REAL...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "RIO REAL" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (144/187) Buscando: RUY BARBOSA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "RUY BARBOSA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (145/187) Buscando: SALVADOR - REGIÃO METROPOLITANA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SALVADOR - REGIÃO METROPOLITANA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (146/187) Buscando: SANTA BÁRBARA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTA BÁRBARA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (147/187) Buscando: SANTA CRUZ CABRÁLIA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTA CRUZ CABRÁLIA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (148/187) Buscando: SANTA INÊS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTA INÊS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (149/187) Buscando: SANTA MARIA DA VITÓRIA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTA MARIA DA VITÓRIA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (150/187) Buscando: SANTA RITA DE CÁSSIA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTA RITA DE CÁSSIA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (151/187) Buscando: SANTA TERESINHA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTA TERESINHA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (152/187) Buscando: SANTALUZ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTALUZ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (153/187) Buscando: SANTANA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTANA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (154/187) Buscando: SANTO AMARO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTO AMARO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (155/187) Buscando: SANTO ANTÔNIO DE JESUS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTO ANTÔNIO DE JESUS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (156/187) Buscando: SANTO ESTEVÃO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SANTO ESTEVÃO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (157/187) Buscando: SÃO DESIDÉRIO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SÃO DESIDÉRIO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (158/187) Buscando: SÃO FELIPE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SÃO FELIPE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (159/187) Buscando: SÃO FRANCISCO DO CONDE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SÃO FRANCISCO DO CONDE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (160/187) Buscando: SÃO GONÇALO DOS CAMPOS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SÃO GONÇALO DOS CAMPOS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (161/187) Buscando: SÃO SEBASTIÃO DO PASSÉ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SÃO SEBASTIÃO DO PASSÉ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (162/187) Buscando: SAÚDE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SAÚDE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (163/187) Buscando: SEABRA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SEABRA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (164/187) Buscando: SENHOR DO BONFIM...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SENHOR DO BONFIM" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (165/187) Buscando: SENTO SÉ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SENTO SÉ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (166/187) Buscando: SERRA DOURADA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SERRA DOURADA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (167/187) Buscando: SERRINHA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SERRINHA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (168/187) Buscando: SIMÕES FILHO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SIMÕES FILHO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (169/187) Buscando: SOBRADINHO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "SOBRADINHO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (170/187) Buscando: TANHAÇU...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "TANHAÇU" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (171/187) Buscando: TAPEROÁ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "TAPEROÁ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (172/187) Buscando: TEIXEIRA DE FREITAS...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "TEIXEIRA DE FREITAS" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (173/187) Buscando: TEOFILÂNDIA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "TEOFILÂNDIA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (174/187) Buscando: TERRA NOVA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "TERRA NOVA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (175/187) Buscando: Tremedal...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "Tremedal" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (176/187) Buscando: TUCANO...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "TUCANO" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (177/187) Buscando: UAUÁ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "UAUÁ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (178/187) Buscando: UBAÍRA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "UBAÍRA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (179/187) Buscando: UBAITABA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "UBAITABA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (180/187) Buscando: UBATÃ...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "UBATÃ" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (181/187) Buscando: UNA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "UNA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (182/187) Buscando: URUÇUCA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "URUÇUCA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (183/187) Buscando: VALENÇA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "VALENÇA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (184/187) Buscando: VALENTE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "VALENTE" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (185/187) Buscando: VITÓRIA DA CONQUISTA...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "VITÓRIA DA CONQUISTA" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (186/187) Buscando: WENCESLAU GUIMARÃES...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "WENCESLAU GUIMARÃES" nesta iteração.
-// (anônimo) @ VM162806:73
-// await in (anônimo)
-// (anônimo) @ VM162806:201
-// VM162806:66 ⏳ (187/187) Buscando: XIQUE-XIQUE...
-// VM162806:73     ⚠ Não foi possível encontrar o link para "XIQUE-XIQUE" nesta iteração.
-
+// 208[Violation]'setTimeout' handler demorou <N>ms
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 5 expedientes coletados no total.
+// VM1244:65 ⏳ (2/186) Buscando: AMARGOSA...
+// 123[Violation]'readystatechange' handler demorou <N>ms
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 19 expedientes coletados no total.
+// VM1244:65 ⏳ (3/186) Buscando: AMÉLIA RODRIGUES...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (4/186) Buscando: ANAGÉ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (5/186) Buscando: ANDARAÍ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 9 expedientes coletados no total.
+// VM1244:65 ⏳ (6/186) Buscando: ANTAS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (7/186) Buscando: ARACI...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 5 expedientes coletados no total.
+// VM1244:65 ⏳ (8/186) Buscando: BAIANÓPOLIS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (9/186) Buscando: BARRA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (10/186) Buscando: BARRA DA ESTIVA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (11/186) Buscando: BARRA DO MENDES...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 36 expedientes coletados no total.
+// VM1244:65 ⏳ (12/186) Buscando: BARREIRAS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 31 expedientes coletados no total.
+// VM1244:65 ⏳ (13/186) Buscando: BELMONTE...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 7 expedientes coletados no total.
+// VM1244:65 ⏳ (14/186) Buscando: BOM JESUS DA LAPA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (15/186) Buscando: BRUMADO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (16/186) Buscando: BUERAREMA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (17/186) Buscando: CACHOEIRA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 6 expedientes coletados no total.
+// VM1244:65 ⏳ (18/186) Buscando: CACULÉ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 20 expedientes coletados no total.
+// VM1244:65 ⏳ (19/186) Buscando: CAETITÉ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (20/186) Buscando: CAMACAN...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 38 expedientes coletados no total.
+// VM1244:65 ⏳ (21/186) Buscando: CAMAÇARI...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 25 expedientes coletados no total.
+// VM1244:65 ⏳ (22/186) Buscando: CAMAMU...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 7 expedientes coletados no total.
+// VM1244:65 ⏳ (23/186) Buscando: CAMPO FORMOSO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (24/186) Buscando: CANARANA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 16 expedientes coletados no total.
+// VM1244:65 ⏳ (25/186) Buscando: CANAVIEIRAS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 15 expedientes coletados no total.
+// VM1244:65 ⏳ (26/186) Buscando: CANDEIAS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 29 expedientes coletados no total.
+// VM1244:65 ⏳ (27/186) Buscando: CANSANÇÃO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (28/186) Buscando: CAPELA DO ALTO ALEGRE...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 8 expedientes coletados no total.
+// VM1244:65 ⏳ (29/186) Buscando: CAPIM GROSSO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 37 expedientes coletados no total.
+// VM1244:65 ⏳ (30/186) Buscando: CARAVELAS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 4 expedientes coletados no total.
+// VM1244:65 ⏳ (31/186) Buscando: CARINHANHA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 15 expedientes coletados no total.
+// VM1244:65 ⏳ (32/186) Buscando: CASA NOVA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 11 expedientes coletados no total.
+// VM1244:65 ⏳ (33/186) Buscando: CASTRO ALVES...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 6 expedientes coletados no total.
+// VM1244:65 ⏳ (34/186) Buscando: CATU...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 12 expedientes coletados no total.
+// VM1244:65 ⏳ (35/186) Buscando: CENTRAL...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 9 expedientes coletados no total.
+// VM1244:65 ⏳ (36/186) Buscando: CHORROCHÓ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (37/186) Buscando: CÍCERO DANTAS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (38/186) Buscando: CIPÓ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 30 expedientes coletados no total.
+// VM1244:65 ⏳ (39/186) Buscando: COARACI...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (40/186) Buscando: CONCEIÇÃO DO ALMEIDA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (41/186) Buscando: CONCEIÇÃO DO COITÉ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 4 expedientes coletados no total.
+// VM1244:65 ⏳ (42/186) Buscando: CONCEIÇÃO DO JACUÍPE...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 15 expedientes coletados no total.
+// VM1244:65 ⏳ (43/186) Buscando: CONDE...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 4 expedientes coletados no total.
+// VM1244:65 ⏳ (44/186) Buscando: CONDEÚBA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 5 expedientes coletados no total.
+// VM1244:65 ⏳ (45/186) Buscando: CORAÇÃO DE MARIA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (46/186) Buscando: CORIBE...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (47/186) Buscando: CORRENTINA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (48/186) Buscando: COTEGIPE...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 4 expedientes coletados no total.
+// VM1244:65 ⏳ (49/186) Buscando: CRUZ DAS ALMAS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 14 expedientes coletados no total.
+// VM1244:65 ⏳ (50/186) Buscando: Cujo prazo findou nos últimos 10 dias - sem resposta...
+// VM1244:132       Página 1...
+// VM1244:160    ⚠ Nenhum expediente encontrado.
+// VM1244:65 ⏳ (51/186) Buscando: CURAÇA...
+// VM1244:74     ⚠ Elemento "CURAÇA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:105    ✅ Recuperado com sucesso! Encontrado: CURAÇA
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (52/186) Buscando: DIAS D'AVILA...
+// VM1244:74     ⚠ Elemento "DIAS D'AVILA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "DIAS D'AVILA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (53/186) Buscando: ENTRE RIOS...
+// VM1244:74     ⚠ Elemento "ENTRE RIOS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ENTRE RIOS" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (54/186) Buscando: ESPLANADA...
+// VM1244:74     ⚠ Elemento "ESPLANADA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ESPLANADA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (55/186) Buscando: EUCLIDES DA CUNHA...
+// VM1244:74     ⚠ Elemento "EUCLIDES DA CUNHA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "EUCLIDES DA CUNHA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (56/186) Buscando: EUNAPOLIS...
+// VM1244:74     ⚠ Elemento "EUNAPOLIS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "EUNAPOLIS" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (57/186) Buscando: FEIRA DE SANTANA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (58/186) Buscando: FORMOSA DO RIO PRETO...
+// VM1244:74     ⚠ Elemento "FORMOSA DO RIO PRETO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "FORMOSA DO RIO PRETO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (59/186) Buscando: GANDU...
+// VM1244:74     ⚠ Elemento "GANDU" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "GANDU" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (60/186) Buscando: GOVERNADOR MANGABEIRA...
+// VM1244:74     ⚠ Elemento "GOVERNADOR MANGABEIRA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "GOVERNADOR MANGABEIRA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (61/186) Buscando: GUANAMBI...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (62/186) Buscando: GUARATINGA...
+// VM1244:74     ⚠ Elemento "GUARATINGA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "GUARATINGA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (63/186) Buscando: IBIRAPUÃ...
+// VM1244:74     ⚠ Elemento "IBIRAPUÃ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "IBIRAPUÃ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (64/186) Buscando: IBIRATAIA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (65/186) Buscando: IBOTIRAMA...
+// VM1244:74     ⚠ Elemento "IBOTIRAMA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "IBOTIRAMA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (66/186) Buscando: IGAPORÃ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (67/186) Buscando: IGUAI...
+// VM1244:74     ⚠ Elemento "IGUAI" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "IGUAI" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (68/186) Buscando: ILHÉUS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 10 expedientes coletados no total.
+// VM1244:65 ⏳ (69/186) Buscando: INHAMBUPE...
+// VM1244:74     ⚠ Elemento "INHAMBUPE" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "INHAMBUPE" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (70/186) Buscando: IPIAU...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (71/186) Buscando: IPIRÁ...
+// VM1244:74     ⚠ Elemento "IPIRÁ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "IPIRÁ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (72/186) Buscando: IRARÁ...
+// VM1244:74     ⚠ Elemento "IRARÁ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:105    ✅ Recuperado com sucesso! Encontrado: IRARÁ
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 12 expedientes coletados no total.
+// VM1244:65 ⏳ (73/186) Buscando: IRECÊ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (74/186) Buscando: ITABELA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (75/186) Buscando: ITABERABA...
+// VM1244:74     ⚠ Elemento "ITABERABA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITABERABA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (76/186) Buscando: ITABUNA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (77/186) Buscando: ITACARÉ...
+// VM1244:74     ⚠ Elemento "ITACARÉ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITACARÉ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (78/186) Buscando: ITAGIBÁ...
+// VM1244:74     ⚠ Elemento "ITAGIBÁ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITAGIBÁ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (79/186) Buscando: ITAJUÍPE...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (80/186) Buscando: ITAMBÉ...
+// VM1244:74     ⚠ Elemento "ITAMBÉ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITAMBÉ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (81/186) Buscando: ITANHÉM...
+// VM1244:74     ⚠ Elemento "ITANHÉM" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITANHÉM" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (82/186) Buscando: ITAPARICA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (83/186) Buscando: ITAPETINGA...
+// VM1244:74     ⚠ Elemento "ITAPETINGA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITAPETINGA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (84/186) Buscando: ITAPICURU...
+// VM1244:74     ⚠ Elemento "ITAPICURU" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITAPICURU" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (85/186) Buscando: ITARANTIM...
+// VM1244:74     ⚠ Elemento "ITARANTIM" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITARANTIM" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (86/186) Buscando: ITORORÓ...
+// VM1244:74     ⚠ Elemento "ITORORÓ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITORORÓ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (87/186) Buscando: ITUAÇU...
+// VM1244:74     ⚠ Elemento "ITUAÇU" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITUAÇU" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (88/186) Buscando: ITUBERÁ...
+// VM1244:74     ⚠ Elemento "ITUBERÁ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "ITUBERÁ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (89/186) Buscando: JACARACI...
+// VM1244:74     ⚠ Elemento "JACARACI" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "JACARACI" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (90/186) Buscando: JACOBINA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (91/186) Buscando: JAGUAQUARA...
+// VM1244:74     ⚠ Elemento "JAGUAQUARA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "JAGUAQUARA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (92/186) Buscando: JAGUARARI...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (93/186) Buscando: JEQUIÉ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (94/186) Buscando: JEREMOABO...
+// VM1244:74     ⚠ Elemento "JEREMOABO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "JEREMOABO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (95/186) Buscando: JITAÚNA...
+// VM1244:74     ⚠ Elemento "JITAÚNA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "JITAÚNA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (96/186) Buscando: JOÃO DOURADO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 25 expedientes coletados no total.
+// VM1244:65 ⏳ (97/186) Buscando: JUAZEIRO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (98/186) Buscando: LAJE...
+// VM1244:74     ⚠ Elemento "LAJE" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "LAJE" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (99/186) Buscando: LAPÃO...
+// VM1244:74     ⚠ Elemento "LAPÃO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "LAPÃO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (100/186) Buscando: LAURO DE FREITAS...
+// VM1244:74     ⚠ Elemento "LAURO DE FREITAS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "LAURO DE FREITAS" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (101/186) Buscando: LENÇÓIS...
+// VM1244:74     ⚠ Elemento "LENÇÓIS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "LENÇÓIS" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (102/186) Buscando: LIVRAMENTO DE NOSSA SENHORA...
+// VM1244:74     ⚠ Elemento "LIVRAMENTO DE NOSSA SENHORA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "LIVRAMENTO DE NOSSA SENHORA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (103/186) Buscando: LUÍS EDUARDO MAGALHÃES...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (104/186) Buscando: MACARANI...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (105/186) Buscando: MACAÚBAS...
+// VM1244:74     ⚠ Elemento "MACAÚBAS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "MACAÚBAS" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (106/186) Buscando: MAIRI...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (107/186) Buscando: MARACAS...
+// VM1244:74     ⚠ Elemento "MARACAS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "MARACAS" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (108/186) Buscando: MATA DE SÃO JOÃO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 4 expedientes coletados no total.
+// VM1244:65 ⏳ (109/186) Buscando: MIGUEL CALMON...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (110/186) Buscando: MONTE SANTO...
+// VM1244:74     ⚠ Elemento "MONTE SANTO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "MONTE SANTO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (111/186) Buscando: MORRO DO CHAPÉU...
+// VM1244:74     ⚠ Elemento "MORRO DO CHAPÉU" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "MORRO DO CHAPÉU" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (112/186) Buscando: MUCURI...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 9 expedientes coletados no total.
+// VM1244:65 ⏳ (113/186) Buscando: MUNDO NOVO...
+// VM1244:74     ⚠ Elemento "MUNDO NOVO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "MUNDO NOVO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (114/186) Buscando: MURITIBA...
+// VM1244:74     ⚠ Elemento "MURITIBA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "MURITIBA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (115/186) Buscando: MUTUÍPE...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (116/186) Buscando: NAZARÉ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (117/186) Buscando: NOVA SOURE...
+// VM1244:74     ⚠ Elemento "NOVA SOURE" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "NOVA SOURE" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (118/186) Buscando: NOVA VIÇOSA...
+// VM1244:74     ⚠ Elemento "NOVA VIÇOSA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "NOVA VIÇOSA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (119/186) Buscando: OLINDINA...
+// VM1244:74     ⚠ Elemento "OLINDINA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "OLINDINA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (120/186) Buscando: OLIVEIRA DOS BREJINHOS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (121/186) Buscando: PALMAS DE MONTE ALTO...
+// VM1244:74     ⚠ Elemento "PALMAS DE MONTE ALTO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "PALMAS DE MONTE ALTO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (122/186) Buscando: PARAMIRIM...
+// VM1244:74     ⚠ Elemento "PARAMIRIM" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "PARAMIRIM" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (123/186) Buscando: PARIPIRANGA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (124/186) Buscando: PAULO AFONSO...
+// VM1244:74     ⚠ Elemento "PAULO AFONSO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "PAULO AFONSO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (125/186) Buscando: Pendente de ciência pelo judiciário...
+// VM1244:132       Página 1...
+// VM1244:160    ⚠ Nenhum expediente encontrado.
+// VM1244:65 ⏳ (126/186) Buscando: PIATÃ...
+// VM1244:74     ⚠ Elemento "PIATÃ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "PIATÃ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (127/186) Buscando: PILÃO ARCADO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (128/186) Buscando: PINDOBAÇÚ...
+// VM1244:74     ⚠ Elemento "PINDOBAÇÚ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "PINDOBAÇÚ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (129/186) Buscando: PIRITIBA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (130/186) Buscando: PLANALTO...
+// VM1244:74     ⚠ Elemento "PLANALTO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:105    ✅ Recuperado com sucesso! Encontrado: PLANALTO
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (131/186) Buscando: POÇÕES...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (132/186) Buscando: POJUCA...
+// VM1244:74     ⚠ Elemento "POJUCA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:105    ✅ Recuperado com sucesso! Encontrado: POJUCA
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 12 expedientes coletados no total.
+// VM1244:65 ⏳ (133/186) Buscando: PORTO SEGURO...
+// VM1244:74     ⚠ Elemento "PORTO SEGURO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "PORTO SEGURO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (134/186) Buscando: PRADO...
+// VM1244:74     ⚠ Elemento "PRADO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "PRADO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (135/186) Buscando: PRESIDENTE JÂNIO QUADROS...
+// VM1244:74     ⚠ Elemento "PRESIDENTE JÂNIO QUADROS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:105    ✅ Recuperado com sucesso! Encontrado: PRESIDENTE JÂNIO QUADROS
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:65 ⏳ (136/186) Buscando: QUEIMADAS...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (137/186) Buscando: REMANSO...
+// VM1244:74     ⚠ Elemento "REMANSO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "REMANSO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (138/186) Buscando: RETIROLÂNDIA...
+// VM1244:74     ⚠ Elemento "RETIROLÂNDIA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "RETIROLÂNDIA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (139/186) Buscando: RIACHÃO DO JACUÍPE...
+// VM1244:74     ⚠ Elemento "RIACHÃO DO JACUÍPE" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "RIACHÃO DO JACUÍPE" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (140/186) Buscando: RIACHO DE SANTANA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (141/186) Buscando: RIBEIRA DO POMBAL...
+// VM1244:74     ⚠ Elemento "RIBEIRA DO POMBAL" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "RIBEIRA DO POMBAL" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (142/186) Buscando: RIO REAL...
+// VM1244:74     ⚠ Elemento "RIO REAL" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "RIO REAL" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (143/186) Buscando: RUY BARBOSA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (144/186) Buscando: SALVADOR - REGIÃO METROPOLITANA...
+// VM1244:132       Página 1...
+// VM1244:132       Página 2...
+// VM1244:158    ✅ 41 expedientes coletados no total.
+// VM1244:65 ⏳ (145/186) Buscando: SANTA BÁRBARA...
+// VM1244:74     ⚠ Elemento "SANTA BÁRBARA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SANTA BÁRBARA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (146/186) Buscando: SANTA CRUZ CABRÁLIA...
+// VM1244:74     ⚠ Elemento "SANTA CRUZ CABRÁLIA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SANTA CRUZ CABRÁLIA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (147/186) Buscando: SANTA INÊS...
+// VM1244:74     ⚠ Elemento "SANTA INÊS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:105    ✅ Recuperado com sucesso! Encontrado: SANTA INÊS
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (148/186) Buscando: SANTA MARIA DA VITÓRIA...
+// VM1244:74     ⚠ Elemento "SANTA MARIA DA VITÓRIA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SANTA MARIA DA VITÓRIA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (149/186) Buscando: SANTA RITA DE CÁSSIA...
+// VM1244:74     ⚠ Elemento "SANTA RITA DE CÁSSIA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SANTA RITA DE CÁSSIA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (150/186) Buscando: SANTA TERESINHA...
+// VM1244:74     ⚠ Elemento "SANTA TERESINHA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SANTA TERESINHA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (151/186) Buscando: SANTALUZ...
+// VM1244:74     ⚠ Elemento "SANTALUZ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:105    ✅ Recuperado com sucesso! Encontrado: SANTALUZ
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 14 expedientes coletados no total.
+// VM1244:65 ⏳ (152/186) Buscando: SANTANA...
+// VM1244:74     ⚠ Elemento "SANTANA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SANTANA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (153/186) Buscando: SANTO AMARO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 9 expedientes coletados no total.
+// VM1244:65 ⏳ (154/186) Buscando: SANTO ANTÔNIO DE JESUS...
+// VM1244:74     ⚠ Elemento "SANTO ANTÔNIO DE JESUS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SANTO ANTÔNIO DE JESUS" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (155/186) Buscando: SANTO ESTEVÃO...
+// VM1244:74     ⚠ Elemento "SANTO ESTEVÃO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SANTO ESTEVÃO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (156/186) Buscando: SÃO DESIDÉRIO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 6 expedientes coletados no total.
+// VM1244:65 ⏳ (157/186) Buscando: SÃO FELIPE...
+// VM1244:74     ⚠ Elemento "SÃO FELIPE" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SÃO FELIPE" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (158/186) Buscando: SÃO FRANCISCO DO CONDE...
+// VM1244:74     ⚠ Elemento "SÃO FRANCISCO DO CONDE" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SÃO FRANCISCO DO CONDE" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (159/186) Buscando: SÃO GONÇALO DOS CAMPOS...
+// VM1244:74     ⚠ Elemento "SÃO GONÇALO DOS CAMPOS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SÃO GONÇALO DOS CAMPOS" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (160/186) Buscando: SÃO SEBASTIÃO DO PASSÉ...
+// VM1244:74     ⚠ Elemento "SÃO SEBASTIÃO DO PASSÉ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SÃO SEBASTIÃO DO PASSÉ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (161/186) Buscando: SAÚDE...
+// VM1244:74     ⚠ Elemento "SAÚDE" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SAÚDE" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (162/186) Buscando: SEABRA...
+// VM1244:74     ⚠ Elemento "SEABRA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:105    ✅ Recuperado com sucesso! Encontrado: SEABRA
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 6 expedientes coletados no total.
+// VM1244:65 ⏳ (163/186) Buscando: SENHOR DO BONFIM...
+// VM1244:74     ⚠ Elemento "SENHOR DO BONFIM" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SENHOR DO BONFIM" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (164/186) Buscando: SENTO SÉ...
+// VM1244:74     ⚠ Elemento "SENTO SÉ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SENTO SÉ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (165/186) Buscando: SERRA DOURADA...
+// VM1244:74     ⚠ Elemento "SERRA DOURADA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SERRA DOURADA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (166/186) Buscando: SERRINHA...
+// VM1244:74     ⚠ Elemento "SERRINHA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SERRINHA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (167/186) Buscando: SIMÕES FILHO...
+// VM1244:74     ⚠ Elemento "SIMÕES FILHO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SIMÕES FILHO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (168/186) Buscando: SOBRADINHO...
+// VM1244:74     ⚠ Elemento "SOBRADINHO" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "SOBRADINHO" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (169/186) Buscando: TANHAÇU...
+// VM1244:74     ⚠ Elemento "TANHAÇU" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "TANHAÇU" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (170/186) Buscando: TAPEROÁ...
+// VM1244:74     ⚠ Elemento "TAPEROÁ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "TAPEROÁ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (171/186) Buscando: TEIXEIRA DE FREITAS...
+// VM1244:74     ⚠ Elemento "TEIXEIRA DE FREITAS" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "TEIXEIRA DE FREITAS" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (172/186) Buscando: TEOFILÂNDIA...
+// VM1244:74     ⚠ Elemento "TEOFILÂNDIA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "TEOFILÂNDIA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (173/186) Buscando: TERRA NOVA...
+// VM1244:74     ⚠ Elemento "TERRA NOVA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "TERRA NOVA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (174/186) Buscando: Tremedal...
+// VM1244:74     ⚠ Elemento "Tremedal" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "Tremedal" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (175/186) Buscando: TUCANO...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (176/186) Buscando: UAUÁ...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 3 expedientes coletados no total.
+// VM1244:65 ⏳ (177/186) Buscando: UBAÍRA...
+// VM1244:74     ⚠ Elemento "UBAÍRA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "UBAÍRA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (178/186) Buscando: UBAITABA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 14 expedientes coletados no total.
+// VM1244:65 ⏳ (179/186) Buscando: UBATÃ...
+// VM1244:74     ⚠ Elemento "UBATÃ" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "UBATÃ" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (180/186) Buscando: UNA...
+// VM1244:74     ⚠ Elemento "UNA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "UNA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (181/186) Buscando: URUÇUCA...
+// VM1244:74     ⚠ Elemento "URUÇUCA" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "URUÇUCA" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (182/186) Buscando: VALENÇA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (183/186) Buscando: VALENTE...
+// VM1244:74     ⚠ Elemento "VALENTE" não visível. Tentando expandir menus (Recuperação de Falha PJe)...
+// (anônimo) @ VM1244:74
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:111     ⚠ Não foi possível encontrar o link para "VALENTE" nesta iteração.
+// (anônimo) @ VM1244:111
+// await in (anônimo)
+// (anônimo) @ VM1244:239
+// VM1244:65 ⏳ (184/186) Buscando: VITÓRIA DA CONQUISTA...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 4 expedientes coletados no total.
+// VM1244:65 ⏳ (185/186) Buscando: WENCESLAU GUIMARÃES...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 2 expedientes coletados no total.
+// VM1244:65 ⏳ (186/186) Buscando: XIQUE-XIQUE...
+// VM1244:132       Página 1...
+// VM1244:158    ✅ 1 expedientes coletados no total.
+// VM1244:195 💾 Gerando arquivo único...
+// VM1244:215  ✅ Documento único gerado com sucesso!
+// VM1244:238 
+//  🏁 Processo finalizado. Verifique seus downloads.
 
 // ## SCRIPT PJE 1º GRAU -
 
@@ -912,63 +1197,95 @@ window.PJE_PARAR = false;
         let nomeCidadeAlvo = listaAlvos[i];
         console.log(`⏳ (${i + 1}/${limite}) Buscando: ${nomeCidadeAlvo}...`);
         try {
-            // Busca novamente o SPAN com o texto exato da cidade
-            let xpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${nomeCidadeAlvo}"]`;
-            let resultadoXPath = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-            let cidadeElemento = resultadoXPath.singleNodeValue;
-            
-            // [FIX AUTOMÁTICO] TENTATIVA DE RECUPERAÇÃO DE ÁRVORE FECHADA
-            if (!cidadeElemento) {
-                console.warn(`   ⚠ Elemento "${nomeCidadeAlvo}" não visível. Tentando expandir menus (Recuperação de Falha PJe)...`);
-                
-                // Menus padrão do PJe que costumam agrupar as cidades
-                const menusParaReabrir = [
-                    "Expedientes", 
-                    "Pendentes de ciência", 
-                    "Pendentes de resposta", 
-                    "Sem prazo", 
-                    "Com prazo",
+            // Busca/ativa a cidade com tentativas e recuperação mais robusta
+            const tryExpandMenus = async () => {
+                // Prioritize reopening the exact 'Pendentes' menu(s) to avoid selecting 'Sem prazo'
+                const preferred = [
+                    "Pendentes de ciência ou de resposta",
+                    "Pendentes de ciência",
+                    "Pendentes de resposta",
+                    "Expedientes",
                     "Caixa de entrada"
                 ];
 
-                for (const menu of menusParaReabrir) {
-                    // Tenta achar o menu
-                    let menuXpath = `//span[contains(@class, 'nomeTarefa') and contains(text(), "${menu}")]`;
+                for (const menu of preferred) {
+                    // try exact match first
+                    let menuXpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${menu}"]`;
                     let menuNode = document.evaluate(menuXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                    
+
+                    // fallback to contains if exact not found
+                    if (!menuNode) {
+                        menuXpath = `//span[contains(@class, 'nomeTarefa') and contains(normalize-space(text()), "${menu}")]`;
+                        menuNode = document.evaluate(menuXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    }
+
                     if (menuNode) {
-                        // Verifica se está visível
-                        if (menuNode.offsetParent !== null) {
-                            menuNode.click();
-                            await esperar(1000); // 1s para o PJe expandir a árvore via AJAX
-                        }
+                        const clickable = menuNode.closest('a') || menuNode;
+                        try { clickable.scrollIntoView({ block: 'center', behavior: 'auto' }); } catch (e) {}
+                        await esperar(250);
+                        try { clickable.click(); } catch (e) {}
+                        await esperar(900);
+
+                        // if after clicking we can already find the city node, stop early
+                        try {
+                            const cityXpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${nomeCidadeAlvo}"]`;
+                            const found = document.evaluate(cityXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                            if (found) return;
+                        } catch (e) { /* ignore */ }
                     }
                 }
+            };
 
-                // Tenta buscar a cidade de novo após a tentativa de expansão
-                resultadoXPath = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                cidadeElemento = resultadoXPath.singleNodeValue;
-                
-                if (cidadeElemento) {
-                     console.log(`   ✅ Recuperado com sucesso! Encontrado: ${nomeCidadeAlvo}`);
+            const activateCityWithRetries = async (cityName, attempts = 3) => {
+                const xpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${cityName}"]`;
+                for (let attempt = 1; attempt <= attempts; attempt++) {
+                    if (attempt > 1) {
+                        console.warn(`   ⚠ Tentativa ${attempt} para recuperar "${cityName}"...`);
+                        await tryExpandMenus();
+                    }
+
+                    let res = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                    let node = res.singleNodeValue;
+                    if (!node) {
+                        // breve espera e retry
+                        await esperar(500);
+                        res = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                        node = res.singleNodeValue;
+                    }
+                    if (!node) continue;
+
+                    // preferir clicar no link pai se existir
+                    const clickable = node.closest('a') || node;
+                    try {
+                        clickable.scrollIntoView({ block: 'center', behavior: 'auto' });
+                    } catch (e) {}
+                    await esperar(300);
+
+                    try {
+                        clickable.click();
+                        clickable.dispatchEvent(new MouseEvent('click', { view: window, bubbles: true, cancelable: true }));
+                    } catch (e) {
+                        console.warn('   ⚠ Falha ao dispatchar clique:', e && e.message);
+                    }
+
+                    // aguarda carregamento e verifica se conteudo esperado apareceu
+                    await esperar(TEMPO_ESPERA_CARREGAMENTO);
+                    const tabela = document.querySelector("table[id$='tbExpedientes']");
+                    if (tabela && tabela.querySelectorAll('tbody > tr').length > 0) {
+                        return true;
+                    }
+
+                    // se não encontrou dados, talvez a árvore tenha sido resetada; vamos tentar reabrir menus e refazer
+                    await esperar(300);
                 }
-            }
-            // [FIM FIX]
+                return false;
+            };
 
-            if (!cidadeElemento) {
-                console.warn(`   ⚠ Não foi possível encontrar o link para "${nomeCidadeAlvo}" nesta iteração.`);
+            const ativado = await activateCityWithRetries(nomeCidadeAlvo, 3);
+            if (!ativado) {
+                console.warn(`   ⚠ Não foi possível ativar/abrir "${nomeCidadeAlvo}" após tentativas.`);
                 continue;
             }
-            cidadeElemento.scrollIntoView({ block: "center", behavior: "auto" });
-            await esperar(500);
-            cidadeElemento.click();
-            let eventoClick = new MouseEvent('click', {
-                'view': window,
-                'bubbles': true,
-                'cancelable': true
-            });
-            cidadeElemento.dispatchEvent(eventoClick);
-            await esperar(TEMPO_ESPERA_CARREGAMENTO);
 
             let processosDaCidade = [];
             let paginaAtual = 1;
@@ -1085,3 +1402,5 @@ window.PJE_PARAR = false;
 
     console.log("\n%c 🏁 Processo finalizado. Verifique seus downloads.", "background: green; color: white; font-size: 16px; padding: 5px;");
 })();
+
+
