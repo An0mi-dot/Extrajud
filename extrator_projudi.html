@@ -426,6 +426,12 @@
 
     <script>
         const statusBadge = document.getElementById('status-badge');
+        const statusText = document.getElementById('status-text');
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+        const logsDiv = document.getElementById('logs');
+        let fullLogs = [];
+        let isUserScrolling = false;
 
         // Page Transitions
         window.addEventListener('DOMContentLoaded', () => {
