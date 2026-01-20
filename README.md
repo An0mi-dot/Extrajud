@@ -90,3 +90,39 @@ Pré-requisitos: Node.js instalado.
 
 ---
 *Documentação gerada em 12/01/2026.*
+
+---
+
+## 🗂️ Arquivos Grandes e Git LFS
+
+Se você planeja commitar arquivos grandes (por exemplo um ZIP de ~1GB), use Git LFS para evitar erros do Git e armazenamento ineficiente.
+
+Passos rápidos (máquina Windows):
+
+1. Instale o Git LFS (uma vez):
+```powershell
+winget install --id Git.GitLFS -e
+# ou
+choco install git-lfs -y
+```
+2. Inicialize e marque `*.zip` para uso com LFS (no repositório):
+```powershell
+git lfs install
+git lfs track "*.zip"
+git add .gitattributes
+git commit -m "chore: track zip files with Git LFS"
+```
+3. Adicione e envie o ZIP grande:
+```powershell
+git add scripts.zip
+git commit -m "Add large scripts.zip (LFS)"
+git push
+```
+
+Também fornecemos um helper PowerShell em `scripts/setup-lfs.ps1` e scripts npm `lfs:install` e `lfs:track:zip` no `package.json` para facilitar.
+
+Observações:
+- GitHub rejeita arquivos maiores que 100MB via git normal. Use LFS para armazenar binários grandes.
+- Git LFS pode ter cotas na conta GitHub; verifique plano/limites.
+- Se você já cometeu um arquivo grande por engano, remova do histórico antes do push (posso ajudar com `git filter-repo`/BFG se necessário).
+
