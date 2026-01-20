@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+const { exec, execSync } = require('child_process');
 const https = require('https');
 const automacaoService = require('./automacao_service');
 
@@ -80,19 +82,49 @@ function writeStateFile(state) {
   catch (e) { console.error('writeStateFile', e); }
 }
 
-function fetchJson(url, timeout = 8000) {
+function fetchJson(url, timeout = 15000, maxRetries = 2) {
+  // Robust fetch: handles redirects, retries and longer timeout to avoid spurious timeouts
   return new Promise((resolve, reject) => {
-    try {
-      const req = https.get(url, { timeout, headers: { 'User-Agent': 'EXTRATJUD-Updater' } }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+    const maxRedirects = 5;
+    const attempt = (u, attemptNo = 0, redirectsLeft = maxRedirects) => {
+      try {
+        const req = https.get(u, { timeout, headers: { 'User-Agent': 'EXTRATJUD-Updater' } }, (res) => {
+          // Follow redirects
+          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && redirectsLeft > 0) {
+            const loc = String(res.headers.location).startsWith('http') ? res.headers.location : new URL(res.headers.location, u).toString();
+            res.resume();
+            return attempt(loc, attemptNo, redirectsLeft - 1);
+          }
+
+          if (res.statusCode < 200 || res.statusCode >= 400) {
+            let eData = '';
+            res.on('data', c => eData += c);
+            res.on('end', () => reject(new Error(`HTTP ${res.statusCode} fetching ${u}: ${eData}`)));
+            return;
+          }
+
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => {
+            try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+          });
         });
-      });
-      req.on('error', reject);
-      req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
-    } catch (e) { reject(e); }
+
+        req.on('error', (err) => {
+          if (attemptNo < maxRetries) {
+            setTimeout(() => attempt(u, attemptNo + 1, redirectsLeft), 300 * (attemptNo + 1));
+          } else reject(err);
+        });
+
+        req.on('timeout', () => {
+          req.destroy();
+          if (attemptNo < maxRetries) {
+            setTimeout(() => attempt(u, attemptNo + 1, redirectsLeft), 500 * (attemptNo + 1));
+          } else reject(new Error('timeout'));
+        });
+      } catch (e) { reject(e); }
+    };
+    attempt(url, 0, maxRedirects);
   });
 }
 
@@ -147,6 +179,81 @@ ipcMain.handle('check-for-updates', async () => {
 ipcMain.on('perform-update', (event, url) => {
   try { if (url) shell.openExternal(url); }
   catch (e) { console.error('perform-update', e); }
+});
+
+// Generic open-external handler so renderers can request the main process to open URLs (safer)
+ipcMain.handle('open-external', async (event, url) => {
+  try {
+    if (!url) return { ok: false, error: 'no_url' };
+    // Try normal open
+    const res = await shell.openExternal(url);
+    // shell.openExternal may return false on some platforms/clients — attempt Windows fallback for mailto
+    if ((res === false || res === 0) && process.platform === 'win32' && String(url).startsWith('mailto:')) {
+      try {
+        const { exec } = require('child_process');
+        // Use cmd start to delegate to default mail client (works when shell.openExternal silently fails)
+        const safe = String(url).replace(/"/g, '\\"');
+        exec(`cmd /c start "" "${safe}"`, (err) => { if (err) console.error('open-external fallback exec error', err); });
+        return { ok: true, fallback: true };
+      } catch (e2) {
+        console.error('open-external fallback error', e2);
+        return { ok: false, error: e2 && e2.message ? e2.message : String(e2) };
+      }
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error('open-external', e);
+    // On Windows try cmd fallback for mailto specifically
+    try {
+      if (process.platform === 'win32' && String(url).startsWith('mailto:')) {
+        const { execSync } = require('child_process');
+        const safe = String(url).replace(/"/g, '\\"');
+        execSync(`cmd /c start "" "${safe}"`);
+        return { ok: true, fallback: true };
+      }
+    } catch (e2) {
+      console.error('open-external fallback sync error', e2);
+      return { ok: false, error: e2 && e2.message ? e2.message : String(e2) };
+    }
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+});
+
+// Create an Outlook compose window with HTML body on Windows using PowerShell + COM
+ipcMain.handle('create-outlook-mail-html', async (event, args) => {
+  try {
+    if (process.platform !== 'win32') return { ok: false, error: 'not_windows' };
+    const { html, subject, to } = args || {};
+    if (!html) return { ok: false, error: 'no_html' };
+
+    // Build PowerShell script to create an Outlook mail item with HTMLBody
+    const safeSubject = String(subject || '').replace(/"/g, '""');
+    const safeTo = String(to || '');
+    const psScript = `try {
+  $ol = New-Object -ComObject Outlook.Application
+  $mail = $ol.CreateItem(0)
+  $mail.To = "${safeTo}"
+  $mail.Subject = "${safeSubject}"
+  $mail.HTMLBody = @'
+${html}
+'@
+  $mail.Display()
+} catch { Write-Error $_ }
+`;
+
+    const tmp = path.join(os.tmpdir(), `extjt_mail_${Date.now()}.ps1`);
+    // Write with BOM to help PowerShell interpret UTF-8 properly
+    fs.writeFileSync(tmp, '\uFEFF' + psScript, 'utf8');
+    // Execute asynchronously so UI is not blocked; remove tmp after spawn
+    exec(`powershell -NoProfile -ExecutionPolicy Bypass -File "${tmp}"`, (err) => {
+      try { fs.unlinkSync(tmp); } catch (e) {}
+      if (err) console.error('create-outlook-mail-html exec error', err);
+    });
+    return { ok: true };
+  } catch (e) {
+    console.error('create-outlook-mail-html', e);
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
 });
 
 function createWindow() {
