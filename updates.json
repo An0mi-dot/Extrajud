@@ -1,6 +1,7 @@
 {
   "version": "1.0.1",
-  "url": "https://github.com/OWNER/REPO/releases/tag/v1.0.1",
+  "url": "https://github.com/An0mi-dot/Extrajud/releases/tag/v1.0.1",
+  "raw": "https://raw.githubusercontent.com/An0mi-dot/Extrajud/main/updates.json",
   "notes": "Pequenas correções e melhorias. Substitua o campo `url` pelo link direto do seu artefato (zip/exe) quando disponível.",
   "published_at": "2026-01-20T00:00:00Z"
 }
