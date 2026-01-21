@@ -1006,6 +1006,16 @@
     <div id="modal-update" class="modal">
         <div class="modal-content">
             <h3>Atualizações</h3>
+            <div style="margin-top:8px; font-size:13px; color:#444;">
+                Este painel permite configurar um endpoint JSON (um arquivo <code>updates.json</code>) que descreve a versão mais recente do aplicativo.
+                Use sempre a URL direta para o arquivo JSON (por exemplo o link <em>raw</em> do GitHub). Exemplo de campos esperados no JSON: <code>version</code>, <code>url</code> (link para artefato), <code>raw</code>, <code>notes</code> e <code>published_at</code>.
+                Ao clicar em <strong>Verificar agora</strong> o app buscará esse JSON e comparará com a versão instalada; se houver atualização ela será exibida com changelog e link. Se <strong>Auto-Update</strong> estiver habilitado, o link de download será aberto automaticamente.
+                Atenção: se você apontar para uma página HTML (ex.: uma página de Release no GitHub) em vez do arquivo raw, a verificação falhará com uma mensagem de erro e — quando possível — o app sugerirá o link raw correto.
+                Para conveniência, você pode usar o arquivo de atualização hospedado neste repositório:
+                <div style="margin-top:6px; font-size:12px; color:#333;">
+                    <code>https://raw.githubusercontent.com/An0mi-dot/Extrajud/main/updates.json</code>
+                </div>
+            </div>
             <div style="margin-top:10px;">
                 <label style="font-size:13px; color:#444; display:block;">Servidor de atualização (JSON):</label>
                 <input id="upd-server" type="text" style="width:100%; padding:8px; margin-top:6px; box-sizing:border-box;" placeholder="https://example.com/updates.json">
