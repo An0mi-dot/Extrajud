@@ -545,7 +545,7 @@
 
         <div class="services-grid">
             <!-- App 1: Extrator Projudi (Ativo) -->
-            <a href="extrator_projudi.html" class="service-card">
+            <a href="extrator_projudi.html" class="service-card" data-service="PROJUDI">
                 <span class="platform-tag tag-projudi">PROJUDI</span>
                 <div class="card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
@@ -572,7 +572,7 @@
             </a>
 
             <!-- App 2: Processos Arquivados (Ativo) -->
-            <a href="arquivados_projudi.html" class="service-card">
+            <a href="arquivados_projudi.html" class="service-card" data-service="ARQUIVADOS">
                 <span class="platform-tag tag-projudi">PROJUDI</span>
                 <div class="card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
@@ -599,7 +599,7 @@
             </a>
 
             <!-- App 3: PJE Automação (Ativo) -->
-            <a href="pje_extrator.html" class="service-card">
+            <a href="pje_extrator.html" class="service-card" data-service="PJE">
                 <span class="platform-tag tag-pje">PJE</span>
                 <div class="card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" aria-hidden="true" focusable="false">
@@ -632,7 +632,7 @@
             </a>
 
             <!-- App 4: Espaider (Em Breve) -->
-            <div class="service-card disabled">
+            <div class="service-card disabled" data-service="ESPAIDER">
                 <span class="platform-tag tag-espaider">ESPAIDER</span>
                 <div class="card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
@@ -744,23 +744,28 @@
                 }
             } catch (e) { console.error('Error restoring index state', e); }
 
-            // Populate service metadata (version, env) and wire company selects
+            // Populate service metadata (service-specific version, env) and wire company selects
             try {
-                const ver = await ipcRenderer.invoke('get-app-version') || '?.?.?';
-                document.querySelectorAll('.service-ver').forEach(el => el.textContent = ver);
+                const svc = await ipcRenderer.invoke('get-service-versions') || {};
                 const env = process.platform + ' (' + process.arch + ')';
-                document.querySelectorAll('.service-env').forEach(el => el.textContent = env);
+                document.querySelectorAll('.service-card').forEach(card => {
+                    const key = (card.getAttribute('data-service') || '').toUpperCase();
+                    const verEl = card.querySelector('.service-ver');
+                    if (verEl) verEl.textContent = (svc[key] || '?.?.?');
+                    const envEl = card.querySelector('.service-env');
+                    if (envEl) envEl.textContent = env;
+
+                    // company select defaults and stop propagation so card click doesn't fire
+                    const sel = card.querySelector('.company-select');
+                    if (sel) {
+                        sel.value = 'IBERDROLA';
+                        sel.addEventListener('click', (e) => e.stopPropagation());
+                        sel.addEventListener('change', (e) => e.stopPropagation());
+                    }
+                });
 
                 // Prevent clicks inside service-meta from triggering card navigation
-                document.querySelectorAll('.service-meta').forEach(m => {
-                    m.addEventListener('click', (e) => e.stopPropagation());
-                });
-                document.querySelectorAll('.company-select').forEach(sel => {
-                    sel.addEventListener('click', (e) => e.stopPropagation());
-                    sel.addEventListener('change', (e) => e.stopPropagation());
-                    // default value
-                    sel.value = 'IBERDROLA';
-                });
+                document.querySelectorAll('.service-meta').forEach(m => { m.addEventListener('click', (e) => e.stopPropagation()); });
             } catch (e) { /* ignore */ }
         });
 
