@@ -187,6 +187,88 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.05);
         }
+
+        .service-card.disabled {
+            cursor: default;
+            opacity: 0.7;
+            background-color: #f8f9fa;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background-color: var(--card-icon-bg);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--card-icon-color);
+            margin-bottom: 20px;
+        }
+
+        .service-card.disabled .card-icon {
+            background-color: var(--card-icon-disabled-bg);
+            color: var(--card-icon-disabled-color);
+        }
+
+        .card-icon svg { width: 24px; height: 24px; color: inherit; }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .card-status {
+            margin-top: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            align-self: flex-start;
+        }
+
+        /* Estimated time label inside service cards */
+        .estimated-time {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #374151; /* gray-700 */
+            font-weight: 600;
+        }
+        .estimated-time small { color: #6b7280; font-weight: 500; display:block; margin-top:2px; font-size:11px; }
+
+        .status-active {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-soon {
+            background-color: #ffecb5;
+            color: #664d03;
+        }
+
+        .arrow-icon {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            color: var(--primary-color);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover:not(.disabled) .arrow-icon {
+            opacity: 1;
+            transform: translateX(0);
+        }
         
         .tag-projudi { background-color: #fce7f3; color: #9d174d; }
         .tag-pje { background-color: #e0e7ff; color: #3730a3; }
