@@ -106,7 +106,11 @@ function fetchJson(url, timeout = 15000, maxRetries = 2) {
           let data = '';
           res.on('data', chunk => data += chunk);
           res.on('end', () => {
-            try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+            try { resolve(JSON.parse(data)); }
+            catch (e) {
+              // If JSON parse fails, return raw text so caller can provide a helpful error
+              resolve({ __raw: data });
+            }
           });
         });
 
@@ -163,6 +167,17 @@ ipcMain.handle('check-for-updates', async () => {
     const updateServer = (state.update && state.update.updateServer) || (require(path.join(__dirname, 'package.json')).updateServer) || null;
     if (!updateServer) return { error: 'no_update_server' };
     const meta = await fetchJson(updateServer);
+    if (meta && meta.__raw) {
+      // Provide clearer error when endpoint returns non-JSON (commonly a HTML page)
+      const snippet = String(meta.__raw).slice(0, 1000);
+      // If user pointed to a GitHub release page, suggest raw URL
+      let suggestion = null;
+      try {
+        const m = updateServer.match(/github\.com\/([^\/]+)\/([^\/]+)\/releases\/(?:tag|download)\/(.+)/i);
+        if (m) suggestion = `https://raw.githubusercontent.com/${m[1]}/${m[2]}/main/updates.json`;
+      } catch (__) {}
+      return { error: 'invalid_json', message: 'Update URL did not return JSON', rawSnippet: snippet, suggestion };
+    }
     const localVer = require(path.join(__dirname, 'package.json')).version || '0.0.0';
     const latest = meta.version || meta.tag_name || null;
     if (!latest) return { error: 'no_version_in_meta', meta };
@@ -289,6 +304,7 @@ app.whenReady().then(() => {
       if (updateCfg.autoUpdate && updateServer) {
         try {
           const meta = await fetchJson(updateServer);
+          if (!meta || meta.__raw) return; // ignore invalid or non-JSON meta when auto-checking
           const localVer = require(path.join(__dirname, 'package.json')).version || '0.0.0';
           const latest = meta.version || meta.tag_name || null;
           const toParts = (v) => (''+v).replace(/^v/i,'').split('.').map(n => parseInt(n)||0);
