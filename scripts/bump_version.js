@@ -20,6 +20,9 @@ patch += 1;
 if (patch > 9) { patch = 0; minor += 1; }
 const newVersion = `${major}.${minor}.${patch}`;
 
+// Dry-run option: simulate changes without writing files
+const dryRun = process.argv.includes('--dry-run') || process.env.DRY_RUN;
+
 // Check whether we should actually bump: only if there are commits/changes since last release
 const force = process.argv.includes('--force') || process.env.FORCE_BUMP;
 if (!force) {
@@ -47,6 +50,29 @@ if (!force) {
   console.log('Forcing bump due to --force / FORCE_BUMP');
 }
 
+// Get last commit info for VERSIONS.md preview
+let commitMsg = '';
+let shortSha = '';
+try {
+  commitMsg = execSync('git log -1 --pretty=%B').toString().trim();
+  shortSha = execSync('git rev-parse --short HEAD').toString().trim();
+} catch (e) { commitMsg = ''; shortSha = ''; }
+
+if (dryRun) {
+  const files = [path.relative(root, pkgPath)];
+  if (fs.existsSync(updatesPath)) files.push(path.relative(root, updatesPath));
+  files.push(path.relative(root, versionsPath));
+  console.log('Dry run: no files will be modified.');
+  console.log('Current version:', oldVersion);
+  console.log('Proposed new version:', newVersion);
+  console.log('Files that would change:', files.join(', '));
+  console.log('Proposed commit message:', `chore(release): v${newVersion}`);
+  const headerPreview = `## v${newVersion} - ${new Date().toISOString().split('T')[0]}`;
+  const entryPreview = [headerPreview, '', `- Commit: ${shortSha || '<current-sha>'}`, `- Notes: ${commitMsg || 'n/a'}`, ''].join('\n');
+  console.log('VERSIONS.md entry preview:\n' + entryPreview);
+  process.exit(0);
+}
+
 pkg.version = newVersion;
 writeJSON(pkgPath, pkg);
 
@@ -66,12 +92,6 @@ if (fs.existsSync(updatesPath)) {
 // Append to VERSIONS.md
 const now = new Date();
 const dateStr = now.toISOString().split('T')[0];
-let commitMsg = '';
-let shortSha = '';
-try {
-  commitMsg = execSync('git log -1 --pretty=%B').toString().trim();
-  shortSha = execSync('git rev-parse --short HEAD').toString().trim();
-} catch (e) { commitMsg = ''; shortSha = ''; }
 
 const header = `## v${newVersion} - ${dateStr}`;
 let entryLines = [header, '', `- Commit: ${shortSha}`, `- Notes: ${commitMsg || 'n/a'}`];
