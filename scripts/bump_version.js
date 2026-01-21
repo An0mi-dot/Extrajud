@@ -20,6 +20,33 @@ patch += 1;
 if (patch > 9) { patch = 0; minor += 1; }
 const newVersion = `${major}.${minor}.${patch}`;
 
+// Check whether we should actually bump: only if there are commits/changes since last release
+const force = process.argv.includes('--force') || process.env.FORCE_BUMP;
+if (!force) {
+  try {
+    const head = execSync('git rev-parse --verify HEAD').toString().trim();
+    const lastPkgCommit = execSync(`git log -1 --pretty=format:%H -- ${pkgPath}`).toString().trim();
+    if (lastPkgCommit === head) {
+      console.log('No commits since last release (package.json at HEAD). Skipping bump. Use --force to override.');
+      process.exit(0);
+    }
+    const diffRaw = execSync(`git diff --name-only ${lastPkgCommit}..HEAD`).toString().trim();
+    const diffFiles = diffRaw ? diffRaw.split(/\r?\n/).filter(Boolean) : [];
+    // Ignore only-generated release files
+    const ignored = [path.relative(root, versionsPath), path.relative(root, updatesPath), path.relative(root, servicesPath)].map(p => p.replace(/\\/g,'/'));
+    const relevant = diffFiles.map(f => f.replace(/\\/g,'/')).filter(f => !ignored.includes(f) && !f.startsWith('.github/'));
+    if (relevant.length === 0) {
+      console.log('No app-relevant changes since last release. Skipping bump. Use --force to override.');
+      process.exit(0);
+    }
+    console.log('Detected changes since last release:', relevant.join(', '));
+  } catch (e) {
+    console.log('Git check for changes failed, proceeding with bump (use --force to override).');
+  }
+} else {
+  console.log('Forcing bump due to --force / FORCE_BUMP');
+}
+
 pkg.version = newVersion;
 writeJSON(pkgPath, pkg);
 
