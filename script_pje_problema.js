@@ -1289,13 +1289,52 @@ window.PJE_PARAR = false;
 
             let processosDaCidade = [];
             let paginaAtual = 1;
+
+            // Helper: find pager element related to the table
+            const findPagerForTable = (tableEl) => {
+              // 1) ancestor with pager
+              let el = tableEl;
+              while (el && el !== document.body) {
+                if (el.querySelector && el.querySelector('.rich-datascr-button')) return el;
+                el = el.parentElement;
+              }
+              // 2) look for nearby .rich-datascr elements (siblings)
+              const near = document.querySelectorAll('.rich-datascr');
+              for (const n of near) {
+                if (n.contains(tableEl) || tableEl.compareDocumentPosition(n) & Node.DOCUMENT_POSITION_PRECEDING) return n;
+              }
+              return null;
+            };
+
+            const waitForTableChange = async (tableSel, prevSnapshot, timeout = 8000) => {
+              const start = Date.now();
+              while (Date.now() - start < timeout) {
+                await esperar(300);
+                const rows = Array.from(document.querySelectorAll(tableSel + ' > tbody > tr'));
+                // compare length and first row content (robust against reorders)
+                const firstText = rows[0] ? rows[0].innerText.trim() : '';
+                if (rows.length !== prevSnapshot.count || firstText !== prevSnapshot.first) return { rows, firstText };
+              }
+              return null;
+            };
+
+            // pagination loop with robust next-button detection and waits
+            const tableSelector = "table[id$='tbExpedientes']";
+            const tableEl = document.querySelector(tableSelector);
+            const pager = tableEl ? findPagerForTable(tableEl) : null;
+
+            let guardPages = 0;
+            const MAX_PAGES = 1000;
+
             while (true) {
                 if (window.PJE_PARAR) {
                     console.log("%c ⏹ Execução interrompida pelo usuário durante a paginação. Gerando arquivo...", "color: orange; font-weight: bold;");
                     break;
                 }
+
                 console.log(`      Página ${paginaAtual}...`);
-                let linhasTabela = document.querySelectorAll("table[id$='tbExpedientes'] > tbody > tr");
+
+                let linhasTabela = document.querySelectorAll(tableSelector + " > tbody > tr");
                 if (linhasTabela.length > 0) {
                     linhasTabela.forEach(linha => {
                         let celulas = linha.querySelectorAll("td");
@@ -1309,12 +1348,49 @@ window.PJE_PARAR = false;
                         }
                     });
                 }
-                let botaoAvancar = document.querySelector(".rich-datascr-button[onclick*='fastforward']");
-                if (botaoAvancar && !botaoAvancar.classList.contains('rich-datascr-inact')) {
-                    botaoAvancar.click();
-                    await esperar(TEMPO_ESPERA_PAGINACAO);
-                    paginaAtual++;
+
+                // detect next button within pager (prefer specific selectors, fallback to heuristics)
+                let botaoAvancar = null;
+                if (pager) {
+                  const candidates = Array.from(pager.querySelectorAll('.rich-datascr-button'));
+                  botaoAvancar = candidates.find(b => {
+                    const onclick = (b.getAttribute('onclick') || '').toLowerCase();
+                    const title = (b.getAttribute('title') || '').toLowerCase();
+                    const txt = (b.innerText || '').trim();
+                    if (onclick.includes('fastforward') || onclick.includes('next') || onclick.includes('pagina')) return true;
+                    if (title.includes('próxima') || title.includes('proxima') || txt === '»' || txt === '>>') return true;
+                    return false;
+                  }) || candidates[candidates.length-1] || null;
                 } else {
+                  // global fallback
+                  const globalCandidates = Array.from(document.querySelectorAll('.rich-datascr-button'));
+                  botaoAvancar = globalCandidates.find(b => (b.getAttribute('onclick')||'').toLowerCase().includes('fastforward')) || globalCandidates.find(b => (b.innerText||'').trim() === '»') || null;
+                }
+
+                // Check active state
+                if (botaoAvancar && !botaoAvancar.classList.contains('rich-datascr-inact')) {
+                    // snapshot before click
+                    const prevRows = Array.from(document.querySelectorAll(tableSelector + ' > tbody > tr'));
+                    const prevSnapshot = { count: prevRows.length, first: prevRows[0] ? prevRows[0].innerText.trim() : '' };
+
+                    botaoAvancar.click();
+
+                    // wait for an actual table change (or at least a timeout)
+                    const changed = await waitForTableChange(tableSelector, prevSnapshot, Math.max(3000, TEMPO_ESPERA_PAGINACAO));
+                    if (!changed) {
+                      // fallback wait to give table time
+                      await esperar(TEMPO_ESPERA_PAGINACAO);
+                    }
+
+                    paginaAtual++;
+                    guardPages++;
+                    if (guardPages > MAX_PAGES) {
+                      console.warn('%c ⚠ Parei paginação: atingido limite máximo de páginas.', 'color: orange');
+                      break;
+                    }
+
+                } else {
+                    // no more pages
                     break;
                 }
             }
