@@ -1,6 +1,6 @@
 {
   "name": "projudi_cita_inti",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Automação de extração de Citações e Intimações do Portal PROJUDI",
   "main": "main.js",
   "scripts": {
@@ -12,7 +12,6 @@
     "lfs:track:zip": "git lfs track \"*.zip\" && git add .gitattributes",
     "bump-version": "node scripts/bump_version.js"
   },
-
   "keywords": [],
   "author": "João Guilherme Almeida Viana <joao.aviana@neoenergia.com>",
   "license": "ISC",
