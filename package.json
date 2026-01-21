@@ -1,6 +1,6 @@
 {
   "name": "projudi_cita_inti",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Automação de extração de Citações e Intimações do Portal PROJUDI",
   "main": "main.js",
   "scripts": {
