@@ -186,101 +186,7 @@
         .service-card:hover:not(.disabled) {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            border-color: var(--primary-color);
-        }
-
-        .service-card.disabled {
-            cursor: default;
-            opacity: 0.7;
-            background-color: #f8f9fa;
-        }
-
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            background-color: var(--card-icon-bg);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--card-icon-color);
-            margin-bottom: 20px;
-        }
-
-        .service-card.disabled .card-icon {
-            background-color: var(--card-icon-disabled-bg);
-            color: var(--card-icon-disabled-color);
-        }
-
-        .card-icon svg { width: 24px; height: 24px; color: inherit; }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-
-        .card-desc {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            flex: 1;
-        }
-
-        .card-status {
-            margin-top: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 20px;
-            align-self: flex-start;
-        }
-
-        /* Estimated time label inside service cards */
-        .estimated-time {
-            margin-top: 8px;
-            font-size: 12px;
-            color: #374151; /* gray-700 */
-            font-weight: 600;
-        }
-        .estimated-time small { color: #6b7280; font-weight: 500; display:block; margin-top:2px; font-size:11px; }
-
-
-        .status-active {
-            background-color: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .status-soon {
-            background-color: #ffecb5;
-            color: #664d03;
-        }
-
-        .arrow-icon {
-            position: absolute;
-            bottom: 25px;
-            right: 25px;
-            color: var(--primary-color);
-            opacity: 0;
-            transform: translateX(-10px);
-            transition: all 0.3s ease;
-        }
-
-        .service-card:hover:not(.disabled) .arrow-icon {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        /* --- State persistence helpers (scroll) --- */
-        
-
-        .platform-tag {
-            font-size: 10px;
-            text-transform: uppercase;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 4px;
+            <!-- Update UI removed (now automatic/default to repository updates.json) -->
             margin-bottom: 8px;
             display: inline-block;
             align-self: flex-start;
@@ -531,10 +437,9 @@
             <button id="btn-actions" class="btn-theme" title="Ações">Ações ▾</button>
             <div id="actions-menu" class="actions-menu" role="menu" aria-hidden="true">
                 <div style="padding:10px; display:flex; flex-direction:column; gap:8px;">
-                    <button id="btn-check-updates" class="btn-theme" title="Verificar atualizações">Verificar atualizações</button>
-                    <button id="btn-theme" class="btn-theme" title="Alternar tema">Tema</button>
-                    <button id="btn-request-service" class="btn-about" title="Solicitar Serviço">Solicitar Serviço</button>
-                </div>
+                        <button id="btn-theme" class="btn-theme" title="Alternar tema">Tema</button>
+                        <button id="btn-request-service" class="btn-about" title="Solicitar Serviço">Solicitar Serviço</button>
+                    </div>
             </div>
         </div>
     </div>
