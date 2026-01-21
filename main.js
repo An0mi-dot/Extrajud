@@ -150,14 +150,7 @@ ipcMain.handle('get-update-config', async () => {
   } catch (e) { console.error('get-update-config', e); return { updateServer: null, autoUpdate: false }; }
 });
 
-// Expose service versions to renderers
-ipcMain.handle('get-service-versions', async () => {
-  try {
-    const p = path.join(__dirname, 'services.json');
-    if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8'));
-  } catch (e) { console.error('get-service-versions', e); }
-  return {};
-});
+// get-service-versions handler removed (service-specific versions disabled)
 
 ipcMain.handle('set-update-config', async (event, cfg) => {
   try {

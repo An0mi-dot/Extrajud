@@ -227,18 +227,9 @@
             flex: 1;
         }
 
-        /* Metadata area inside each service card: version, env, company */
-        .service-meta {
-            display:flex;
-            gap:12px;
-            align-items:center;
-            margin-top:10px;
-            flex-wrap:wrap;
-        }
-        .service-meta .meta-item { font-size:13px; color:var(--text-secondary); }
-        .service-meta .meta-item strong { color:var(--text-color); margin-right:6px; font-weight:600; }
-        .company-select { border:1px solid var(--border-color); padding:4px 8px; border-radius:6px; background:var(--card-bg); color:var(--text-color); font-size:13px; }
-        html.dark .company-select { background: #2b2f31; color:var(--text-color); }
+        /* Service metadata removed (versão/ambiente/empresa) */
+        
+        
 
         .card-status {
             margin-top: 20px;
@@ -556,11 +547,6 @@
                 <div class="card-desc">
                     Automação completa para extração de Citações e Intimações do Portal PROJUDI, com geração de tabelas e evidências em PDF.
                 </div>
-                <div class="service-meta">
-                    <div class="meta-item"><strong>Versão:</strong> <span class="service-ver">?.?.?</span></div>
-                    <div class="meta-item"><strong>Ambiente:</strong> <span class="service-env"></span></div>
-                    <div class="meta-item"><label style="font-weight:600; margin-right:6px;">Empresa:</label><select class="company-select"><option>IBERDROLA</option><option>COELBA</option></select></div>
-                </div>
                 <div class="estimated-time">Tempo estimado: <strong>00:01:38</strong> <small>(Aproximadamente)</small></div>
                 <div class="card-status status-active">Disponível</div>
                 
@@ -582,11 +568,6 @@
                 <div class="card-title">Processos Arquivados</div>
                 <div class="card-desc">
                     Ferramenta de busca e extração em massa de processos já arquivados, permitindo auditoria de histórico.
-                </div>
-                <div class="service-meta">
-                    <div class="meta-item"><strong>Versão:</strong> <span class="service-ver">?.?.?</span></div>
-                    <div class="meta-item"><strong>Ambiente:</strong> <span class="service-env"></span></div>
-                    <div class="meta-item"><label style="font-weight:600; margin-right:6px;">Empresa:</label><select class="company-select"><option>IBERDROLA</option><option>COELBA</option></select></div>
                 </div>
                 <div class="estimated-time">Tempo estimado: <strong>Variável</strong> <small>(depende do volume; pode levar até horas)</small></div>
                 <div class="card-status status-active">Disponível</div>
@@ -616,11 +597,6 @@
                 <div class="card-desc">
                     Extração de Expedientes PJE 1º e 2º Grau (Pendentes de Ciência e Resposta).
                 </div>
-                <div class="service-meta">
-                    <div class="meta-item"><strong>Versão:</strong> <span class="service-ver">?.?.?</span></div>
-                    <div class="meta-item"><strong>Ambiente:</strong> <span class="service-env"></span></div>
-                    <div class="meta-item"><label style="font-weight:600; margin-right:6px;">Empresa:</label><select class="company-select"><option>IBERDROLA</option><option>COELBA</option></select></div>
-                </div>
                 <div class="estimated-time">Tempo estimado: <strong>Não estimado</strong> <small>(ainda não avaliado)</small></div>
                 <div class="card-status status-soon">Em desenvolvimento</div>
 
@@ -642,11 +618,6 @@
                 <div class="card-title">Integração Espaider</div>
                 <div class="card-desc">
                     Conector futuro para sincronização de dados e gestão jurídica no sistema Espaider.
-                </div>
-                <div class="service-meta">
-                    <div class="meta-item"><strong>Versão:</strong> <span class="service-ver">?.?.?</span></div>
-                    <div class="meta-item"><strong>Ambiente:</strong> <span class="service-env"></span></div>
-                    <div class="meta-item"><label style="font-weight:600; margin-right:6px;">Empresa:</label><select class="company-select"><option>IBERDROLA</option><option>COELBA</option></select></div>
                 </div>
                 <div class="card-status status-soon">Em Breve</div>
             </div>
@@ -744,29 +715,7 @@
                 }
             } catch (e) { console.error('Error restoring index state', e); }
 
-            // Populate service metadata (service-specific version, env) and wire company selects
-            try {
-                const svc = await ipcRenderer.invoke('get-service-versions') || {};
-                const env = process.platform + ' (' + process.arch + ')';
-                document.querySelectorAll('.service-card').forEach(card => {
-                    const key = (card.getAttribute('data-service') || '').toUpperCase();
-                    const verEl = card.querySelector('.service-ver');
-                    if (verEl) verEl.textContent = (svc[key] || '?.?.?');
-                    const envEl = card.querySelector('.service-env');
-                    if (envEl) envEl.textContent = env;
-
-                    // company select defaults and stop propagation so card click doesn't fire
-                    const sel = card.querySelector('.company-select');
-                    if (sel) {
-                        sel.value = 'IBERDROLA';
-                        sel.addEventListener('click', (e) => e.stopPropagation());
-                        sel.addEventListener('change', (e) => e.stopPropagation());
-                    }
-                });
-
-                // Prevent clicks inside service-meta from triggering card navigation
-                document.querySelectorAll('.service-meta').forEach(m => { m.addEventListener('click', (e) => e.stopPropagation()); });
-            } catch (e) { /* ignore */ }
+            // Service metadata removed.
         });
 
         // Transição de Saída para Links

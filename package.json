@@ -10,8 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lfs:install": "git lfs install",
     "lfs:track:zip": "git lfs track \"*.zip\" && git add .gitattributes",
-    "bump-version": "node scripts/bump_version.js",
-    "bump-service": "node scripts/bump_service_version.js"
+    "bump-version": "node scripts/bump_version.js"
   },
   "keywords": [],
   "author": "João Guilherme Almeida Viana <joao.aviana@neoenergia.com>",
