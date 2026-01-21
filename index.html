@@ -500,7 +500,20 @@
             return false;
         };
     </script>
-
+    
+    <script>
+        // Populate displayed app version on startup so footer doesn't show '?' until About is opened
+        (function(){
+            try {
+                const ipc = require('electron').ipcRenderer;
+                ipc.invoke('get-app-version').then(ver => {
+                    const v = ver || '?.?.?';
+                    const headVer = document.getElementById('app-version'); if (headVer) headVer.textContent = v;
+                    const envVer = document.getElementById('env-app-ver'); if (envVer) envVer.textContent = v;
+                }).catch(()=>{});
+            } catch(e) { /* ignore if not available */ }
+        })();
+    </script>
     <!-- Loader overlay shown while app loads -->
     <div id="app-loader" role="status" aria-live="polite">
         <div class="loader-box">
