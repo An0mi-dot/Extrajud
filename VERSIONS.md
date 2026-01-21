@@ -11,3 +11,12 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 30452a1
 - Notes: ci: add auto-bump workflow (on release label or [release] commit)
+## v1.0.3 - 2026-01-21
+
+- Commit: 08befd2
+- Notes: chore(scripts): bump-version auto-bumps services when present (opt-out: --no-services / NO_BUMP_SERVICES)
+- Services:
+  - PROJUDI: v1.0.1
+  - ARQUIVADOS: v1.0.1
+  - PJE: v0.1.1
+  - ESPAIDER: v0.1.1
