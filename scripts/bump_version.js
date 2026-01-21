@@ -34,6 +34,31 @@ if (fs.existsSync(updatesPath)) {
   } catch (e) { /* ignore */ }
 }
 
+// Bump all services versions if services.json exists (unless disabled)
+let bumpedServices = null;
+const servicesPath = path.join(root, 'services.json');
+const noBumpServices = process.argv.includes('--no-services') || process.env.NO_BUMP_SERVICES;
+if (noBumpServices) {
+  console.log('Skipping services bump due to --no-services / NO_BUMP_SERVICES');
+} else if (fs.existsSync(servicesPath)) {
+  try {
+    const services = readJSON(servicesPath);
+    bumpedServices = {};
+    for (const k of Object.keys(services)) {
+      const oldV = String(services[k] || '0.0.0').replace(/^v/i,'');
+      const parts = oldV.split('.').map(n => parseInt(n)||0);
+      let [maj, min, pat] = [parts[0]||0, parts[1]||0, parts[2]||0];
+      pat += 1;
+      if (pat > 9) { pat = 0; min += 1; }
+      const newV = `${maj}.${min}.${pat}`;
+      services[k] = newV;
+      bumpedServices[k] = newV;
+    }
+    writeJSON(servicesPath, services);
+    console.log('Bumped services:', Object.entries(bumpedServices).map(([k,v])=>`${k}->v${v}`).join(', '));
+  } catch (e) { bumpedServices = null; }
+}
+
 // Append to VERSIONS.md
 const now = new Date();
 const dateStr = now.toISOString().split('T')[0];
@@ -45,14 +70,25 @@ try {
 } catch (e) { commitMsg = ''; shortSha = ''; }
 
 const header = `## v${newVersion} - ${dateStr}`;
-const entry = [`${header}`, '', `- Commit: ${shortSha}`, `- Notes: ${commitMsg || 'n/a'}`, ''].join('\n');
+let entryLines = [header, '', `- Commit: ${shortSha}`, `- Notes: ${commitMsg || 'n/a'}`];
+if (bumpedServices) {
+  entryLines.push('- Services:');
+  for (const [k, v] of Object.entries(bumpedServices)) {
+    entryLines.push(`  - ${k}: v${v}`);
+  }
+}
+entryLines.push('');
+const entry = entryLines.join('\n');
 
 fs.appendFileSync(versionsPath, entry, 'utf8');
 
 // Stage and commit changes
+let gitAddPaths = `${pkgPath} ${updatesPath} ${versionsPath}`;
+if (bumpedServices && fs.existsSync(servicesPath)) gitAddPaths += ` ${servicesPath}`;
 try {
-  execSync(`git add ${pkgPath} ${updatesPath} ${versionsPath}`);
-  execSync(`git commit -m "chore(release): v${newVersion}"`);
+  execSync(`git add ${gitAddPaths}`);
+  const svcMsg = bumpedServices ? ` (services: ${Object.entries(bumpedServices).map(([k,v])=>`${k}@v${v}`).join(', ')})` : '';
+  execSync(`git commit -m "chore(release): v${newVersion}${svcMsg}"`);
   console.log('Bumped version to', newVersion);
   console.log('Committed release files.');
 } catch (e) {
