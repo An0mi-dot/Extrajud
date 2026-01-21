@@ -180,6 +180,8 @@ Posso ajudar a criar um workflow de CI (GitHub Actions) que rode esses testes em
 - Para arquivos pesados use Git LFS. Há helpers em `scripts/` e instruções anteriores neste README.
 - Há um workflow de auto-bump no `.github/workflows/` — revise as regras antes de confiar nele em produção.
 
+**Nota:** a partir de 2026-01-21 este repositório documenta **apenas** as versões do *aplicativo* em `VERSIONS.md`. O versionamento por serviço (ex.: `services.json` e scripts de bump por serviço) foi removido para simplificar o histórico — use `npm run bump-version` para registrar releases do app.
+
 ---
 
 ## Troubleshooting e dicas de manutenção
