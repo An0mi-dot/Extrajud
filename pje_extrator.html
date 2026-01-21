@@ -455,7 +455,17 @@
         }
 
         // --- Sistema de Modal ---
+        // Ensure only one modal is visible at a time
+        function closeAllModals(keepEl) {
+            try {
+                document.querySelectorAll('.modal-overlay').forEach(m => {
+                    if (keepEl && m === keepEl) m.style.display = 'flex'; else m.style.display = 'none';
+                });
+            } catch (e) { /* ignore */ }
+        }
+
         function showModal(data) {
+            closeAllModals(modal);
             modal.style.display = 'flex';
             modalTitle.innerText = data.title;
             modalBody.innerHTML = ''; // Limpa

@@ -69,6 +69,8 @@
             background: #94a3b8;
         }
 
+        
+
         body {
             font-family: 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
@@ -124,13 +126,21 @@
             background: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 8px 12px;
+            border-radius: 10px;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
+            box-shadow: none;
         }
-        .btn-theme:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .btn-theme:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2,6,23,0.06);
+            background: linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02));
+            color: var(--primary-color);
+        }
+        .btn-theme:active { transform: translateY(0); }
+        .btn-theme:focus { outline: none; box-shadow: 0 0 0 4px rgba(16,185,129,0.10); color: var(--primary-color); }
 
         /* Prevent overflow issues on dev reload */
         .service-card { word-break: break-word; }
@@ -282,11 +292,13 @@
 
         .footer {
             text-align: center;
-            padding: 15px;
+            padding: 8px 12px;
             color: var(--text-secondary);
-            font-size: 13px;
+            font-size: 12px;
             border-top: 1px solid var(--border-color);
             background-color: var(--card-bg);
+            position: relative;
+            min-height: 40px;
         }
 
         /* Footer contact highlight (more discrete) */
@@ -415,16 +427,43 @@
             background: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
-            padding: 5px 12px;
-            border-radius: 6px;
+            padding: 6px 12px;
+            border-radius: 10px;
             font-size: 13px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 140ms ease, color 140ms ease, transform 140ms ease;
         }
         .btn-about:hover {
-            border-color: var(--primary-color);
+            background: rgba(16,185,129,0.06);
             color: var(--primary-color);
+            transform: translateY(-1px);
         }
+        .btn-about:focus { outline: none; box-shadow: 0 0 0 4px rgba(16,185,129,0.06); }
+
+        /* Actions dropdown */
+        .actions-menu {
+            position: absolute;
+            right: 0;
+            top: 44px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 6px 24px rgba(2,6,23,0.08);
+            z-index: 1200;
+            min-width: 220px;
+            opacity: 0;
+            transform: translateY(-8px);
+            pointer-events: none;
+            transition: opacity 160ms ease, transform 160ms ease;
+        }
+        .actions-menu[aria-hidden="false"] {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        #btn-actions { padding: 6px 10px; transition: transform 160ms ease; }
+        #btn-actions.open { transform: translateY(-1px); }
+        .actions-menu button { text-align: left; }
 
         .info-section {
             margin-top: 20px;
@@ -475,13 +514,18 @@
             <img src="assets/logo.png" alt="Logo" style="height: 80px; width: auto;">
             EXTRATJUD
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="font-size: 14px; color: #666;">Versão <span id="app-version">?</span></div>
-            <button id="btn-check-updates" class="btn-theme" title="Verificar atualizações">Verificar atualizações</button>
-            <button id="btn-theme" class="btn-theme" title="Alternar tema">Tema</button>
-            <button id="btn-about" class="btn-about">Sobre</button>
+        <div style="display:flex; align-items:center; gap:12px; position:relative;">
+            <button id="btn-actions" class="btn-theme" title="Ações">Ações ▾</button>
+            <div id="actions-menu" class="actions-menu" role="menu" aria-hidden="true">
+                <div style="padding:10px; display:flex; flex-direction:column; gap:8px;">
+                    <button id="btn-check-updates" class="btn-theme" title="Verificar atualizações">Verificar atualizações</button>
+                    <button id="btn-theme" class="btn-theme" title="Alternar tema">Tema</button>
+                    <button id="btn-request-service" class="btn-about" title="Solicitar Serviço">Solicitar Serviço</button>
+                </div>
+            </div>
         </div>
     </div>
+    
 
     <div class="container">
         <div class="welcome-text">
@@ -598,8 +642,26 @@
     </script>
 
     <div class="footer">
-        <p class="footer-note">Caso queira solicitar mais serviços, fale com <strong>João Guilherme Almeida Viana</strong> (Aprendiz Administrativo).</p>
+        <div style="display:flex; align-items:center; justify-content:center;">
+            <button id="btn-about" class="btn-about">Sobre</button>
+        </div>
+        <div style="position:absolute; right:12px; bottom:6px; font-size:12px; color:var(--text-secondary);">Versão <span id="app-version">?</span></div>
     </div>
+
+    <script>
+        // Utility: close all modals except the one to keep (pass null/undefined to close all)
+        function closeAllModals(keepEl) {
+            try {
+                document.querySelectorAll('.modal').forEach(m => {
+                    if (keepEl && m === keepEl) {
+                        m.style.display = 'block';
+                    } else {
+                        m.style.display = 'none';
+                    }
+                });
+            } catch (e) { /* ignore */ }
+        }
+    </script>
 
     <!-- Modal Sobre -->
     <div id="modal-about" class="modal">
@@ -694,7 +756,7 @@
         const span = document.getElementsByClassName("close")[0];
 
         btn.onclick = function() {
-            modal.style.display = "block";
+            closeAllModals(modal);
             // Populate versions
             document.getElementById('env-node').textContent = process.versions.node;
             document.getElementById('env-electron').textContent = process.versions.electron;
@@ -722,6 +784,155 @@
 
         // App clock removed per user request
     </script>
+    <script>
+        // Actions dropdown toggle
+        (function(){
+            const btn = document.getElementById('btn-actions');
+            const menu = document.getElementById('actions-menu');
+            if(!btn || !menu) return;
+            function open(){ menu.setAttribute('aria-hidden','false'); btn.classList.add('open'); }
+            function close(){ menu.setAttribute('aria-hidden','true'); btn.classList.remove('open'); }
+            btn.addEventListener('click', (e)=>{ e.stopPropagation(); const openState = menu.getAttribute('aria-hidden') === 'false'; if(openState) close(); else open(); });
+            // close when clicking outside
+            window.addEventListener('click', (ev)=>{ if(menu.getAttribute('aria-hidden') === 'false' && !menu.contains(ev.target) && ev.target !== btn) close(); });
+            // allow Esc to close
+            window.addEventListener('keydown', (ev)=>{ if(ev.key === 'Escape') close(); });
+        })();
+    </script>
+    <!-- Service Request Modal -->
+    <div id="modal-request" class="modal">
+        <div class="modal-content">
+            <span class="close" id="req-close">&times;</span>
+            <h3 style="margin-top:0;">Solicitar Serviço</h3>
+            <div style="margin-top:10px;">
+                <label style="display:block; font-weight:600; margin-bottom:6px;">Plataforma</label>
+                <select id="req-platform" style="width:100%; padding:8px; box-sizing:border-box;">
+                    <option value="PROJUDI">PROJUDI</option>
+                    <option value="PJE">PJE</option>
+                    <option value="ESPAIDER">ESPAIDER</option>
+                    <option value="OUTRO">Outro</option>
+                </select>
+            </div>
+            <div style="margin-top:12px;">
+                <label style="display:block; font-weight:600; margin-bottom:6px;">Descrição do serviço</label>
+                <textarea id="req-desc" rows="6" tabindex="0" style="width:100%; padding:10px; box-sizing:border-box; font-size:13px;" placeholder="Descreva o serviço que deseja solicitar..."></textarea>
+                <div id="req-error" style="color:#b91c1c; margin-top:8px; display:none; font-size:13px;"></div>
+            </div>
+            <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
+                <button id="req-cancel" class="btn-about">Cancelar</button>
+                <button id="req-send" class="btn-theme">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            const btnReq = document.getElementById('btn-request-service');
+            const modal = document.getElementById('modal-request');
+            const sel = document.getElementById('req-platform');
+            const desc = document.getElementById('req-desc');
+            const btnSend = document.getElementById('req-send');
+            const btnCancel = document.getElementById('req-cancel');
+            const btnClose = document.getElementById('req-close');
+            const errEl = document.getElementById('req-error');
+            if(!btnReq || !modal) return;
+
+            function openModal(){
+                closeAllModals(modal);
+                errEl.style.display = 'none';
+                desc.removeAttribute('disabled');
+                desc.removeAttribute('readonly');
+                desc.value = '';
+                // ensure modal-content is focusable so inputs receive keyboard events
+                const modalContent = modal.querySelector('.modal-content');
+                if(modalContent && !modalContent.hasAttribute('tabindex')) modalContent.setAttribute('tabindex','-1');
+                // small delay then focus the textarea
+                setTimeout(()=>{ try{ desc.focus(); desc.select(); }catch(e){} }, 150);
+            }
+
+            function closeModal(){ modal.style.display = 'none'; }
+
+            btnReq.addEventListener('click', openModal);
+            btnCancel.addEventListener('click', closeModal);
+            btnClose.addEventListener('click', closeModal);
+
+            // Close when clicking outside
+            window.addEventListener('click', (ev) => { if(ev.target === modal) closeModal(); });
+
+            btnSend.addEventListener('click', async () => {
+                const text = (desc.value || '').trim();
+                if(!text){ errEl.textContent = 'Por favor descreva o serviço desejado.'; errEl.style.display = 'block'; desc.focus(); return; }
+                try {
+                    let appVer = '?.?.?';
+                    try { appVer = await require('electron').ipcRenderer.invoke('get-app-version') || appVer; } catch(e){}
+                    const platform = sel.value || 'OUTRO';
+                    const plainSubject = `Solicitação de Serviço - ${platform} - EXTRATJUD`;
+                    const subject = encodeURIComponent(plainSubject);
+
+                    // Build an HTML body with light corporate styling. Attempt to embed local logo as data URL.
+                    function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+                    let logoImg = '';
+                    try{
+                        const fs = require('fs');
+                        const path = require('path');
+                        const logoPath = path.join(__dirname || '.', 'assets', 'logo.png');
+                        if(fs.existsSync(logoPath)){
+                            const bin = fs.readFileSync(logoPath);
+                            const b64 = bin.toString('base64');
+                            // Embeds the repo `assets/logo.png` (preferably a transparent PNG)
+                            logoImg = `<img src="data:image/png;base64,${b64}" alt="EXTRATJUD" height="500" style="height:500px; width:auto; max-width:800px; display:block; margin-bottom:12px; background:transparent;"/>`;
+                        }
+                    }catch(e){ /* ignore if not readable */ }
+
+                    const html = `<!doctype html><html><body style="font-family: 'Segoe UI', Tahoma, sans-serif; color:#1f2937;">
+                        ${logoImg}
+                        <h2 style="color:#10b981; margin:0 0 8px 0;">Solicitação de Serviço</h2>
+                        <p style="margin:0 0 8px 0; color:#374151;"><strong>Plataforma:</strong> ${escapeHtml(platform)}</p>
+                        <div style="margin-top:6px; color:#111; font-size:14px; line-height:1.4;">${escapeHtml(text).replace(/\n/g,'<br/>')}</div>
+                        <hr style="margin:12px 0; border:none; border-top:1px solid #e6eef2;" />
+                        <p style="color:#6b7280; font-size:12px; margin:0;">App Version: ${escapeHtml(appVer)} &nbsp;|&nbsp; Platform: ${escapeHtml(process.platform + ' ' + process.arch)}</p>
+                    </body></html>`;
+
+                    const body = encodeURIComponent(html);
+                    const recipients = 'jguivianna@gmail.com,joao.aviana@neoenergia.com';
+                    // On Windows try to open a formatted Outlook compose window using COM (PowerShell) first
+                    try {
+                        if (process.platform === 'win32') {
+                            try {
+                                const createRes = await require('electron').ipcRenderer.invoke('create-outlook-mail-html', { html: html, subject: plainSubject, to: recipients });
+                                if (createRes && createRes.ok) { try { alert('Aberto no Outlook com formatação.'); } catch(e){}; closeModal(); return; }
+                            } catch(e) { /* ignore and fallback */ }
+                        }
+                    } catch(e) { /* ignore */ }
+
+                    const mailto = `mailto:${recipients}?subject=${subject}&body=${body}`;
+                    try {
+                        const res = await require('electron').ipcRenderer.invoke('open-external', mailto);
+                        if (res && res.ok) {
+                            try { alert('Cliente de e-mail aberto.'); } catch(e){}
+                            closeModal();
+                            return;
+                        }
+                        // If failed, try a simplified plaintext mailto (shorter)
+                        const simpleBody = encodeURIComponent((text||'').slice(0,600) + '\n\n(Descrição truncada - cole o texto completo aqui se necessário)');
+                        const simpleMailto = `mailto:${recipients}?subject=${subject}&body=${simpleBody}`;
+                        const res2 = await require('electron').ipcRenderer.invoke('open-external', simpleMailto);
+                        if (res2 && res2.ok) {
+                            try { alert('Cliente de e-mail aberto com corpo simplificado (texto truncado).'); } catch(e){}
+                            closeModal();
+                            return;
+                        }
+                        try { alert('Falha ao abrir cliente de e-mail. Verifique o aplicativo padrão para mailto.'); } catch(e){}
+                    } catch(e) {
+                        try { alert('Erro ao tentar abrir cliente de e-mail. Verifique o console principal para detalhes.'); } catch(err){}
+                    }
+                    closeModal();
+                } catch(err){
+                    try { alert('Não foi possível abrir o cliente de e-mail.'); } catch(e){}
+                }
+            });
+        })();
+    </script>
     <!-- Theme selector modal -->
     <div id="modal-theme" class="modal">
         <div class="modal-content">
@@ -747,7 +958,7 @@
             const btnDefault = document.getElementById('theme-default');
             const btnClose = document.getElementById('theme-close');
 
-            function openModal(){ if(modal) modal.style.display = 'block'; }
+            function openModal(){ if(modal) closeAllModals(modal); }
             function closeModal(){ if(modal) modal.style.display = 'none'; }
 
             if(btnTheme) btnTheme.addEventListener('click', openModal);
@@ -817,7 +1028,7 @@
             const updResult = document.getElementById('upd-result');
             let lastUrl = null;
 
-            function openModal(){ if(modalUpd) modalUpd.style.display = 'block'; }
+            function openModal(){ if(modalUpd) closeAllModals(modalUpd); }
             function closeModal(){ if(modalUpd) modalUpd.style.display = 'none'; }
 
             if(btnCheck) btnCheck.addEventListener('click', async ()=>{

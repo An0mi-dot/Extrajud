@@ -1,128 +1,209 @@
-# Documentação Técnica: Automação Projudi (Citações e Intimações)
+# Extrajud — Automação Projudi (Citações / Intimações)
 
-## 📌 Visão Geral
-Este projeto é uma ferramenta de automação desenvolvida em **Node.js** com interface **Electron**, projetada para operar no sistema **Projudi (TJBA)**. 
+**Última atualização:** 2026-01-20
 
-O objetivo principal é realizar a varredura automática das listas de **Citações** e **Intimações**, extrair dados processuais para uma planilha Excel formatada e gerar arquivos PDF contendo as "evidências" (prints) das telas visitadas.
+Este repositório contém uma aplicação desktop (Electron) que automatiza a extração de dados em portais judiciais (p.ex. Projudi), gera planilhas Excel com os dados encontrados e cria PDFs com evidências (screenshots) das páginas visitadas.
 
-### 🎯 Funcionalidades Principais
-1. **Login Automático**: Acesso ao portal Projudi TJBA.
-2. **Filtro por Período**: Seleção de Data Inicial e Final para a busca.
-3. **Extração de Dados**: Captura do NPU, Datas (Postagem, Ciência, Limite) e outros metadados.
-4. **Relatório Excel**: Geração de planilha estilizada (.xlsx) sem dependência de modelos externos.
-5. **Evidências em PDF**: Geração de um PDF consolidado com o "print" de cada página percorrida, garantindo que o cabeçalho e rodapé da tabela não sejam cortados.
+O README abaixo foi escrito para ser entregue a outros mantenedores: explica arquitetura, operações comuns, pontos de atenção, como desenvolver e como distribuir.
 
 ---
 
-## 🛠️ Stack Tecnológica
+## Sumário
 
-| Tecnologia | Função no Projeto |
-| :--- | :--- |
-| **Electron** | Container da Aplicação (Frontend + Backend Node). |
-| **Playwright** | Automação do navegador (engine Chromium/Edge). Responsável pela navegação, cliques e screenshots. |
-| **Cheerio** | Parser de HTML (jQuery-like). Usado para "ler" o conteúdo da tabela de forma rápida e robusta. |
-| **ExcelJS** | Geração e estilização das planilhas Excel. |
-| **PDF-Lib / HTML-PDF** | Montagem do PDF final das evidências. |
-| **DayJS** | Manipulação e formatação de datas. |
-
----
-
-## 📂 Estrutura de Arquivos
-
-### `main.js` (Processo Principal)
-- Ponto de entrada da aplicação Electron.
-- Gerencia a janela principal (`BrowserWindow`).
-- Recebe eventos da interface (via IPC `start-automation`) e invoca o serviço de automação.
-
-### `index.html` (Interface do Usuário)
-- Interface simples onde o usuário insere credenciais e seleciona o intervalo de datas.
-- Contém lógica de JavaScript para envio dos dados ao processo principal.
-
-### `automacao_service.js` (O "Cérebro" do Projeto)
-Este é o arquivo mais crítico. Contém toda a lógica de negócio e regras de scraping.
-
-#### Principais Funções:
-*   **`runAutomation(args, eventSender)`**: Função `async` principal. Gerencia todo o ciclo de vida: Login -> Navegação Citações -> Extração -> Navegação Intimações -> Extração -> Geração de Arquivos.
-*   **`extractTableCustom(html, mode)`**: Recebe o HTML bruto da página e usa o `Cheerio` para parsear as linhas da tabela. Contém lógicas de Regex para limpar dados e normalizar datas.
-*   **`saveEvidencePDF(...)`**: Recebe o array de buffers (imagens) e gera o PDF final com layout personalizado (Cabeçalho vermelho, datas, etc).
-*   **`saveToExcel(...)`**: Cria a planilha do zero usando `ExcelJS`, aplicando estilos (cores, bordas, fontes) programaticamente.
+- Visão geral
+- Requisitos
+- Estrutura do projeto e descrição de arquivos
+- IPC e contratos entre `renderer` e `main`
+- Update-checker (`updates.json`) e configuração
+- Modal "Solicitar Serviço" (envio de e-mail)
+- Execução e empacotamento
+- Testes e scaffold local
+- Git LFS, CI (auto-bump) e publicação
+- Troubleshooting e dicas de manutenção
 
 ---
 
-## ⚠️ Pontos Críticos e Lógicas Específicas
-Se você for alterar este código, preste atenção nestes detalhes que foram implementados para corrigir bugs específicos do site Projudi:
+## Visão geral
 
-### 1. Captura de Tela (Screenshots)
-O Projudi possui layouts antigos com tabelas aninhadas.
-*   **Problema**: Tirar print apenas da `<table>` cortava a última linha. Tirar do `<body>` pegava muita sujeira.
-*   **Solução Atual**: O robô localiza o cabeçalho da grade (`tr.subTituloTabela`), encontra a tabela pai e, em seguida, captura o **Container Pai** dessa tabela.
-*   **Trecho de código**: Procure por `// --- TABELA DE RESULTADOS (SOLUÇÃO REFINADA v4` no `automacao_service.js`.
+Funcionalidade principal: automatizar navegação em portais judiciais (login, filtros de período, paginação), extrair dados tabulares relevantes (NPU, datas, descrição), gerar saída legível (Excel) e produzir PDFs com as telas capturadas como evidência.
 
-### 2. Paginação de Intimações (Bug do Projudi)
-*   **Problema**: No Projudi, ao clicar na "Página 2" da lista de Intimações, o filtro de data é perdido (o site reseta para "todos").
-*   **Solução**: Antes de clicar em "Próximo", o robô verifica se estamos no modo `inti` e **re-preenche os campos de data** no DOM (`#horarioInicio`, `#horarioFim`) para garantir que a página seguinte respeite o filtro.
+Arquitetura resumida:
 
-### 3. Seletores de Login
-O código possui lógica de "retry" e espera explícita para os campos de Login, pois o carregamento do frame de autenticação do TJBA às vezes sofre atrasos.
-
-### 4. Excel Programático
-Não usamos um arquivo `.xlsx` modelo na pasta. A planilha é desenhada linha a linha pelo código. Se precisar mudar a cor do cabeçalho de Azul Petróleo para outra cor, edite a função `applyHeaderStyle` dentro de `saveToExcel`.
+- Processo principal (`main.js`): gerencia janela, IPC e integração com SO (abrir links, criar e-mails via Outlook COM). Também abriga utilitários de rede (fetch com retries) e persistência de configuração (`state.json`).
+- Renderer (`index.html` e páginas auxiliares): UI, modais e controles que disparam automações via IPC.
+- Serviço de automação (`automacao_service.js`): core das automações (Playwright/Cheerio/ExcelJS/PDF generation).
 
 ---
 
-## 🚀 Como Executar
-Pré-requisitos: Node.js instalado.
+## Requisitos
 
-1.  **Instalar dependências**:
-    ```bash
-    npm install
-    ```
-2.  **Iniciar aplicação**:
-    ```bash
-    npm start
-    ```
+- Node.js 18+ (recomendado)
+- npm 9+
+- Windows é o ambiente mais testado (integração Outlook via COM), porém o app roda em macOS/Linux com funcionalidades limitadas.
 
-## 🐛 Troubleshooting Comum
+Instalação:
 
-*   **Erro "Target closed"**: Geralmente acontece se o usuário fecha o navegador manualmente antes do robô terminar. O código tenta tratar isso no bloco `catch` principal.
-*   **Print vazio/cortado**: Verificar se o layout do Projudi mudou. A lógica de captura depende da classe `tr.subTituloTabela`.
-*   **Datas incorretas**: O parser de datas (`extractTableCustom`) usa Regex para formatos `DD/MM/YYYY` e formatos por extenso (`21 de Janeiro de...`). Se o site mudar a formatação, o Regex precisará de ajuste.
-
----
-*Documentação gerada em 12/01/2026.*
-
----
-
-## 🗂️ Arquivos Grandes e Git LFS
-
-Se você planeja commitar arquivos grandes (por exemplo um ZIP de ~1GB), use Git LFS para evitar erros do Git e armazenamento ineficiente.
-
-Passos rápidos (máquina Windows):
-
-1. Instale o Git LFS (uma vez):
-```powershell
-winget install --id Git.GitLFS -e
-# ou
-choco install git-lfs -y
-```
-2. Inicialize e marque `*.zip` para uso com LFS (no repositório):
-```powershell
-git lfs install
-git lfs track "*.zip"
-git add .gitattributes
-git commit -m "chore: track zip files with Git LFS"
-```
-3. Adicione e envie o ZIP grande:
-```powershell
-git add scripts.zip
-git commit -m "Add large scripts.zip (LFS)"
-git push
+```bash
+npm install
 ```
 
-Também fornecemos um helper PowerShell em `scripts/setup-lfs.ps1` e scripts npm `lfs:install` e `lfs:track:zip` no `package.json` para facilitar.
+Execução (dev):
 
-Observações:
-- GitHub rejeita arquivos maiores que 100MB via git normal. Use LFS para armazenar binários grandes.
-- Git LFS pode ter cotas na conta GitHub; verifique plano/limites.
-- Se você já cometeu um arquivo grande por engano, remova do histórico antes do push (posso ajudar com `git filter-repo`/BFG se necessário).
+```bash
+npm start
+```
 
+---
+
+## Estrutura do projeto e descrição dos arquivos importantes
+
+- `main.js` — processo principal
+  - Cria a `BrowserWindow` e carrega `index.html`.
+  - Persistência: grava `state.json` em `app.getPath('userData')`.
+  - `fetchJson(url, timeout, retries)`: utilitário robusto para buscar metadados (atualizações).
+  - IPC handlers: atualização, abrir links, criar e-mail Outlook (PowerShell+COM), execução/paro de automações.
+
+- `index.html` — UI principal
+  - Contém modais: Tema (Dark Mode), Atualizações, Solicitar Serviço, Sobre.
+  - Interage com `main` via `ipcRenderer.invoke/send` para iniciar automações e checar updates.
+
+- `automacao_service.js` — automação (Playwright + Cheerio)
+  - `runAutomation`, `runArchivedAutomation`, `runPjeAutomation` e `stopAutomation`.
+  - `extractTableCustom(html, mode)`: parse robusto com Cheerio e regex para normalizar datas e campos.
+  - `saveToExcel(...)` (ExcelJS) e `saveEvidencePDF(...)` (PDF generation).
+
+- `script_pje_problema.js` — heurísticas específicas para PJE (menus, retries, fallback selectors).
+
+- `pje_extrator.html`, `extrator_projudi.html`, `arquivados_projudi.html` — UIs / logs por extrator.
+
+- `updates.json` — metadados de update (padrão do checker). Exemplo raw: https://raw.githubusercontent.com/An0mi-dot/Extrajud/main/updates.json
+
+- `assets/` — imagens, logo e recursos estáticos.
+
+---
+
+## IPC: contratos e uso (resumo)
+
+Handlers expostos pelo `main` (use `ipcRenderer.invoke` para handles e `ipcRenderer.send` para eventos):
+
+- `load-app-state` (handle): retorna estado salvo.
+- `save-app-state` (send): salva estado.
+- `get-app-version` (handle).
+- `get-update-config` / `set-update-config` (handles): ler/gravar `updateServer` e `autoUpdate`.
+- `check-for-updates` (handle): busca JSON remoto e compara versão.
+- `perform-update` (send): abre link de download.
+- `open-external` (handle): wrapper de `shell.openExternal()` com fallback para `mailto:` no Windows.
+- `create-outlook-mail-html` (handle): abre rascunho no Outlook com `HTMLBody` (Windows).
+- `run-script`, `run-archived-script`, `run-pje-script` (on): iniciam automações.
+- `stop-script` (on): solicita parada.
+- `send-input`, `pje-input-response` (on): canais para comunicação de inputs do usuário.
+- `dialog:openDirectory` (handle): abre diálogo de seleção de pasta.
+
+Se alterar qualquer nome aqui, atualize todos os `ipcRenderer.*` nos renderers.
+
+---
+
+## Update-checker e `updates.json`
+
+Fluxo:
+
+1. O usuário pode configurar um `updateServer` (URL para JSON) no modal de atualização na UI.
+2. O `main` usa `fetchJson` para obter o JSON e compara `version` (ou `tag_name`) com `package.json` local.
+3. Se houver versão mais nova, a UI exibe changelog e permite abrir o `meta.url`.
+
+Formato recomendado (`updates.json`):
+
+```json
+{
+  "version": "1.0.1",
+  "url": "https://github.com/OWNER/REPO/releases/tag/v1.0.1",
+  "notes": "Notas de versão...",
+  "published_at": "2026-01-20T00:00:00Z"
+}
+```
+
+Nota: o repositório contém um `updates.json` exemplo em https://raw.githubusercontent.com/An0mi-dot/Extrajud/main/updates.json
+
+Se der `timeout` na checagem, verifique rede/proxy/firewall e se a URL é acessível no host onde o app roda.
+
+---
+
+## Modal "Solicitar Serviço" e envio de e-mail
+
+- O modal gera um HTML de e-mail com o logo (quando encontrado) embutido em Base64.
+- Tenta criar um rascunho no Outlook (Windows) via PowerShell+COM. Se falhar, tenta `shell.openExternal('mailto:...')` com fallback de `cmd /c start` no Windows.
+
+Pontos a conferir:
+
+- Se der erro no compose do Outlook, veja o log do `main` no terminal que executa `npm start`.
+
+---
+
+## Execução, empacotamento e distribuição
+
+Executar localmente:
+
+```bash
+npm install
+npm start
+```
+
+Empacotamento recomendado (exemplos):
+
+- Com `electron-builder`: configure `build` em `package.json` e rode `npx electron-builder --win --x64`.
+- Com `electron-packager`: `npx electron-packager . --platform=win32 --arch=x64 --out=dist`.
+
+Para atualizações automáticas (produto em produção), considere usar `electron-updater` e um servidor de artefatos que hospede instaladores compatíveis com o seu método de update.
+
+---
+
+## Testes e scaffold local
+
+- O repositório inclui um scaffold para testes baseados em Playwright (`tests/`). Instale os browsers se necessário:
+
+```bash
+npx playwright install
+```
+
+- Execute testes de Playwright via script (se disponível):
+
+```bash
+npm run test:playwright
+```
+
+Posso ajudar a criar um workflow de CI (GitHub Actions) que rode esses testes em PRs.
+
+---
+
+## Git LFS, CI e automações (observações)
+
+- Para arquivos pesados use Git LFS. Há helpers em `scripts/` e instruções anteriores neste README.
+- Há um workflow de auto-bump no `.github/workflows/` — revise as regras antes de confiar nele em produção.
+
+---
+
+## Troubleshooting e dicas de manutenção
+
+- Timeout no `check-for-updates`: verifique URL, proxy e alcance da rede; abra o raw JSON no navegador a partir da máquina que executa o app.
+- Páginas em branco ou ReferenceError: abra DevTools (renderer) e veja console; verifique se `contextIsolation` e `nodeIntegration` são apropriados para suas mudanças de segurança.
+- Falha ao abrir Outlook: confirme instalação/configuração Outlook desktop.
+
+Logs úteis: terminal que iniciou o Electron (onde `npm start` roda) e console da DevTools do renderer.
+
+---
+
+## Contribuições e próximos passos sugeridos
+
+- Padronizar seletores dos extratores e documentar cada seletor (arquivo CHANGELOG ou docs/).
+- Adicionar testes Playwright end-to-end para fluxos críticos (login, extração, geração de arquivos).
+- Publicar `updates.json` em URL estável (GitHub Pages, S3 ou CDN) e apontar a configuração padrão do app para esse endpoint.
+
+Se desejar, eu posso:
+
+- criar o workflow de publicação do `updates.json` (ex.: GitHub Pages) e atualizar o `package.json`;
+- adicionar o CI que roda os testes Playwright;
+- criar um instalador e publicar um release automático.
+
+---
+
+Arquivo `updates.json` (raw): https://raw.githubusercontent.com/An0mi-dot/Extrajud/main/updates.json
