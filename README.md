@@ -182,6 +182,34 @@ Posso ajudar a criar um workflow de CI (GitHub Actions) que rode esses testes em
 
 **Nota:** a partir de 2026-01-21 este repositório documenta **apenas** as versões do *aplicativo* em `VERSIONS.md`. O versionamento por serviço (ex.: `services.json` e scripts de bump por serviço) foi removido para simplificar o histórico — use `npm run bump-version` para registrar releases do app.
 
+## Versionamento do App 🔖
+
+- Comando: `npm run bump-version` (ou `node scripts/bump_version.js`).
+- O que faz: incrementa a versão do app (patch++), atualiza `package.json`, atualiza `updates.json` (quando presente) e adiciona uma entrada em `VERSIONS.md` com commit/short SHA.
+- Comportamento seguro: por padrão o script só realiza o bump quando detecta alterações relevantes desde o último release (ignore apenas `VERSIONS.md` e `updates.json`). Use `--force` ou `FORCE_BUMP=1` para forçar.
+- Novo: `--dry-run` (ou `DRY_RUN=1`) mostra **o que** seria alterado sem gravar ou commitar nada. Exemplo:
+
+```bash
+npm run bump-version -- --dry-run
+```
+
+Saída esperada (resumida):
+
+- Current version: `1.0.2`
+- Proposed new version: `1.0.3`
+- Files that would change: `package.json`, `updates.json` (if exists), `VERSIONS.md`
+- Proposed commit message: `chore(release): v1.0.3`
+- VERSIONS.md entry preview:
+
+```
+## v1.0.3 - 2026-01-21
+
+- Commit: <short-sha>
+- Notes: <commit message>
+```
+
+
+
 ---
 
 ## Troubleshooting e dicas de manutenção
