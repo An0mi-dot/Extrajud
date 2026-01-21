@@ -5,3 +5,7 @@ build/
 .env
 .DS_Store
 *.log
+
+# Generated pages and helper HTML (archived in branch archive/pre-cleanup)
+paginas_html/
+
