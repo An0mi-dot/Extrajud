@@ -4,7 +4,7 @@ const dayjs = require('dayjs');
 const cheerio = require('cheerio');
 const path = require('path');
 const fs = require('fs');
-const { app } = require('electron');
+const { app, BrowserWindow } = require('electron');
 
 // Configurações
 const PROJUDI_URL = "https://projudi.tjba.jus.br/projudi/";
@@ -45,6 +45,22 @@ async function runAutomation(eventSender, inputReceiver, args) {
     // Indica ao processo principal que uma automação está em execução
     global.isAutomationRunning = true;
     if (eventSender) eventSender.send('automation-status', true);
+
+    // Bring main window to front once so the automation window (Edge) won't be hidden by other apps
+    try {
+        const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
+        if (win) {
+            log(eventSender, 'Trazendo a janela do app para frente (uma vez) para priorizar a automação', 'Window Focus', 'info');
+            // Temporarily set always on top to ensure visibility, then restore
+            win.setAlwaysOnTop(true, 'screen');
+            // small delay to ensure stacking
+            await delay(300);
+            win.setAlwaysOnTop(false);
+            try { win.focus(); } catch (e) { /* ignore */ }
+        }
+    } catch (e) {
+        log(eventSender, `Não foi possível focar a janela: ${e && e.message ? e.message : String(e)}`, 'Window Focus', 'warn');
+    }
 
     log(eventSender, "Iniciando Robô de Automação", "Thread Start | Loading Playwright Engine", 'info');
     log(eventSender, "Carregando configurações...", "Edge Browser | Mode: Scanner | Lib: ExcelJS", 'info');
