@@ -48,6 +48,8 @@ app.on('before-quit', (e) => {
 
 // --- Persistência de Estado via app.getPath('userData') ---
 const STATE_FILE = path.join(app.getPath('userData'), 'state.json');
+const PLAYWRIGHT_DIR = path.join(app.getPath('userData'), 'playwright-storage');
+const PJE_STORAGE = path.join(PLAYWRIGHT_DIR, 'pje.json');
 
 ipcMain.handle('load-app-state', async () => {
   try {
@@ -63,11 +65,137 @@ ipcMain.handle('load-app-state', async () => {
 
 ipcMain.on('save-app-state', (event, state) => {
   try {
+    // Defensive: some renderers call save-app-state without a payload; ignore to avoid overwriting with undefined
+    if (typeof state === 'undefined' || state === null) return;
     fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
   } catch (e) {
     console.error('save-app-state error', e);
   }
 });
+
+// Convert a browser dump (localStorage/sessionStorage/cookies) to Playwright storageState format
+function convertToPlaywrightStorage(payload) {
+  try {
+    if (!payload) throw new Error('no_payload');
+    const origin = payload.origin || (payload.url ? new URL(payload.url).origin : null);
+    const domain = origin ? new URL(origin).hostname : null;
+
+    // Normalize cookies: accept array or JSON-stringed array
+    let cookies = payload.cookies || [];
+    if (typeof cookies === 'string') {
+      try { cookies = JSON.parse(cookies); } catch (e) { cookies = []; }
+    }
+    cookies = Array.isArray(cookies) ? cookies : [];
+
+    const cookieObjs = cookies.map(c => ({
+      name: String(c.name || ''),
+      value: String(c.value || ''),
+      domain: c.domain || domain || (origin ? new URL(origin).hostname : ''),
+      path: c.path || '/',
+      httpOnly: !!c.httpOnly,
+      secure: !!c.secure,
+      sameSite: c.sameSite || 'Lax'
+    })).filter(c => c.name);
+
+    // Convert localStorage object to array form expected by Playwright
+    const local = payload.localStorage || {};
+    const localArr = Object.keys(local || {}).map(k => ({ name: String(k), value: String(local[k]) }));
+
+    const storage = {
+      cookies: cookieObjs,
+      origins: []
+    };
+    if (origin) storage.origins.push({ origin, localStorage: localArr });
+
+    return storage;
+  } catch (e) {
+    throw e;
+  }
+}
+
+// IPC: import PJE session (payload can be object or string) - now merges with existing storage
+ipcMain.handle('pje:import-session', async (event, payload) => {
+  try {
+    let parsed = payload;
+    if (typeof payload === 'string') {
+      try { parsed = JSON.parse(payload); } catch (e) { /* keep as string - conversion will fail */ }
+    }
+
+    const incoming = convertToPlaywrightStorage(parsed);
+
+    // Read any existing storage (project-local and userData)
+    let existing = null;
+    try {
+      if (fs.existsSync(PJE_STORAGE)) existing = JSON.parse(fs.readFileSync(PJE_STORAGE, 'utf8'));
+    } catch (e) { /* ignore */ }
+    try {
+      const userPje = path.join(app.getPath('userData'), 'playwright-storage', 'pje.json');
+      if (!existing && fs.existsSync(userPje)) existing = JSON.parse(fs.readFileSync(userPje, 'utf8'));
+    } catch (e) { /* ignore */ }
+
+    // Merge cookies (unique by name+domain+path) - incoming wins
+    const cookieKey = (c) => `${c.name || ''}|${c.domain || ''}|${c.path || '/'}|${c.value || ''}`;
+    const cookiesMap = new Map();
+    (existing && Array.isArray(existing.cookies) ? existing.cookies : []).forEach(c => {
+      const key = `${c.name || ''}|${c.domain || ''}|${c.path || '/'}|${c.value || ''}`;
+      cookiesMap.set(key, c);
+    });
+    (incoming && Array.isArray(incoming.cookies) ? incoming.cookies : []).forEach(c => {
+      const key = `${c.name || ''}|${c.domain || ''}|${c.path || '/'}|${c.value || ''}`;
+      cookiesMap.set(key, c);
+    });
+    const mergedCookies = Array.from(cookiesMap.values());
+
+    // Merge origins/localStorage: for same origin, merge key/value pairs (incoming wins)
+    const originMap = new Map();
+    const toLocalMap = (arr) => (arr || []).reduce((acc, i) => { acc[String(i.name)] = String(i.value); return acc; }, {});
+
+    (existing && Array.isArray(existing.origins) ? existing.origins : []).forEach(o => {
+      originMap.set(o.origin, { origin: o.origin, local: toLocalMap(o.localStorage) });
+    });
+    (incoming && Array.isArray(incoming.origins) ? incoming.origins : []).forEach(o => {
+      const prev = originMap.get(o.origin) || { origin: o.origin, local: {} };
+      const incomingLocal = toLocalMap(o.localStorage);
+      // Merge: incoming overrides existing keys
+      const mergedLocal = Object.assign({}, prev.local || {}, incomingLocal || {});
+      originMap.set(o.origin, { origin: o.origin, local: mergedLocal });
+    });
+
+    const mergedOrigins = Array.from(originMap.values()).map(o => ({ origin: o.origin, localStorage: Object.keys(o.local).map(k => ({ name: k, value: String(o.local[k]) })) }));
+
+    const merged = { cookies: mergedCookies, origins: mergedOrigins };
+
+    // Ensure directories exist and write both local and userData copies
+    if (!fs.existsSync(PLAYWRIGHT_DIR)) fs.mkdirSync(PLAYWRIGHT_DIR, { recursive: true });
+    fs.writeFileSync(PJE_STORAGE, JSON.stringify(merged, null, 2), 'utf8');
+
+    try {
+      const userDir = path.join(app.getPath('userData'), 'playwright-storage');
+      if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
+      fs.writeFileSync(path.join(userDir, 'pje.json'), JSON.stringify(merged, null, 2), 'utf8');
+    } catch (e) { /* ignore userData write failures */ }
+
+    return { ok: true, path: PJE_STORAGE };
+  } catch (e) {
+    console.error('pje:import-session error', e);
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+});
+
+ipcMain.handle('pje:has-session', async () => {
+  try {
+    const local = path.join(__dirname, 'playwright-storage', 'pje.json');
+    if (fs.existsSync(PJE_STORAGE)) return true;
+    if (fs.existsSync(local)) return true;
+    return false;
+  } catch (e) { return false; }
+});
+
+ipcMain.handle('pje:get-session', async () => {
+  try { if (fs.existsSync(PJE_STORAGE)) return JSON.parse(fs.readFileSync(PJE_STORAGE, 'utf8')); } catch (e) { console.error('pje:get-session error', e); }
+  return null;
+});
+
 
 // State helpers used by update routines
 function readStateFile() {
@@ -296,6 +424,20 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+
+  // If we have a project-local PJE storage (for testing), seed the user's appData on first run so automation can reuse it immediately
+  try {
+    const localPje = path.join(__dirname, 'playwright-storage', 'pje.json');
+    const userPjeDir = path.join(app.getPath('userData'), 'playwright-storage');
+    const userPje = path.join(userPjeDir, 'pje.json');
+    if (fs.existsSync(localPje) && !fs.existsSync(userPje)) {
+      try {
+        if (!fs.existsSync(userPjeDir)) fs.mkdirSync(userPjeDir, { recursive: true });
+        fs.copyFileSync(localPje, userPje);
+        console.log('Seeded userData PJE storage from project copy');
+      } catch (e) { console.error('Error seeding userData PJE storage', e); }
+    }
+  } catch (e) { /* ignore */ }
 
   // check auto-update on startup if enabled (opt-in)
   (async () => {

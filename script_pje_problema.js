@@ -1150,20 +1150,20 @@ window.PJE_PARAR = false;
 
     // --- 1. IDENTIFICAÇÃO DAS CIDADES ---
     let nosIniciais = Array.from(document.querySelectorAll("span.nomeTarefa"));
+    // Case-insensitive filtering to avoid including menu nodes like 'Cujo prazo findou...'
+    const blacklist = ["CAIXA DE ENTRADA","PENDENTES","EXPEDIENTES","ACERVO","MINHAS PETIÇÕES","CIÊNCIA","PRAZO","RESPONDIDOS","APENAS","SEM PRAZO"];
     let listaAlvos = nosIniciais.filter(el => {
-        const nome = el.innerText.trim();
-        return nome &&
-            !nome.includes("Caixa de entrada") &&
-            !nome.includes("Pendentes") &&
-            !nome.includes("Expedientes") &&
-            !nome.includes("Acervo") &&
-            !nome.includes("Minhas petições") &&
-            !nome.includes("Ciência") &&
-            !nome.includes("Prazo") &&
-            !nome.includes("Respondidos") &&
-            !nome.includes("Apenas") &&
-            !nome.includes("Sem prazo") &&
-            !nome.match(/^\d+$/);
+        const nomeRaw = el.innerText || '';
+        const nome = nomeRaw.trim();
+        if (!nome) return false;
+        const upper = nome.toUpperCase();
+        if (upper.match(/^\d+$/)) return false;
+        for (const b of blacklist) if (upper.includes(b)) {
+            // debug: log suspicious nodes (e.g., 'prazo' category) to help diagnose
+            if (b === 'PRAZO' || b === 'PENDENTES') console.log(`   ⚠ Pulando nó de menu: "${nome}" (motivo: contém "${b}")`);
+            return false;
+        }
+        return true;
     }).map(el => el.innerText.trim());
     listaAlvos = [...new Set(listaAlvos)];
     listaAlvos.sort((a, b) => a.localeCompare(b));
@@ -1324,7 +1324,8 @@ window.PJE_PARAR = false;
             const pager = tableEl ? findPagerForTable(tableEl) : null;
 
             let guardPages = 0;
-            const MAX_PAGES = 1000;
+            const MAX_PAGES = 400;
+            const seenPageFirsts = new Set();
 
             while (true) {
                 if (window.PJE_PARAR) {
@@ -1349,37 +1350,105 @@ window.PJE_PARAR = false;
                     });
                 }
 
-                // detect next button within pager (prefer specific selectors, fallback to heuristics)
-                let botaoAvancar = null;
-                if (pager) {
-                  const candidates = Array.from(pager.querySelectorAll('.rich-datascr-button'));
-                  botaoAvancar = candidates.find(b => {
-                    const onclick = (b.getAttribute('onclick') || '').toLowerCase();
-                    const title = (b.getAttribute('title') || '').toLowerCase();
-                    const txt = (b.innerText || '').trim();
-                    if (onclick.includes('fastforward') || onclick.includes('next') || onclick.includes('pagina')) return true;
-                    if (title.includes('próxima') || title.includes('proxima') || txt === '»' || txt === '>>') return true;
-                    return false;
-                  }) || candidates[candidates.length-1] || null;
-                } else {
-                  // global fallback
-                  const globalCandidates = Array.from(document.querySelectorAll('.rich-datascr-button'));
-                  botaoAvancar = globalCandidates.find(b => (b.getAttribute('onclick')||'').toLowerCase().includes('fastforward')) || globalCandidates.find(b => (b.innerText||'').trim() === '»') || null;
+                // track first row snapshot to detect repeats
+                const firstRowText = (linhasTabela[0] && linhasTabela[0].innerText) ? linhasTabela[0].innerText.trim() : '';
+                if (firstRowText) {
+                    if (seenPageFirsts.has(firstRowText)) {
+                        console.warn(`   ⚠ Página detectada repetida (primeira linha "${firstRowText}"). Encerrando paginação.`);
+                        break;
+                    }
+                    seenPageFirsts.add(firstRowText);
                 }
 
-                // Check active state
-                if (botaoAvancar && !botaoAvancar.classList.contains('rich-datascr-inact')) {
-                    // snapshot before click
+                // detect next button within pager (prefer specific selectors, fallback to heuristics)
+                const isElementVisible = (el) => !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
+                const isElementDisabled = (el) => {
+                    if (!el) return true;
+                    if (el.classList && el.classList.contains('rich-datascr-inact')) return true;
+                    if (el.getAttribute && el.getAttribute('aria-disabled') === 'true') return true;
+                    if (el.hasAttribute && el.hasAttribute('disabled')) return true;
+                    const style = (el.style && (el.style.display === 'none' || el.style.visibility === 'hidden'));
+                    if (style) return true;
+                    return false;
+                };
+
+                const findNextButton = (pagerEl) => {
+                    const candidates = [];
+                    if (pagerEl) candidates.push(...Array.from(pagerEl.querySelectorAll('.rich-datascr-button, button, a')));
+                    // global fallback load nearby controls
+                    if (candidates.length === 0) candidates.push(...Array.from(document.querySelectorAll('.rich-datascr-button, .rich-paginator button, .rich-paginator a')));
+
+                    // prefer buttons that explicitly indicate next
+                    const preferred = candidates.find(b => {
+                        const onclick = (b.getAttribute && (b.getAttribute('onclick') || '') || '').toLowerCase();
+                        const title = (b.getAttribute && (b.getAttribute('title') || '') || '').toLowerCase();
+                        const txt = (b.innerText || '').trim();
+                        if (onclick.includes('fastforward') || onclick.includes('next') || onclick.includes('pagina') || onclick.includes('avancar')) return true;
+                        if (title.includes('próxima') || title.includes('proxima') || title.includes('próxima')) return true;
+                        if (['»','>>','›','>','>','Próxima','Próximo'].includes(txt)) return true;
+                        return false;
+                    });
+                    if (preferred && isElementVisible(preferred)) return preferred;
+
+                    // otherwise, first visible non-disabled candidate
+                    const visible = candidates.find(c => isElementVisible(c) && !isElementDisabled(c));
+                    if (visible) return visible;
+
+                    return null;
+                };
+
+                let botaoAvancar = findNextButton(pager);
+
+                // Check active state and try to click with retries and fallbacks (including page-number navigation)
+                if (botaoAvancar && !isElementDisabled(botaoAvancar)) {
+                    // Attempt multiple times to advance pages, re-querying the button each attempt
                     const prevRows = Array.from(document.querySelectorAll(tableSelector + ' > tbody > tr'));
                     const prevSnapshot = { count: prevRows.length, first: prevRows[0] ? prevRows[0].innerText.trim() : '' };
 
-                    botaoAvancar.click();
+                    let advanced = false;
+                    for (let attemptClick = 1; attemptClick <= 4; attemptClick++) {
+                        try {
+                            botaoAvancar.click();
+                        } catch (e) {
+                            // sometimes the element is detached; try to re-find and click
+                            await esperar(200);
+                            botaoAvancar = findNextButton(pager);
+                            if (botaoAvancar) try { botaoAvancar.click(); } catch(_){}
+                        }
 
-                    // wait for an actual table change (or at least a timeout)
-                    const changed = await waitForTableChange(tableSelector, prevSnapshot, Math.max(3000, TEMPO_ESPERA_PAGINACAO));
-                    if (!changed) {
-                      // fallback wait to give table time
-                      await esperar(TEMPO_ESPERA_PAGINACAO);
+                        const changed = await waitForTableChange(tableSelector, prevSnapshot, Math.max(3000, TEMPO_ESPERA_PAGINACAO + attemptClick * 300));
+                        if (changed) { advanced = true; break; }
+
+                        // small wait and re-evaluate candidates (page might update its DOM)
+                        await esperar(700 + attemptClick * 300);
+                        const currRows = Array.from(document.querySelectorAll(tableSelector + ' > tbody > tr'));
+                        const currFirst = currRows[0] ? currRows[0].innerText.trim() : '';
+                        if (currFirst !== prevSnapshot.first || currRows.length !== prevSnapshot.count) { advanced = true; break; }
+
+                        // re-find next button in case a new DOM node replaced it
+                        botaoAvancar = findNextButton(pager);
+                        if (!botaoAvancar) break;
+                    }
+
+                    if (!advanced) {
+                        // Fallback: try to navigate via page-number links (if any)
+                        let pageNums = [];
+                        if (pager) pageNums = Array.from(pager.querySelectorAll('a, span')).filter(e => (/^\d+$/.test((e.innerText||'').trim())));
+                        if (pageNums.length > 0) {
+                            let currIdx = pageNums.findIndex(e => e.classList.contains('rich-datascr-current') || e.classList.contains('rich-datascr-active') || e.tagName === 'SPAN');
+                            if (currIdx === -1) currIdx = pageNums.findIndex(e => e.innerText && e.innerText.trim() === String(paginaAtual));
+                            if (currIdx >= 0 && currIdx < pageNums.length - 1) {
+                                const nextPageEl = pageNums[currIdx + 1];
+                                try { nextPageEl.click(); } catch(_) { try { nextPageEl.dispatchEvent(new MouseEvent('click', { bubbles: true })); } catch(_){} }
+                                const changed2 = await waitForTableChange(tableSelector, prevSnapshot, 4000);
+                                if (changed2) advanced = true;
+                            }
+                        }
+                    }
+
+                    if (!advanced) {
+                        console.warn('   ⚠ Não foi possível avançar a paginação após tentativas. Encerrando paginação para esta cidade.');
+                        break;
                     }
 
                     paginaAtual++;
@@ -1390,7 +1459,7 @@ window.PJE_PARAR = false;
                     }
 
                 } else {
-                    // no more pages
+                    // no next button found or it's disabled
                     break;
                 }
             }

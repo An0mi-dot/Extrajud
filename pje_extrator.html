@@ -216,7 +216,20 @@
             border-radius: 12px;
             width: 400px;
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            position: relative;
         }
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #6b7280;
+            display: none; /* shown only for import modal */
+        }
+        .modal-close:hover { color: #111827; }
         .modal-title {
             font-size: 1.1rem;
             font-weight: 600;
@@ -278,6 +291,16 @@
                 <i class="fas fa-stop"></i> Parar
             </button>
 
+            <!-- Session controls: Import / Check -->
+            <div style="margin-top:12px; display:flex; gap:8px;">
+                <button id="btnImportSession" class="btn" style="flex:1; background:#eef2ff; color:#4338ca; font-weight:700;" title="Importar sessão PJe (cole JSON)">
+                    <i class="fas fa-file-import"></i>&nbsp; Importar Sessão PJe
+                </button>
+                <button id="btnCheckSession" class="btn" style="width:140px; background:#f3f4f6; color:#374151;" title="Verificar se há sessão importada">
+                    <i class="fas fa-eye"></i>&nbsp; Verificar Sessão
+                </button>
+            </div>
+
             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
                 <label style="display:block; font-size:11px; margin-bottom:4px; color:#666; font-weight:600;">Salvar Arquivos Em:</label>
                 <div style="display:flex; gap:5px;">
@@ -305,6 +328,7 @@
     <!-- Modal Dinâmico -->
     <div id="dynamicModal" class="modal-overlay">
         <div class="modal-content">
+            <button id="modalCloseX" class="modal-close" title="Fechar">&times;</button>
             <div id="modalTitle" class="modal-title">Título do Modal</div>
             <div id="modalBody">
                 <!-- Inputs injetados via JS -->
@@ -505,6 +529,10 @@
             modalTitle.innerText = data.title;
             modalBody.innerHTML = ''; // Limpa
 
+            // Reset confirm button to sensible default for this modal and hide the import 'X' if present
+            try { modalConfirmBtn.textContent = (data && data.confirmText) ? data.confirmText : 'Confirmar'; } catch (__) {}
+            const modalCloseX = document.getElementById('modalCloseX'); if (modalCloseX) modalCloseX.style.display = 'none';
+
             if (data.type === 'number') {
                 const input = document.createElement('input');
                 input.type = 'number';
@@ -576,10 +604,74 @@
 
                 // Hide cancel after use
                 if (modalCancelBtn) modalCancelBtn.style.display = 'none';
+                const modalCloseX = document.getElementById('modalCloseX');
+                if (modalCloseX) modalCloseX.style.display = 'none';
             };
 
             // Hide cancel button for non-confirm types
             if (data.type !== 'confirm' && modalCancelBtn) modalCancelBtn.style.display = 'none';
+
+            // ESC key closes the modal (quiet close)
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    modal.style.display = 'none';
+                    const modalCloseX = document.getElementById('modalCloseX');
+                    if (modalCloseX) modalCloseX.style.display = 'none';
+                }
+            });
+        }
+
+        // Session import/check handlers
+        function initSessionButtons() {
+            const btnImport = document.getElementById('btnImportSession');
+            const btnCheck = document.getElementById('btnCheckSession');
+
+            if (btnImport) btnImport.addEventListener('click', () => {
+                // Open a modal to paste JSON
+                closeAllModals(modal);
+                modal.style.display = 'flex';
+                modalTitle.innerText = 'Importar Sessão PJe';
+                modalBody.innerHTML = '';
+
+                const textarea = document.createElement('textarea');
+                textarea.style = 'width:100%; height:220px; box-sizing:border-box; padding:8px; border:1px solid #ddd; border-radius:6px; font-family: monospace;';
+                textarea.id = 'sessionPasteBox';
+                modalBody.appendChild(textarea);
+
+                // Replace confirm button handler
+                modalConfirmBtn.textContent = 'Importar';
+                modalConfirmBtn.onclick = async () => {
+                    const txt = document.getElementById('sessionPasteBox').value;
+                    if (!txt || txt.trim().length === 0) { alert('Cole o JSON da sessão para importar.'); return; }
+                    modal.style.display = 'none';
+                    addLog('[i] Importando sessão PJe...', 'log-info');
+                    try {
+                        const res = await ipcRenderer.invoke('pje:import-session', txt);
+                        if (res && res.ok) { addLog('[+] Sessão importada com sucesso. O robô agora pode reutilizar a sessão.', 'log-success'); } else { addLog('[x] Falha ao importar: ' + (res && res.error ? res.error : 'erro desconhecido'), 'log-error'); }
+                    } catch (e) { addLog('[x] Erro no import: ' + (e && e.message ? e.message : String(e)), 'log-error'); }
+                };
+
+                // Show cancel and enable close X
+                const modalCancelBtn = document.getElementById('modalCancelBtn');
+                if (modalCancelBtn) modalCancelBtn.style.display = 'flex';
+                const modalCloseX = document.getElementById('modalCloseX');
+                if (modalCloseX) { modalCloseX.style.display = 'block'; modalCloseX.onclick = () => { modal.style.display = 'none'; } }
+            });
+
+            if (btnCheck) btnCheck.addEventListener('click', async () => {
+                try {
+                    const has = await ipcRenderer.invoke('pje:has-session');
+                    if (has) { addLog('[i] Sessão PJe importada e disponível.', 'log-info'); alert('Sessão PJe encontrada e pronta para uso.'); }
+                    else { addLog('[!] Nenhuma sessão PJe importada.', 'log-warning'); alert('Nenhuma sessão PJe importada. Faça login no navegador, copie o JSON e importe.'); }
+                } catch (e) { addLog('[x] Erro checando sessão: ' + (e && e.message ? e.message : String(e)), 'log-error'); }
+            });
+        }
+
+        // Initialize session buttons after DOM ready
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => { initSessionButtons(); attachSelectDirHandler(); });
+        } else {
+            initSessionButtons();
         }
 
         // App clock removed per user request

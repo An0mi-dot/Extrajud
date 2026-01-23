@@ -46,6 +46,11 @@ async function runAutomation(eventSender, inputReceiver, args) {
     global.isAutomationRunning = true;
     if (eventSender) eventSender.send('automation-status', true);
 
+    // Heartbeat logger to show progress when flow seems idle (one log every 8s)
+    let heartbeatInterval = setInterval(() => {
+        if (global.isAutomationRunning) log(eventSender, 'Automação ativa: aguardando próximo passo...', 'heartbeat', 'info');
+    }, 8000);
+
     // Bring main window to front once so the automation window (Edge) won't be hidden by other apps
     try {
         const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
@@ -268,6 +273,9 @@ async function runAutomation(eventSender, inputReceiver, args) {
         }
         // Indica que a automação terminou
         global.isAutomationRunning = false;
+        if (typeof heartbeatInterval !== 'undefined') {
+            try { clearInterval(heartbeatInterval); } catch(_){}
+        }
         if (eventSender) eventSender.send('automation-status', false);
     }
 }
@@ -1674,16 +1682,34 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
             args: ["--start-maximized", "--disable-blink-features=AutomationControlled"]
         });
 
-        const context = await browser.newContext({ viewport: null });
-        page = await context.newPage();
-        
-        // --- PARTE 1: PJE 2º GRAU ---
-        log(eventSender, "Acessando PJE 2º Grau...", PJE_2_URL, 'info');
-        await page.goto(PJE_2_URL, { waitUntil: 'domcontentloaded', timeout: 120000 });
+        // If the user previously imported a PJE storageState, reuse it to avoid repeated 2FA/logins
+        try {
+            const pjeStorage = path.join(app.getPath('userData'), 'playwright-storage', 'pje.json');
+            const localPjeStorage = path.join(__dirname, 'playwright-storage', 'pje.json');
+            const contextOptions = { viewport: null };
 
+            if (fs.existsSync(pjeStorage)) {
+                log(eventSender, `PJE session storage found in userData. Reusing storageState: ${pjeStorage}`, 'PJE Session', 'info');
+                contextOptions.storageState = pjeStorage;
+            } else if (fs.existsSync(localPjeStorage)) {
+                log(eventSender, `PJE session storage found in project. Reusing storageState: ${localPjeStorage}`, 'PJE Session', 'info');
+                contextOptions.storageState = localPjeStorage;
+            } else {
+                log(eventSender, 'No PJE session storage found. Will require manual login.', 'PJE Session', 'info');
+            }
+
+            context = await browser.newContext(contextOptions);
+            page = await context.newPage();
+        } catch (e) {
+            // Fallback to default newContext if anything goes wrong
+            log(eventSender, `Aviso: não foi possível carregar storageState: ${e && e.message ? e.message : String(e)}. Abrindo contexto limpo.`, 'PJE Session', 'warn');
+            context = await browser.newContext({ viewport: null });
+            page = await context.newPage();
+        }
+        
         // Helper: safe page.evaluate with retries if execution context is destroyed (happens on navigation)
         const safeEvaluate = async (fn, ...fnArgs) => {
-            const maxAttempts = 3;
+            const maxAttempts = 5; // increased retries to handle slower navigations
             for (let attempt = 1; attempt <= maxAttempts; attempt++) {
                 try {
                     return await page.evaluate(fn, ...fnArgs);
@@ -1691,338 +1717,565 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                     const msg = (e && e.message) ? e.message : String(e);
                     if (msg.includes('Execution context was destroyed') || msg.includes('Target closed') || msg.includes('Cannot find context')) {
                         log(eventSender, `Aviso: Execution context destruído durante page.evaluate (tentativa ${attempt}). Aguardando recarregamento...`, null, 'warn');
-                        try { await page.waitForLoadState('domcontentloaded', { timeout: 5000 }); } catch(err){}
-                        await delay(1000);
+                        // Wait for load state and allow extra time for redirects to settle
+                        try { await page.waitForLoadState('domcontentloaded', { timeout: 10000 }); } catch(err){}
+                        await delay(1500);
+
+                        // On last attempt, attempt a reload to recover a usable execution context
+                        if (attempt === maxAttempts) {
+                            try {
+                                log(eventSender, 'Tentando recarregar a página para recuperar o contexto...', null, 'warn');
+                                await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
+                                await delay(1000);
+                                // Final retry after reload
+                                return await page.evaluate(fn, ...fnArgs);
+                            } catch (reloadErr) {
+                                log(eventSender, `Falha ao recarregar página: ${reloadErr && reloadErr.message ? reloadErr.message : String(reloadErr)}`, null, 'warn');
+                            }
+                        }
+
                         continue; // retry
                     }
                     throw e; // rethrow other errors
                 }
             }
             throw new Error('safeEvaluate: excedeu tentativas devido a Execution context destroyed');
-        };
-
-        // Solicita login manual do usuário (100% manual)
-        log(eventSender, "Aguardando login manual do usuário...", "Waiting User Input", 'warn');
-        const loginResp = await waitForInput(eventSender, ipcReceiver, 'confirm', {
-            title: 'Login PJE 2º Grau',
-            message: 'Realize o login no PJE 2 e aguarde a tela inicial carregar. Clique em Confirmar quando estiver pronto.'
-        });
-
-        if (loginResp === false || loginResp === 'cancel') {
-            log(eventSender, "Login cancelado pelo usuário. Abortando PJE.", null, 'error');
-            return; // termina a execução do PJE
         }
 
-        log(eventSender, "Confirmado. Iniciando varredura PJE 2...", null, 'info');
-
-        // Navegar até o local correto (Lógica do User: mariana campelo -> Expedientes -> Apenas pendentes)
-        await page.evaluate(async () => {
-            const esperar = ms => new Promise(r => setTimeout(r, ms));
-            console.log("Iniciando navegação interna PJE 2...");
-
-            // 1. Expedientes (Tab)
-            // Tenta clicar na aba Expedientes se ela existir
-            let tabExp = document.querySelector("td[class*='abaExpediendes']"); 
-            if(!tabExp) tabExp = document.evaluate("//td[contains(text(), 'Expedientes')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-            
-            if (tabExp) {
-                tabExp.click();
-                await esperar(2000);
-            }
-
-            // 2. "Apenas pendentes de ciência"
-            // Procura o nó na árvore
-            let xpathNode = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Apenas pendentes de ciência')]";
-            let node = document.evaluate(xpathNode, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-            
-            if (node) {
-                node.scrollIntoView({block: 'center'});
-                node.click();
-                await esperar(4000); // Aguarda carregar a sub-arvore
-            } else {
-                console.warn("Nó 'Apenas pendentes de ciência' não encontrado. Tentando 'Pendentes de ciência'...");
-                // Fallback
-                let xpathAlt = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Pendentes de ciência')]";
-                let nodeAlt = document.evaluate(xpathAlt, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                if(nodeAlt) {
-                     nodeAlt.click();
-                     await esperar(4000);
-                }
-            }
-        });
-
-        // NOTA: A automação de clique em menus RichFaces é complexa. Vamos tentar replicar os passos
-        // Mas a página já deve estar aberta. Se o user logou e está no painel.
-
-        // Injetamos a função de extração que retorna os dados encontrados para o Node decidir
-        // Vamos usar uma abordagem hibrida: Page.evaluate faz o scan, retorna metadados, Node pergunta qtd, Page.evaluate processa.
-
-        // --- SCAN PJE 2 ---
-        const scanPje2 = await safeEvaluate(() => {
-            const limparNomeNo = (nomeCompleto) => {
-                let nome = nomeCompleto.toUpperCase().trim();
-                nome = nome.replace(/\s*\(\d+\)/g, '').trim();
-                return nome;
-            };
-
-            let nosDaArvore = Array.from(document.querySelectorAll(".rich-tree-node-text a"));
-            let listaNos = nosDaArvore.filter(el => {
-                const nome = el.innerText.trim().toUpperCase();
-                return nome.includes("TRIBUNAL DE JUSTIÇA") || nome.includes("TURMAS RECURSAIS");
-            }).map((el, index) => ({
-                index: index,
-                nomeOriginal: el.innerText.trim(),
-                nomeLimpo: limparNomeNo(el.innerText)
-            }));
-
-            return listaNos;
-        });
-
-        let dadosPje2 = {};
-
-        if (scanPje2 && scanPje2.length > 0) {
-            log(eventSender, `PJE 2: Encontrados ${scanPje2.length} nós.`, null, 'success');
-            
-            // Pergunta Quantidade
-            const qtd = await waitForInput(eventSender, ipcReceiver, 'number', {
-                title: 'PJE 2 - Quantidade',
-                message: `PJE 2: ${scanPje2.length} nós encontrados (${scanPje2.map(n=>n.nomeLimpo).join(', ')}). Quantos processar?`,
-                max: scanPje2.length
-            });
-            
-            const limite = parseInt(qtd);
-            log(eventSender, `Processando ${limite} nós do PJE 2...`, null, 'info');
-
-            // Loop de Extração PJE 2
-            // Precisamos rodar o script no browser para cada nó
-             for (let i = 0; i < limite; i++) {
-                const targetName = scanPje2[i].nomeOriginal;
-                log(eventSender, `(PJE 2) Extraindo: ${targetName}...`, null, 'info');
-
-                const processos = await safeEvaluate(async (targetName) => {
-                    const esperar = (ms) => new Promise(res => setTimeout(res, ms));
-                    const limparTexto = (t) => t ? t.split('\n').map(l=>l.trim()).filter(l=>l.length>0).join('\n') : "";
-
-                    // Re-localizar elemento
-                    let elements = Array.from(document.querySelectorAll(".rich-tree-node-text a"));
-                    let el = elements.find(e => e.innerText.trim() === targetName);
-                    
-                    if(!el) return null;
-                    
-                    el.click();
-                    await esperar(3500); // 3.5s loading
-
-                    let processosDoNo = [];
-                    
-                    // Paginação Loop
-                    while (true) {
-                        let linhasTabela = document.querySelectorAll("table[id$='tbExpedientes'] > tbody > tr");
-                        if (linhasTabela.length > 0) {
-                            linhasTabela.forEach(linha => {
-                                let celulas = linha.querySelectorAll("td");
-                                if (celulas.length >= 3) {
-                                    let colDetalhes = celulas[1].innerText;
-                                    let colProcesso = celulas[2].innerText;
-                                    let textoCompleto = limparTexto(colDetalhes + "\n" + colProcesso);
-                                    if (!processosDoNo.includes(textoCompleto)) processosDoNo.push(textoCompleto);
-                                }
-                            });
-                        }
-
-                        // Avançar
-                        let botaoAvancar = document.querySelector(".rich-datascr-button[onclick*='fastforward']");
-                        if (botaoAvancar && !botaoAvancar.classList.contains('rich-datascr-inact')) {
-                            botaoAvancar.click();
-                            await esperar(1500);
-                        } else {
-                            break;
+        // Helper: click with retries and recovery (works with ElementHandle or selector string)
+        const clickWithRetries = async (target, desc = 'element', maxAttempts = 4) => {
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    if (isStopping) throw new Error('STOP_REQUESTED');
+                    let handle = null;
+                    if (typeof target === 'string') {
+                        handle = await page.$(target);
+                    } else {
+                        handle = target;
+                    }
+                    if (!handle) {
+                        // If we don't have a handle, try a small wait and retry
+                        await delay(500 + attempt * 200);
+                        continue;
+                    }
+                    try {
+                        await handle.click({ timeout: 5000 });
+                        return true;
+                    } catch (clickErr) {
+                        try {
+                            // fallback to evaluate click inside page
+                            await handle.evaluate(n => { n.click(); });
+                            return true;
+                        } catch (evalErr) {
+                            const msg = (evalErr && evalErr.message) ? evalErr.message : String(evalErr);
+                            // If context destroyed, allow safeEvaluate style recovery
+                            if (msg.includes('Execution context was destroyed') || msg.includes('Target closed') || msg.includes('Cannot find context')) {
+                                log(eventSender, `Aviso: contexto destruído ao clicar (${desc}) (tentativa ${attempt}). Esperando e tentando novamente...`, null, 'warn');
+                                try { await page.waitForLoadState('domcontentloaded', { timeout: 10000 }); } catch(__){}
+                                await delay(800 + attempt * 300);
+                                continue; // next attempt
+                            }
+                            // otherwise continue retrying
+                            await delay(400 + attempt * 200);
+                            continue;
                         }
                     }
-                    return processosDoNo;
-                }, targetName);
-
-                if (processos) {
-                    dadosPje2[scanPje2[i].nomeLimpo] = processos;
-                    log(eventSender, `   > ${processos.length} expedientes coletados.`, null, 'success');
-                } else {
-                    log(eventSender, `   > Falha ao acessar nó.`, null, 'error');
+                } catch (err) {
+                    if (err && err.message === 'STOP_REQUESTED') throw err;
+                    // last attempt fallthrough
+                    if (attempt === maxAttempts) {
+                        throw new Error(`CLICK_FAILED: ${desc} (${err && err.message ? err.message : String(err)})`);
+                    }
+                    await delay(300 + attempt * 200);
                 }
             }
-        } else {
-            log(eventSender, "PJE 2: Nenhum nó (Tribunal/Turmas) encontrado na tela atual.", null, 'warn');
-        }
+            throw new Error(`CLICK_FAILED: ${desc}`);
+        };;
 
-        // --- PARTE 2: PJE 1º GRAU ---
-        log(eventSender, "Preparando transição para PJE 1º Grau...", null, 'info');
-        await page.goto(PJE_1_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        // Path where we will persist storageState (userData preferred)
+        const PJE_STORAGE = path.join(app.getPath('userData'), 'playwright-storage', 'pje.json');
 
-        // Solicita Login Manual PJE 1
-        await waitForInput(eventSender, ipcReceiver, 'confirm', {
-            title: 'Login PJE 1º Grau',
-            message: 'Realize o login no PJE 1º Grau. Clique em Confirmar quando estiver na tela inicial (painel do advogado).'
-        });
+        // Ensure directory exists for storageState
+        try { if (!fs.existsSync(path.dirname(PJE_STORAGE))) fs.mkdirSync(path.dirname(PJE_STORAGE), { recursive: true }); } catch (e) {}
 
-        log(eventSender, "Confirmado. Iniciando varredura PJE 1...", null, 'info');
-
-        // Navegação PJE 1
-        await safeEvaluate(async () => {
-             const esperar = ms => new Promise(r => setTimeout(r, ms));
-             
-             // 1. Tentar selecionar perfil de Procuradoria (se houver lista)
-             const perfis = Array.from(document.querySelectorAll("a")).filter(a => a.innerText.toUpperCase().includes("PROCURADOR"));
-             if (perfis.length > 0) {
-                 let target = perfis.find(a => a.innerText.toUpperCase().includes("ELETRICIDADE")) || perfis[0];
-                 target.click();
-                 await esperar(5000);
-             }
-
-             // 2. Expedientes
-             let tabExp = document.querySelector("td[class*='abaExpediendes']"); 
-             if(!tabExp) tabExp = document.evaluate("//td[contains(text(), 'Expedientes')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-             if (tabExp) {
-                 tabExp.click();
-                 await esperar(2000);
-             }
-
-             // 3. Pendentes de ciência ou de resposta
-             let xpathNode = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Pendentes de ciência ou de resposta')]";
-             let node = document.evaluate(xpathNode, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-             if(node) {
-                 node.scrollIntoView({block: 'center'});
-                 node.click();
-                 await esperar(4000);
-             }
-        });
-
-        // SCAN PJE 1
-        // Lógica: User forneceu 2º script. Procura SPAN "Pendentes de ciência ou de resposta"
-        // Tem lógica de abrir arvore se fechada (script_pje_problema.js)
-        
-        // Vamos usar a lógica de procurar "cidades". O script do user procura "span.nomeTarefa" e filtra uma blacklist.
-        
-        const scanPje1 = await safeEvaluate(async () => {
-            // Filtro Blacklist do user
-            let nosIniciais = Array.from(document.querySelectorAll("span.nomeTarefa"));
-            let listaAlvos = nosIniciais.filter(el => {
-                const nome = el.innerText.trim();
-                return nome &&
-                    !nome.includes("Caixa de entrada") &&
-                    !nome.includes("Pendentes") &&
-                    !nome.includes("Expedientes") &&
-                    !nome.includes("Acervo") &&
-                    !nome.includes("Minhas petições") &&
-                    !nome.includes("Ciência") &&
-                    !nome.includes("Prazo") &&
-                    !nome.includes("Respondidos") &&
-                    !nome.includes("Apenas") &&
-                    !nome.includes("Sem prazo") &&
-                    !nome.match(/^\d+$/);
-            }).map(el => el.innerText.trim());
-            
-            listaAlvos = [...new Set(listaAlvos)];
-            listaAlvos.sort((a, b) => a.localeCompare(b));
-            return listaAlvos;
-        });
-
+        // Encapsulate PJE 1 and PJE 2 routines so we can choose execution order easily
         let dadosPje1 = {};
+        let dadosPje2 = {};
 
-        if (scanPje1 && scanPje1.length > 0) {
-            log(eventSender, `PJE 1: Encontradas ${scanPje1.length} jurisdições/cidades.`, null, 'success');
-            
-            const qtd1 = await waitForInput(eventSender, ipcReceiver, 'number', {
-                title: 'PJE 1 - Quantidade',
-                message: `PJE 1: ${scanPje1.length} locais encontrados. Quantos processar?`,
-                max: scanPje1.length
+        const runPje1 = async () => {
+            log(eventSender, "Preparando transição para PJE 1º Grau...", null, 'info');
+            await page.goto(PJE_1_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+            // Solicita Login Manual PJE 1 (se necessário)
+            const login1 = await waitForInput(eventSender, ipcReceiver, 'confirm', {
+                title: 'Login PJE 1º Grau',
+                message: 'Realize o login no PJE 1º Grau. Clique em Continuar quando estiver na tela inicial (painel do advogado).',
+                confirmText: 'Continuar'
             });
-            
-            const limite1 = parseInt(qtd1);
-            log(eventSender, `Processando ${limite1} locais do PJE 1...`, null, 'info');
+            if (login1 === false || login1 === 'cancel') { log(eventSender, 'Login PJE 1 cancelado pelo usuário. Pulando PJE 1.', null, 'warn'); return; }
 
-            for (let i = 0; i < limite1; i++) {
-                if(isStopping) break;
-                const cidadeNome = scanPje1[i];
-                log(eventSender, `(PJE 1) Extraindo: ${cidadeNome}...`, null, 'info');
+            // Save updated storageState after successful manual login to capture HttpOnly cookies
+            try {
+                await context.storageState({ path: PJE_STORAGE });
+                log(eventSender, `Sessão PJE salva em: ${PJE_STORAGE}`, 'PJE Session', 'success');
+            } catch (e) {
+                log(eventSender, `Erro salvando sessão PJE (1): ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+            }
 
-                // Lógica complexa do user (Recuperação de arvore, xpath, etc)
-                let processosCidade = null;
+            // Ensure the page is on the expected PJE 1 URL and stable before running evaluations
+            try {
+                try { await page.waitForLoadState('domcontentloaded', { timeout: 15000 }); } catch (__) {}
+                await delay(800);
+                const curUrl = page.url ? page.url() : '';
+                if (!curUrl || !curUrl.startsWith(PJE_1_URL)) {
+                    log(eventSender, `URL atual inesperada (${curUrl}). Navegando para ${PJE_1_URL} para estabilizar.`, 'PJE Session', 'warn');
+                    await page.goto(PJE_1_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                    await delay(1500);
+                }
+
+                // Wait for dashboard indicators (Mesa de Trabalho, Aguardando Leitura, tree nodes or Expedientes tab)
+                const indicators = ['text=Mesa de Trabalho', 'text=Aguardando Leitura', 'span.nomeTarefa', '#tabExpedientes_lbl'];
+                let foundIndicator = false;
+                const startWait = Date.now();
+                const overallTimeout = 30000;
+                let lastLog = Date.now();
+                while (Date.now() - startWait < overallTimeout) {
+                    if (isStopping) throw new Error('STOP_REQUESTED');
+                    for (const sel of indicators) {
+                        try {
+                            const handle = await page.$(sel);
+                            if (handle) {
+                                log(eventSender, `Indicador de painel detectado: ${sel}`, 'PJE Session', 'info');
+                                foundIndicator = true;
+                                break;
+                            }
+                        } catch (e) { /* ignore and try next */ }
+                    }
+                    if (foundIndicator) break;
+                    // periodic status log to show we're waiting (every 5s)
+                    if (Date.now() - lastLog > 5000) {
+                        log(eventSender, `Aguardando indicador do painel... (${Math.round((Date.now()-startWait)/1000)}s)`, 'PJE Session', 'info');
+                        lastLog = Date.now();
+                    }
+                    await delay(500);
+                }
+                if (!foundIndicator) {
+                    log(eventSender, 'Aviso: não foi detectado indicador claro do painel após login (após timeout). Tentando recarregar e re-verificar...', 'PJE Session', 'warn');
+                    try {
+                        await page.reload({ waitUntil: 'domcontentloaded', timeout: 20000 });
+                        await delay(1000);
+                        // try one more quick scan
+                        for (const sel of indicators) {
+                            try { if (await page.$(sel)) { log(eventSender, `Indicador de painel detectado após reload: ${sel}`, 'PJE Session', 'info'); foundIndicator = true; break; } } catch (__){}
+                        }
+                    } catch (reloadErr) {
+                        log(eventSender, `Reload falhou: ${reloadErr && reloadErr.message ? reloadErr.message : String(reloadErr)}`, 'PJE Session', 'warn');
+                    }
+                }
+                if (!foundIndicator) {
+                    log(eventSender, 'Aviso: indicador do painel não encontrado após tentativas. Prosseguindo mesmo assim (pode falhar).', 'PJE Session', 'warn');
+                }
+            } catch (e) {
+                log(eventSender, `Aviso ao estabilizar página PJE1: ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+            }
+
+            log(eventSender, "Confirmado. Iniciando varredura PJE 1...", null, 'info');
+
+            // Navegação PJE 1 (reimplementada via Playwright em Node para logging detalhado)
+            try {
+                log(eventSender, `Navegando para PJE 1 (URL alvo: ${PJE_1_URL})`, 'Navigation', 'info');
+                // Re-navega para garantir o dashboard
+                try { await page.goto(PJE_1_URL, { waitUntil: 'domcontentloaded', timeout: 60000 }); } catch (e) { log(eventSender, `Aviso: erro ao goto PJE1: ${e.message}`, 'Navigation', 'warn'); }
+                await delay(1000);
+                log(eventSender, `URL atual após goto: ${page.url()}`, 'Navigation', 'info');
+
+                // 1) Selecionar perfil de Procuradoria (se existir)
                 try {
-                    processosCidade = await safeEvaluate(async (cidadeNome) => {
+                    const anchors = await page.$$('a');
+                    let foundProcurador = null;
+                    for (const a of anchors) {
+                        const text = (await a.evaluate(n => n.innerText || '')).toUpperCase();
+                        if (text && text.includes('PROCURADOR')) {
+                            if (text.includes('ELETRICIDADE')) { foundProcurador = a; break; }
+                            if (!foundProcurador) foundProcurador = a;
+                        }
+                    }
+                    if (foundProcurador) {
+                        log(eventSender, 'Perfil de Procuradoria detectado. Clicando...', 'Navigation', 'info');
+                        try { await clickWithRetries(foundProcurador, 'Perfil de Procuradoria'); } catch (e) { log(eventSender, `Falha ao clicar no perfil de Procuradoria: ${e.message || e}`, 'Navigation', 'warn'); }
+                        await delay(5000);
+                        log(eventSender, `URL após selecionar perfil: ${page.url()}`, 'Navigation', 'info');
+                    } else {
+                        log(eventSender, 'Nenhum perfil de Procuradoria detectado. Pulando seleção.', 'Navigation', 'info');
+                    }
+                } catch (e) { log(eventSender, `Erro ao selecionar perfil: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'warn'); }
+
+                // 2) Clicar em Expedientes
+                try {
+                    let tabExp = await page.$('#tabExpedientes_lbl');
+                    if (!tabExp) tabExp = await page.$("td[class*='abaExpediendes']");
+                    if (!tabExp) {
+                        try {
+                            const res = (typeof page.$x === 'function') ? await page.$x("//td[contains(text(), 'Expedientes') and (contains(@class,'rich-tab-header') or contains(@class,'abaExpediendes'))]") : null;
+                            if (res && res[0]) tabExp = res[0];
+                        } catch (e) { /* ignore xpath errors */ }
+                    }
+                    if (tabExp) {
+                        log(eventSender, 'Aba Expedientes encontrada. Clicando...', 'Navigation', 'info');
+                        try { await clickWithRetries(tabExp, 'Aba Expedientes'); } catch (e) { log(eventSender, `Falha ao clicar em Expedientes: ${e.message || e}`, 'Navigation', 'warn'); }
+                        await delay(2000);
+                        log(eventSender, `URL após clicar Expedientes: ${page.url()}`, 'Navigation', 'info');
+                    } else {
+                        log(eventSender, 'Aba Expedientes não encontrada.', 'Navigation', 'warn');
+                    }
+                } catch (e) { log(eventSender, `Erro ao interagir com Expedientes: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'warn'); }
+
+                // 3) Clicar em 'Pendentes de ciência ou de resposta'
+                try {
+                    const exactXPath = "//span[contains(@class,'nomeTarefa') and normalize-space(text())='Pendentes de ciência ou de resposta']";
+                    let nodes = (typeof page.$x === 'function') ? await page.$x(exactXPath) : null;
+                    if (nodes && nodes.length > 0) {
+                        log(eventSender, "Nó 'Pendentes de ciência ou de resposta' encontrado (exato). Clicando...", 'Navigation', 'info');
+                        try { await clickWithRetries(nodes[0], "Nó 'Pendentes' (exato)"); } catch (e) { log(eventSender, `Falha ao clicar nó Pendentes (exato): ${e.message || e}`, 'Navigation', 'warn'); }
+                        await delay(4000);
+                        log(eventSender, `URL após clicar Pendentes (exato): ${page.url()}`, 'Navigation', 'info');
+                    } else {
+                        log(eventSender, "Nó exato 'Pendentes de ciência ou de resposta' NÃO encontrado. Tentando fallback...", 'Navigation', 'warn');
+                        const xpathFallback = "//span[contains(@class,'nomeTarefa') and contains(text(), 'Pendentes de ciência')]";
+                        nodes = (typeof page.$x === 'function') ? await page.$x(xpathFallback) : null;
+                        if (nodes && nodes.length > 0) {
+                            log(eventSender, "Nó 'Pendentes de ciência' encontrado (fallback). Clicando...", 'Navigation', 'info');
+                            try { await clickWithRetries(nodes[0], "Nó 'Pendentes' (fallback)"); } catch (e) { log(eventSender, `Falha ao clicar nó Pendentes (fallback): ${e.message || e}`, 'Navigation', 'warn'); }
+                            await delay(4000);
+                            log(eventSender, `URL após clicar Pendentes (fallback): ${page.url()}`, 'Navigation', 'info');
+                        } else {
+                            // If page.$x is not available or returned nothing, attempt to click via document.evaluate inside the page
+                            const clicked = await page.evaluate(async (x) => {
+                                try {
+                                    const node = document.evaluate(x, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                                    if (node) { node.click(); return true; }
+                                    return false;
+                                } catch (e) { return false; }
+                            }, xpathFallback);
+                            if (clicked) {
+                                log(eventSender, "Nó Pendentes clicado via evaluate() (fallback alternativo).", 'Navigation', 'info');
+                                await delay(4000);
+                                log(eventSender, `URL após clicar Pendentes (evaluate fallback): ${page.url()}`, 'Navigation', 'info');
+                            } else {
+                                const spans = await page.$$('span.nomeTarefa');
+                                let found = null;
+                                for (const s of spans) {
+                                    const t = (await s.evaluate(n => n.innerText || '')).toLowerCase();
+                                    if (t.includes('pendentes')) { found = s; break; }
+                                }
+                                if (found) {
+                                    log(eventSender, "Nó contendo 'pendentes' encontrado (último recurso). Clicando...", 'Navigation', 'info');
+                                    try { await clickWithRetries(found, "Nó 'Pendentes' (último recurso)"); } catch (e) { log(eventSender, `Falha ao clicar nó Pendentes (último recurso): ${e.message || e}`, 'Navigation', 'warn'); }
+                                    await delay(4000);
+                                    log(eventSender, `URL após clicar Pendentes (último recurso): ${page.url()}`, 'Navigation', 'info');
+                                } else {
+                                    log(eventSender, 'Nenhum nó de Pendentes encontrado. A extração pode falhar.', 'Navigation', 'error');
+                                }
+                            }
+                        }
+                    }
+                } catch (e) { log(eventSender, `Erro na navegação para Pendentes: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'warn'); }
+
+            } catch (e) {
+                log(eventSender, `Erro durante navegação PJE1: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'error');
+            }
+
+            // SCAN PJE 1
+            const scanPje1 = await safeEvaluate(async () => {
+                let nosIniciais = Array.from(document.querySelectorAll("span.nomeTarefa"));
+                let listaAlvos = nosIniciais.filter(el => {
+                    const nome = el.innerText.trim();
+                    return nome &&
+                        !nome.includes("Caixa de entrada") &&
+                        !nome.includes("Pendentes") &&
+                        !nome.includes("Expedientes") &&
+                        !nome.includes("Acervo") &&
+                        !nome.includes("Minhas petições") &&
+                        !nome.includes("Ciência") &&
+                        !nome.includes("Prazo") &&
+                        !nome.includes("Respondidos") &&
+                        !nome.includes("Apenas") &&
+                        !nome.includes("Sem prazo") &&
+                        !nome.match(/^\d+$/);
+                }).map(el => el.innerText.trim());
+                listaAlvos = [...new Set(listaAlvos)];
+                listaAlvos.sort((a, b) => a.localeCompare(b));
+                return listaAlvos;
+            });
+
+            if (scanPje1 && scanPje1.length > 0) {
+                log(eventSender, `PJE 1: Encontradas ${scanPje1.length} jurisdições/cidades.`, null, 'success');
+                const qtd1 = await waitForInput(eventSender, ipcReceiver, 'number', {
+                    title: 'PJE 1 - Quantidade',
+                    message: `PJE 1: ${scanPje1.length} locais encontrados. Quantos processar?`,
+                    max: scanPje1.length
+                });
+                const limite1 = parseInt(qtd1);
+                log(eventSender, `Processando ${limite1} locais do PJE 1...`, null, 'info');
+
+                for (let i = 0; i < limite1; i++) {
+                    if(isStopping) break;
+                    const cidadeNome = scanPje1[i];
+                    log(eventSender, `(PJE 1) Extraindo: ${cidadeNome}...`, null, 'info');
+
+                    let processosCidade = null;
+                    try {
+                        processosCidade = await safeEvaluate(async (cidadeNome) => {
+                            const esperar = (ms) => new Promise(res => setTimeout(res, ms));
+                            const limparTexto = (t) => t ? t.split('\n').map(l=>l.trim()).filter(l=>l.length>0).join('\n') : "";
+
+                            let xpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${cidadeNome}"]`;
+                            let result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                            let element = result.singleNodeValue;
+                            if (!element) {
+                                const menus = ["Expedientes", "Pendentes de ciência", "Pendentes de resposta"];
+                                for (const menu of menus) {
+                                    let mXpath = `//span[contains(@class, 'nomeTarefa') and contains(text(), "${menu}")]`;
+                                    let mNode = document.evaluate(mXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                                    if (mNode && mNode.offsetParent !== null) {
+                                        mNode.click();
+                                        await esperar(1000);
+                                    }
+                                }
+                                result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                                element = result.singleNodeValue;
+                            }
+
+                            if (!element) return null;
+                            element.scrollIntoView({ block: "center", behavior: "auto" });
+                            await esperar(500);
+                            element.click();
+                            let evt = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
+                            element.dispatchEvent(evt);
+                            await esperar(4000);
+
+                            let data = [];
+                            while (true) {
+                                let linhas = document.querySelectorAll("table[id$='tbExpedientes'] > tbody > tr");
+                                if (linhas.length > 0) {
+                                    linhas.forEach(linha => {
+                                        let cels = linha.querySelectorAll("td");
+                                        if (cels.length >= 3) {
+                                            let txt = limparTexto(cels[1].innerText + "\n" + cels[2].innerText);
+                                            if (!data.includes(txt)) data.push(txt);
+                                        }
+                                    });
+                                }
+                                let nextBtn = document.querySelector(".rich-datascr-button[onclick*='fastforward']");
+                                if (nextBtn && !nextBtn.classList.contains('rich-datascr-inact')) {
+                                    nextBtn.click();
+                                    await esperar(1500);
+                                } else {
+                                    break;
+                                }
+                            }
+                            return data;
+
+                        }, cidadeNome);
+                    } catch (errCidade) {
+                        log(eventSender, `Erro ao extrair ${cidadeNome}: ${errCidade.message}`, errCidade.stack, 'error');
+                        continue;
+                    }
+
+                    if (processosCidade) {
+                        dadosPje1[cidadeNome] = processosCidade;
+                        log(eventSender, `   > ${processosCidade.length} expedientes.`, null, 'success');
+                    } else {
+                        log(eventSender, `   > Não foi possível acessar.`, null, 'error');
+                    }
+                }
+
+            } else {
+                log(eventSender, "PJE 1: Nenhuma cidade encontrada (verifique se a árvore 'Expedientes' está aberta).", null, 'warn');
+            }
+        };
+
+        const runPje2 = async () => {
+            log(eventSender, "Acessando PJE 2º Grau...", PJE_2_URL, 'info');
+            await page.goto(PJE_2_URL, { waitUntil: 'domcontentloaded', timeout: 120000 });
+
+            // Solicita login manual do usuário (100% manual)
+            log(eventSender, "Aguardando login manual do usuário...", "Waiting User Input", 'warn');
+            const loginResp = await waitForInput(eventSender, ipcReceiver, 'confirm', {
+                title: 'Login PJE 2º Grau',
+                message: 'Realize o login no PJE 2 e aguarde a tela inicial carregar. Clique em Continuar quando estiver pronto.',
+                confirmText: 'Continuar'
+            });
+
+            if (loginResp === false || loginResp === 'cancel') {
+                log(eventSender, "Login cancelado pelo usuário. Pulando PJE 2.", null, 'warn');
+                return;
+            }
+
+            // Save updated storageState after successful manual login to capture HttpOnly cookies
+            try {
+                await context.storageState({ path: PJE_STORAGE });
+                log(eventSender, `Sessão PJE salva em: ${PJE_STORAGE}`, 'PJE Session', 'success');
+            } catch (e) {
+                log(eventSender, `Erro salvando sessão PJE (2): ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+            }
+
+            // Ensure the page is on the expected PJE 2 URL and stable before running evaluations
+            try {
+                try { await page.waitForLoadState('domcontentloaded', { timeout: 15000 }); } catch (__) {}
+                await delay(800);
+                const curUrl2 = page.url ? page.url() : '';
+                if (!curUrl2 || !curUrl2.startsWith(PJE_2_URL)) {
+                    log(eventSender, `URL atual inesperada (${curUrl2}). Navegando para ${PJE_2_URL} para estabilizar.`, 'PJE Session', 'warn');
+                    await page.goto(PJE_2_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                    await delay(1500);
+                }
+
+                // Wait for dashboard indicators (Mesa de Trabalho, Aguardando Leitura, tree nodes or Expedientes tab)
+                const indicators2 = ['text=Mesa de Trabalho', 'text=Aguardando Leitura', 'span.nomeTarefa', '#tabExpedientes_lbl'];
+                let foundIndicator2 = false;
+                for (const sel of indicators2) {
+                    try {
+                        await page.waitForSelector(sel, { timeout: 20000 });
+                        log(eventSender, `Indicador de painel detectado (PJE2): ${sel}`, 'PJE Session', 'info');
+                        foundIndicator2 = true;
+                        break;
+                    } catch (__) { /* try next */ }
+                }
+                if (!foundIndicator2) {
+                    log(eventSender, 'Aviso: não foi detectado indicador claro do painel PJE2 após login. Prosseguindo mesmo assim (pode falhar).', 'PJE Session', 'warn');
+                }
+            } catch (e) {
+                log(eventSender, `Aviso ao estabilizar página PJE2: ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+            }
+
+            log(eventSender, "Confirmado. Iniciando varredura PJE 2...", null, 'info');
+
+            // Navegar até o local correto (Lógica do User: mariana campelo -> Expedientes -> Apenas pendentes)
+            await page.evaluate(async () => {
+                const esperar = ms => new Promise(r => setTimeout(r, ms));
+                console.log("Iniciando navegação interna PJE 2...");
+
+                // 1. Expedientes (Tab)
+                // Tenta clicar na aba Expedientes se ela existir
+                let tabExp = document.querySelector("td[class*='abaExpediendes']"); 
+                if(!tabExp) tabExp = document.evaluate("//td[contains(text(), 'Expedientes')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                
+                if (tabExp) {
+                    tabExp.click();
+                    await esperar(2000);
+                }
+
+                // 2. "Apenas pendentes de ciência"
+                // Procura o nó na árvore
+                let xpathNode = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Apenas pendentes de ciência')]";
+                let node = document.evaluate(xpathNode, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                
+                if (node) {
+                    node.scrollIntoView({block: 'center'});
+                    node.click();
+                    await esperar(4000); // Aguarda carregar a sub-arvore
+                } else {
+                    console.warn("Nó 'Apenas pendentes de ciência' não encontrado. Tentando 'Pendentes de ciência'...");
+                    // Fallback
+                    let xpathAlt = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Pendentes de ciência')]";
+                    let nodeAlt = document.evaluate(xpathAlt, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    if(nodeAlt) {
+                         nodeAlt.click();
+                         await esperar(4000);
+                    }
+                }
+            });
+
+            // --- SCAN PJE 2 ---
+            const scanPje2 = await safeEvaluate(() => {
+                const limparNomeNo = (nomeCompleto) => {
+                    let nome = nomeCompleto.toUpperCase().trim();
+                    nome = nome.replace(/\s*\(\d+\)/g, '').trim();
+                    return nome;
+                };
+
+                let nosDaArvore = Array.from(document.querySelectorAll(".rich-tree-node-text a"));
+                let listaNos = nosDaArvore.filter(el => {
+                    const nome = el.innerText.trim().toUpperCase();
+                    return nome.includes("TRIBUNAL DE JUSTIÇA") || nome.includes("TURMAS RECURSAIS");
+                }).map((el, index) => ({
+                    index: index,
+                    nomeOriginal: el.innerText.trim(),
+                    nomeLimpo: limparNomeNo(el.innerText)
+                }));
+
+                return listaNos;
+            });
+
+            if (scanPje2 && scanPje2.length > 0) {
+                log(eventSender, `PJE 2: Encontrados ${scanPje2.length} nós.`, null, 'success');
+                const qtd = await waitForInput(eventSender, ipcReceiver, 'number', {
+                    title: 'PJE 2 - Quantidade',
+                    message: `PJE 2: ${scanPje2.length} nós encontrados (${scanPje2.map(n=>n.nomeLimpo).join(', ')}). Quantos processar?`,
+                    max: scanPje2.length
+                });
+                const limite = parseInt(qtd);
+                log(eventSender, `Processando ${limite} nós do PJE 2...`, null, 'info');
+
+                for (let i = 0; i < limite; i++) {
+                    const targetName = scanPje2[i].nomeOriginal;
+                    log(eventSender, `(PJE 2) Extraindo: ${targetName}...`, null, 'info');
+
+                    const processos = await safeEvaluate(async (targetName) => {
                         const esperar = (ms) => new Promise(res => setTimeout(res, ms));
                         const limparTexto = (t) => t ? t.split('\n').map(l=>l.trim()).filter(l=>l.length>0).join('\n') : "";
 
-                    // XPath Search
-                    let xpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${cidadeNome}"]`;
-                    let result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                    let element = result.singleNodeValue;
-                    
-                    // Lógica de Recuperação (Tree Collapse Fix)
-                    if (!element) {
-                        // Tenta reabrir menus comuns
-                        const menus = ["Expedientes", "Pendentes de ciência", "Pendentes de resposta"];
-                        for (const menu of menus) {
-                            let mXpath = `//span[contains(@class, 'nomeTarefa') and contains(text(), "${menu}")]`;
-                            let mNode = document.evaluate(mXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                            if (mNode && mNode.offsetParent !== null) {
-                                mNode.click();
-                                await esperar(1000);
+                        let elements = Array.from(document.querySelectorAll(".rich-tree-node-text a"));
+                        let el = elements.find(e => e.innerText.trim() === targetName);
+                        
+                        if(!el) return null;
+                        
+                        el.click();
+                        await esperar(3500);
+
+                        let processosDoNo = [];
+                        while (true) {
+                            let linhasTabela = document.querySelectorAll("table[id$='tbExpedientes'] > tbody > tr");
+                            if (linhasTabela.length > 0) {
+                                linhasTabela.forEach(linha => {
+                                    let celulas = linha.querySelectorAll("td");
+                                    if (celulas.length >= 3) {
+                                        let colDetalhes = celulas[1].innerText;
+                                        let colProcesso = celulas[2].innerText;
+                                        let textoCompleto = limparTexto(colDetalhes + "\n" + colProcesso);
+                                        if (!processosDoNo.includes(textoCompleto)) processosDoNo.push(textoCompleto);
+                                    }
+                                });
+                            }
+                            let botaoAvancar = document.querySelector(".rich-datascr-button[onclick*='fastforward']");
+                            if (botaoAvancar && !botaoAvancar.classList.contains('rich-datascr-inact')) {
+                                botaoAvancar.click();
+                                await esperar(1500);
+                            } else {
+                                break;
                             }
                         }
-                        // Retry find
-                        result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                        element = result.singleNodeValue;
+                        return processosDoNo;
+                    }, targetName);
+
+                    if (processos) {
+                        dadosPje2[scanPje2[i].nomeLimpo] = processos;
+                        log(eventSender, `   > ${processos.length} expedientes coletados.`, null, 'success');
+                    } else {
+                        log(eventSender, `   > Falha ao acessar nó.`, null, 'error');
                     }
-
-                    if (!element) return null;
-
-                    element.scrollIntoView({ block: "center", behavior: "auto" });
-                    await esperar(500);
-                    element.click();
-                    // Force click event dispatch just in case
-                    let evt = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
-                    element.dispatchEvent(evt);
-
-                    await esperar(4000); // Load content
-
-                    let data = [];
-                    // Paginação
-                    while (true) {
-                        let linhas = document.querySelectorAll("table[id$='tbExpedientes'] > tbody > tr");
-                        if (linhas.length > 0) {
-                            linhas.forEach(linha => {
-                                let cels = linha.querySelectorAll("td");
-                                if (cels.length >= 3) {
-                                    let txt = limparTexto(cels[1].innerText + "\n" + cels[2].innerText);
-                                    if (!data.includes(txt)) data.push(txt);
-                                }
-                            });
-                        }
-                        let nextBtn = document.querySelector(".rich-datascr-button[onclick*='fastforward']");
-                        if (nextBtn && !nextBtn.classList.contains('rich-datascr-inact')) {
-                            nextBtn.click();
-                            await esperar(1500);
-                        } else {
-                            break;
-                        }
-                    }
-                    return data;
-
-                }, cidadeNome);
-                } catch (errCidade) {
-                    log(eventSender, `Erro ao extrair ${cidadeNome}: ${errCidade.message}`, errCidade.stack, 'error');
-                    continue; // prosseguir para próxima cidade
                 }
-
-                if (processosCidade) {
-                    dadosPje1[cidadeNome] = processosCidade;
-                    log(eventSender, `   > ${processosCidade.length} expedientes.`, null, 'success');
-                } else {
-                    log(eventSender, `   > Não foi possível acessar.`, null, 'error');
-                }
+            } else {
+                log(eventSender, "PJE 2: Nenhum nó (Tribunal/Turmas) encontrado na tela atual.", null, 'warn');
             }
+        };
 
-        } else {
-            log(eventSender, "PJE 1: Nenhuma cidade encontrada (verifique se a árvore 'Expedientes' está aberta).", null, 'warn');
-        }
+        // Run in preferred order: PJE 1 first, then PJE 2 (user preference)
+        await runPje1();
+        if (isStopping) return;
+        await runPje2();
+        if (isStopping) return;
 
         // --- GERAÇÃO DE ARQUIVOS (WORD) ---
         // Combinar dados
@@ -2030,8 +2283,7 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
         
         if (tudoVazio) {
             log(eventSender, "Nenhum dado coletado. Finalizando sem arquivos.", null, 'warn');
-        } else {
-            // Pergunta Merge
+        } else {            // Pergunta Merge
             const merge = await waitForInput(eventSender, ipcReceiver, 'select', {
                 title: 'Gerar Relatório',
                 message: 'Deseja juntar todos os processos (PJE 1 e 2) em um único arquivo Word?',
