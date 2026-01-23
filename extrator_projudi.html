@@ -518,6 +518,46 @@
             }
         });
 
+        // Attach robust handler for Select output dir button
+        function attachSelectDirHandler() {
+            const inpOutputDir = document.getElementById('inp-output-dir');
+            const btnSelectDir = document.getElementById('btn-select-dir');
+            if (!btnSelectDir) return false;
+            btnSelectDir.addEventListener('click', async () => {
+                try {
+                    console.log('extrator_projudi: btnSelectDir clicked');
+                    if (!ipcRenderer || typeof ipcRenderer.invoke !== 'function') {
+                        console.warn('ipcRenderer.invoke not available - cannot open directory dialog');
+                        alert('A seleção de pasta não está disponível neste contexto.');
+                        return;
+                    }
+                    const dir = await ipcRenderer.invoke('dialog:openDirectory');
+                    if (dir) {
+                        if (inpOutputDir) { inpOutputDir.value = dir; inpOutputDir.title = dir; }
+                        // persist state if possible
+                        try { ipcRenderer.send('save-app-state'); } catch (__) {}
+                    } else {
+                        console.log('dialog:openDirectory cancelled or returned null');
+                    }
+                } catch (e) {
+                    console.error('btnSelectDir error (extrator_projudi)', e);
+                    alert('Erro ao abrir seletor de pasta. Veja o console para mais detalhes.');
+                }
+            });
+            return true;
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => { attachSelectDirHandler(); });
+        } else {
+            attachSelectDirHandler();
+        }
+
+        const selectDirObserverProj = new MutationObserver((mutations) => {
+            if (attachSelectDirHandler()) { selectDirObserverProj.disconnect(); console.log('attachSelectDirHandler attached via MutationObserver (extrator_projudi)'); }
+        });
+        selectDirObserverProj.observe(document.body, { childList: true, subtree: true });
+
         function updateStatus(state, text) {
             statusBadge.className = 'status-badge'; // reset
             statusText.textContent = text;
