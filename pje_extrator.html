@@ -426,17 +426,45 @@
             if (doSave) scheduleSave();
         }
 
-        // Select output dir handler
-        const inpOutputDir = document.getElementById('inp-output-dir');
-        const btnSelectDir = document.getElementById('btn-select-dir');
-        if (btnSelectDir) {
+        // Select output dir handler (robust: attach on DOMContentLoaded, with logging and fallback)
+        function attachSelectDirHandler() {
+            const inpOutputDir = document.getElementById('inp-output-dir');
+            const btnSelectDir = document.getElementById('btn-select-dir');
+            if (!btnSelectDir) return false;
+
             btnSelectDir.addEventListener('click', async () => {
                 try {
+                    console.log('btnSelectDir clicked: invoking dialog:openDirectory');
                     const dir = await ipcRenderer.invoke('dialog:openDirectory');
-                    if (dir) { inpOutputDir.value = dir; inpOutputDir.title = dir; scheduleSave(); }
-                } catch (e) { console.error('btnSelectDir error', e); }
+                    if (dir) {
+                        if (inpOutputDir) { inpOutputDir.value = dir; inpOutputDir.title = dir; }
+                        scheduleSave();
+                    } else {
+                        console.log('dialog:openDirectory cancelled or returned null');
+                    }
+                } catch (e) {
+                    console.error('btnSelectDir error', e);
+                    alert('Erro ao abrir seletor de pasta. Verifique logs.');
+                }
             });
+            return true;
         }
+
+        // Ensure handler is attached after DOM ready; if DOMContentLoaded already fired, attach immediately
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => { attachSelectDirHandler(); });
+        } else {
+            attachSelectDirHandler();
+        }
+
+        // As a last resort, observe DOM for dynamic insertion of the button (some pages change structure)
+        const selectDirObserver = new MutationObserver((mutations) => {
+            if (attachSelectDirHandler()) {
+                selectDirObserver.disconnect();
+                console.log('btnSelectDir detected and handler attached via MutationObserver');
+            }
+        });
+        selectDirObserver.observe(document.body, { childList: true, subtree: true });
 
         function startAutomation() {
             logArea.innerHTML = '';
