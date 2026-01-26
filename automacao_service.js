@@ -46,9 +46,14 @@ async function runAutomation(eventSender, inputReceiver, args) {
     global.isAutomationRunning = true;
     if (eventSender) eventSender.send('automation-status', true);
 
-    // Heartbeat logger to show progress when flow seems idle (one log every 8s)
+    // Heartbeat: only log once to avoid spamming when waiting for user action
+    let _heartbeatLogged = false;
     let heartbeatInterval = setInterval(() => {
-        if (global.isAutomationRunning) log(eventSender, 'Automação ativa: aguardando próximo passo...', 'heartbeat', 'info');
+        if (global.isAutomationRunning && !_heartbeatLogged) {
+            log(eventSender, 'Automação ativa: aguardando próximo passo...', 'heartbeat', 'info');
+            _heartbeatLogged = true;
+            try { clearInterval(heartbeatInterval); } catch(_) {}
+        }
     }, 8000);
 
     // Bring main window to front once so the automation window (Edge) won't be hidden by other apps

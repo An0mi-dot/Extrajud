@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Criar Pastas - OFÍCIOS (SharePoint)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    // Apply saved theme early to avoid flash
+    try {
+        const t = localStorage.getItem('extjt-theme');
+        if (t === 'dark') document.documentElement.classList.add('dark');
+    } catch (e) { /* ignore */ }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #10b981;
+      --primary-hover: #059669;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --text-secondary: #666666;
+      --border-color: #dfe1e5;
+      --danger-color: #ef4444;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin:0; padding:20px; display:flex; flex-direction:column; height:100vh; box-sizing:border-box; }
+
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .header h1 { color:var(--primary-color); margin:0; font-size:1.25rem; display:flex; gap:10px; align-items:center; }
+    .back-btn { background:none; border:none; color:var(--text-color); cursor:pointer; display:flex; align-items:center; gap:6px; padding:8px 10px; border-radius:6px; }
+    .back-btn:hover { background:#e5e7eb; }
+
+    .main-container { display:flex; gap:18px; flex:1; min-height:0; }
+
+    .control-panel { width:320px; background:var(--card-bg); padding:18px; border-radius:12px; box-shadow:0 6px 18px rgba(2,6,23,0.06); display:flex; flex-direction:column; gap:12px; }
+    .info-box { background:#e0f2fe; border-left:4px solid #3b82f6; padding:12px; border-radius:6px; font-size:0.9rem; color:#0c4a6e; }
+
+    .btn { width:100%; padding:12px; border:none; border-radius:8px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.95rem; }
+    .btn-primary { background:var(--primary-color); color:#fff; }
+    .btn-primary:hover:not(:disabled){ background:var(--primary-hover); transform:translateY(-1px); }
+    .btn-primary:disabled { background:#9ca3af; cursor:not-allowed; opacity:0.75; }
+
+    .log-panel { flex:1; background:#121212; border-radius:12px; padding:14px; display:flex; flex-direction:column; overflow:hidden; }
+    .log-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:6px; }
+    .log-title { color:#e5e7eb; font-size:0.95rem; font-weight:700; }
+    #logArea { flex:1; overflow-y:auto; font-family:Consolas, monospace; font-size:0.9rem; color:#d4d4d4; padding-right:6px; }
+
+    .log-entry { margin-bottom:6px; border-left:3px solid transparent; padding-left:8px; }
+    .log-info { border-left-color:#3b82f6; }
+    .log-success { border-left-color:#10b981; color:#a7f3d0; }
+    .log-warning { border-left-color:#f59e0b; color:#fde68a; }
+    .log-error { border-left-color:#ef4444; color:#fca5a5; }
+
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
+    .modal-content { background:var(--card-bg); padding:22px; border-radius:12px; width:460px; box-shadow:0 20px 30px rgba(0,0,0,0.12); }
+    .modal-title { font-size:1.05rem; font-weight:700; margin-bottom:8px; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
+
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button class="back-btn" onclick="window.location.href='index.html'"><i class="fas fa-arrow-left"></i> Voltar</button>
+    <h1><i class="fas fa-folder-plus"></i> Criar Pastas - OFÍCIOS (SharePoint)</h1>
+  </div>
+
+  <div class="main-container">
+    <div class="control-panel">
+      <div class="info-box">
+        <strong>Como funciona:</strong><br>
+        1. Clique em <strong>Iniciar</strong> para abrir o SharePoint no Edge (URL fixa).<br>
+        2. Faça o login manualmente se solicitado.<br>
+        3. O app detecta automaticamente a pasta OFÍCIOS e lista o conteúdo.<br>
+        4. Após a detecção, um popup aparecerá pedindo quantas pastas criar; confirme para prosseguir.
+      </div>
+
+      <button id="btnStart" class="btn btn-primary"><i class="fas fa-play"></i> Iniciar (abrir SharePoint)</button>
+      <button id="btnStop" class="btn btn-danger" style="display:none"><i class="fas fa-stop"></i> Parar</button>
+
+      <div style="margin-top:6px;">
+        <label style="display:block; font-size:12px; color:var(--text-secondary); font-weight:700; margin-bottom:6px">Pasta fixa</label>
+        <div class="badge">JUD COELBA - Documentos - OFÍCIOS (Ano Escolhido) - Todos os Documentos</div>
+      </div>
+
+      <div style="margin-top:8px; border-top:1px dashed #e6e6e6; padding-top:10px;">
+        <label style="display:block; font-size:12px; color:var(--text-secondary); font-weight:700; margin-bottom:6px">Preview</label>
+        <div id="preview" class="preview"><em>Nenhum preview gerado ainda.</em></div>
+      </div>
+    </div>
+
+    <div class="log-panel">
+      <div class="log-header">
+        <span class="log-title">Log de Execução</span>
+        <div>
+          <button id="btnCopyLog" style="background:none;border:none;color:#9ca3af;cursor:pointer;" title="Copiar Log"><i class="fas fa-copy"></i></button>
+        </div>
+      </div>
+      <div id="logArea"></div>
+    </div>
+  </div>
+
+  <!-- Modal used to ask how many folders to create -->
+  <div id="dynamicModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title">Criar pastas sequenciais</div>
+      <div id="modalBody">
+        <div id="modalPreview" style="max-height:140px; overflow:auto; border:1px solid var(--border-color); padding:8px; border-radius:6px;">Carregando preview...</div>
+        <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+          <label for="modalCount" style="min-width:160px">Quantas novas pastas deseja criar?</label>
+          <input id="modalCount" type="number" min="1" value="3" style="width:110px; padding:8px; border:1px solid var(--border-color); border-radius:6px;" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="modalCancel" class="btn">Cancelar</button>
+        <button id="modalConfirm" class="btn btn-primary">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login wait modal -->
+  <div id="loginModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title">Aguardando Login</div>
+      <div style="margin-top:6px; color:var(--text-secondary);">Faça login no Microsoft Online na janela do Edge. Quando terminar, clique em <strong>Login feito</strong> abaixo.</div>
+      <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+        <button id="loginCancel" class="btn">Cancelar</button>
+        <button id="loginDone" class="btn btn-primary">Login feito</button>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const DEFAULT_SP_URL = "https://iberdrola.sharepoint.com/sites/JUDCOELBA/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FJUDCOELBA%2FShared%20Documents%2FOF%C3%8DCIOS%202026&viewid=b0389131%2Db788%2D4354%2D8edd%2Dcfe27a229f93&ct=1720187493260&or=Teams%2DHL&LOF=1&ovuser=031a09bc%2Da2bf%2D44df%2D888e%2D4e09355b7a24%2Cjoao%2Eaviana%40neoenergia%2Ecom&OR=Teams%2DHL&CT=1769431380333&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiIxNDE1LzI1MTEzMDAxMzEyIiwiSGFzRmVkZXJhdGVkVXNlciI6ZmFsc2V9";
+
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+    const logArea = document.getElementById('logArea');
+    const btnCopyLog = document.getElementById('btnCopyLog');
+    const previewEl = document.getElementById('preview');
+
+    // Modal elements
+    const dynamicModal = document.getElementById('dynamicModal');
+    const modalBody = document.getElementById('modalBody');
+    const modalConfirmBtn = document.getElementById('modalConfirm');
+    const modalCancelBtn = document.getElementById('modalCancel');
+    const modalPreview = document.getElementById('modalPreview');
+    const modalCount = document.getElementById('modalCount');
+
+    let currentSession = null;
+    let fullLogs = [];
+
+    function addLog(msg, cls = 'log-info') {
+      const el = document.createElement('div'); el.className = 'log-entry ' + cls; el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logArea.insertBefore(el, logArea.firstChild);
+      fullLogs.push({ msg, type: cls });
+      if (fullLogs.length > 500) fullLogs.shift();
+    }
+
+    btnCopyLog && btnCopyLog.addEventListener('click', () => {
+      try { ipcRenderer.invoke('clipboard-write', { text: fullLogs.map(l=>l.msg).join('\n') }); addLog('Log copiado para a área de transferência', 'log-success'); } catch(e){ addLog('Erro ao copiar log: '+e.message, 'log-error'); }
+    });
+
+    btnStart && btnStart.addEventListener('click', async () => {
+      addLog('Iniciando sessão (abrindo navegador)...', 'log-info');
+      try {
+        const res = await ipcRenderer.invoke('sharepoint:start-session', { url: DEFAULT_SP_URL });
+        if (!res || !res.ok) { addLog('Falha ao iniciar sessão: '+(res && res.error ? res.error : 'erro desconhecido'), 'log-error'); return; }
+        currentSession = res.sessionId; addLog('Sessão iniciada: '+currentSession, 'log-success');
+      } catch (e) { addLog('Erro ao iniciar sessão: '+e.message, 'log-error'); }
+    });
+
+    // Modal confirm
+    modalConfirmBtn && modalConfirmBtn.addEventListener('click', async () => {
+      const count = parseInt(modalCount.value,10) || 0;
+      if (!currentSession) { addLog('Sessão inválida.', 'log-error'); return; }
+      if (count <= 0) { addLog('Número inválido informado.', 'log-warning'); return; }
+      modalConfirmBtn.disabled = true; modalConfirmBtn.textContent = 'Executando...';
+      addLog(`Solicitando criação de ${count} pastas (sessão ${currentSession})`, 'log-info');
+      try {
+        const res = await ipcRenderer.invoke('sharepoint:create-session', { sessionId: currentSession, count });
+        if (!res || !res.ok) { addLog('Falha ao criar pastas: '+(res && res.error ? res.error : 'erro desconhecido'), 'log-error'); }
+        else { addLog('Criação concluída: ' + JSON.stringify(res.result || res), 'log-success'); }
+      } catch (e) { addLog('Exceção ao criar: '+e.message, 'log-error'); }
+      modalConfirmBtn.disabled = false; modalConfirmBtn.textContent = 'Confirmar';
+      dynamicModal.style.display = 'none'; currentSession = null;
+    });
+
+    modalCancelBtn && modalCancelBtn.addEventListener('click', () => { dynamicModal.style.display = 'none'; addLog('Criação cancelada pelo usuário', 'log-warning'); });
+
+    // Login modal handlers
+    const loginModalEl = document.getElementById('loginModal');
+    const loginDoneBtn = document.getElementById('loginDone');
+    const loginCancelBtn = document.getElementById('loginCancel');
+
+    loginDoneBtn && loginDoneBtn.addEventListener('click', () => {
+      try { ipcRenderer.send('sharepoint:login-action', { sessionId: currentSession, action: 'done' }); addLog('Usuário confirmou login.', 'log-success'); } catch (e) { addLog('Erro ao enviar confirmação de login: '+e.message, 'log-error'); }
+      try { loginModalEl.style.display = 'none'; } catch(e){}
+    });
+
+    loginCancelBtn && loginCancelBtn.addEventListener('click', () => {
+      try { ipcRenderer.send('sharepoint:login-action', { sessionId: currentSession, action: 'cancel' }); addLog('Usuário cancelou o login.', 'log-warning'); } catch (e) { addLog('Erro ao enviar cancelamento de login: '+e.message, 'log-error'); }
+      try { loginModalEl.style.display = 'none'; } catch(e){}
+    });
+
+    // IPC listeners
+    ipcRenderer.on('sharepoint:waiting-for-login', (ev,p) => { addLog('Aguardando login do usuário (MS Online)...', 'log-info'); btnStop.style.display = 'inline-flex';
+      try { document.getElementById('loginModal').style.display = 'flex'; } catch(e){}
+    });
+    ipcRenderer.on('sharepoint:login-completed', (ev,p) => { addLog('Login concluído pelo usuário.', 'log-success'); try { document.getElementById('loginModal').style.display = 'none'; } catch(e){} });
+
+    // Handle request to show login prompt explicitly (runner may send sharepoint:request-login)
+    ipcRenderer.on('sharepoint:request-login', (ev,p) => { addLog('Solicitação: confirme quando o login estiver concluído.', 'log-info'); try { currentSession = p && p.sessionId ? p.sessionId : currentSession; document.getElementById('loginModal').style.display = 'flex'; } catch(e){} });
+
+    ipcRenderer.on('sharepoint:prompt-create', (ev,payload) => {
+      addLog('Preview obtido. Abrindo popup para confirmação...', 'log-info');
+      if (!payload) return;
+      currentSession = payload.sessionId || currentSession;
+      // render preview in panel and modal
+      const p = payload.preview || {};
+      if (p.items && Array.isArray(p.items) && p.items.length > 0) {
+        previewEl.innerHTML = '';
+        p.items.slice(0,200).forEach(it => { const d = document.createElement('div'); d.className='item'; d.textContent = (it.isFolder ? '📁 ' : '📄 ') + (it.name || '(sem nome)'); previewEl.appendChild(d); });
+        modalPreview.innerHTML = previewEl.innerHTML;
+      } else { previewEl.innerHTML = `<div style="font-size:13px;color:#444">${p.rootText||''}<br>Itens: ${p.totalItems||0}</div>`; modalPreview.innerHTML = previewEl.innerHTML; }
+      modalCount.value = payload.suggested || 3; dynamicModal.style.display = 'flex';
+    });
+
+    // Also listen for general log-message
+    ipcRenderer.on('log-message', (ev,p) => { try { const t = typeof p === 'string'? p : (p && p.msg? p.msg : JSON.stringify(p)); addLog(t, 'log-info'); } catch(e){} });
+
+    // Restore may be added later (state persistence)
+
+  </script>
+</body>
+</html>

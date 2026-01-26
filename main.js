@@ -73,6 +73,69 @@ ipcMain.on('save-app-state', (event, state) => {
   }
 });
 
+// Handler requested by SharePoint service to bring the application window to front
+ipcMain.on('bring-window-front', (event, args) => {
+  try {
+    const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
+    if (!win) return;
+    // Temporarily set alwaysOnTop to ensure visibility, then restore shortly after
+    win.setAlwaysOnTop(true, 'screen');
+    setTimeout(() => {
+      try { win.setAlwaysOnTop(false); } catch (e) { /* ignore */ }
+      try { if (!win.isDestroyed()) win.focus(); } catch(e) { }
+    }, 300);
+  } catch (e) {
+    console.error('bring-window-front handler error', e);
+  }
+});
+
+// SharePoint preview and creation handlers
+ipcMain.handle('sharepoint:get-preview', async (event, args) => {
+  try {
+    const runner = require('./sharepoint_runner');
+    const res = await runner.getPreview(args || {}, event.sender);
+    return res;
+  } catch (e) {
+    console.error('sharepoint:get-preview error', e);
+    return { ok: false, error: e && e.message };
+  }
+});
+
+ipcMain.handle('sharepoint:create', async (event, args) => {
+  try {
+    const runner = require('./sharepoint_runner');
+    const res = await runner.createSequential(args || {}, event.sender);
+    return res;
+  } catch (e) {
+    console.error('sharepoint:create error', e);
+    return { ok: false, error: e && e.message };
+  }
+});
+
+// Start a long-lived session: opens Edge, navigates and returns a sessionId + preview. Browser stays open until create-session is called or timeout.
+ipcMain.handle('sharepoint:start-session', async (event, args) => {
+  try {
+    const runner = require('./sharepoint_runner');
+    const res = await runner.startSession(args || {}, event.sender);
+    return res;
+  } catch (e) {
+    console.error('sharepoint:start-session error', e);
+    return { ok: false, error: e && e.message };
+  }
+});
+
+// Create using an existing session and then close it
+ipcMain.handle('sharepoint:create-session', async (event, args) => {
+  try {
+    const runner = require('./sharepoint_runner');
+    const res = await runner.createInSession(args && args.sessionId ? args.sessionId : null, args || {}, event.sender);
+    return res;
+  } catch (e) {
+    console.error('sharepoint:create-session error', e);
+    return { ok: false, error: e && e.message };
+  }
+});
+
 // Convert a browser dump (localStorage/sessionStorage/cookies) to Playwright storageState format
 function convertToPlaywrightStorage(payload) {
   try {
