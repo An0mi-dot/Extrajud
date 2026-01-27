@@ -117,6 +117,14 @@
         </div>
         <small style="color:var(--text-secondary); font-size:12px; display:block; margin-bottom:6px">O app usará o e-mail selecionado para preencher automaticamente o campo de login.</small>
 
+          <label style="display:block; font-size:12px; color:var(--text-secondary); font-weight:700; margin-bottom:6px">Caminho base (REST fallback)</label>
+          <input id="restBasePathInput" type="text" placeholder="Shared Documents/OFÍCIOS 2026" style="width:100%; padding:8px; border:1px solid var(--border-color); border-radius:6px; margin-bottom:8px;" />
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:6px; font-size:12px; color:var(--text-secondary);">
+          <input id="analyzerCheckbox" type="checkbox" style="width:16px;height:16px;" /> <span style="font-weight:700;">Analisador</span>
+          <span style="font-size:11px; color:var(--text-secondary); font-weight:400; margin-left:6px;">Captura requisições XHR/Fetch para diagnóstico (/_api/ e Graph)</span>
+        </label>
+
         <label style="display:block; font-size:12px; color:var(--text-secondary); font-weight:700; margin-bottom:6px">Preview</label>
         <div id="preview" class="preview"><em>Nenhum preview gerado ainda.</em></div>
       </div>
@@ -204,15 +212,22 @@
 
     function loadEmails() {
       const list = JSON.parse(localStorage.getItem('sp-emails') || '[]');
+      if (!Array.isArray(list) || list.length === 0) {
+        // Hide the select control entirely when there are no saved emails
+        try { emailSelect.style.display = 'none'; } catch (e) {}
+        emailSelect.innerHTML = '';
+        return;
+      }
+      // Populate and show select when we have saved emails
       emailSelect.innerHTML = list.map(e => `<option value="${e}">${e}</option>`).join('');
-      // If no saved emails, keep the select empty and let user add via input
+      try { emailSelect.style.display = ''; } catch (e) {}
     }
     function saveEmail(e) {
       if (!e || !e.includes('@')) return;
       const list = JSON.parse(localStorage.getItem('sp-emails') || '[]');
       if (!list.includes(e)) { list.unshift(e); localStorage.setItem('sp-emails', JSON.stringify(list.slice(0,20))); }
       loadEmails();
-      emailSelect.value = e;
+      try { emailSelect.value = e; emailSelect.style.display = ''; } catch (e) {}
     }
     emailAddBtn && emailAddBtn.addEventListener('click', () => { const val = (emailInput.value||'').trim(); if (!val) return; saveEmail(val); emailInput.value = ''; addLog('Credencial adicionada: '+val, 'log-info'); });
     loadEmails();
@@ -220,12 +235,36 @@
     btnStart && btnStart.addEventListener('click', async () => {
       addLog('Iniciando sessão (abrindo navegador)...', 'log-info');
       try {
-        const selectedEmail = emailSelect.value || null;
-        const res = await ipcRenderer.invoke('sharepoint:start-session', { url: DEFAULT_SP_URL, email: selectedEmail });
+        const selectedEmail = (emailSelect && emailSelect.value) ? emailSelect.value : (emailInput && emailInput.value ? emailInput.value.trim() : null);
+        const analyzer = (document.getElementById('analyzerCheckbox') && document.getElementById('analyzerCheckbox').checked) ? true : false;
+        const res = await ipcRenderer.invoke('sharepoint:start-session', { url: DEFAULT_SP_URL, email: selectedEmail, analyzer });
         if (!res || !res.ok) { addLog('Falha ao iniciar sessão: '+(res && res.error ? res.error : 'erro desconhecido'), 'log-error'); return; }
         currentSession = res.sessionId; addLog('Sessão iniciada: '+currentSession, 'log-success');
         if (selectedEmail) { addLog('Usando credencial: '+selectedEmail, 'log-info'); saveEmail(selectedEmail); }
       } catch (e) { addLog('Erro ao iniciar sessão: '+e.message, 'log-error'); }
+    });
+
+    // Stop button: when analyzer active, request captured dump; otherwise cancel session
+    btnStop && btnStop.addEventListener('click', async () => {
+      if (!currentSession) { addLog('Nenhuma sessão ativa.', 'log-warning'); return; }
+      try {
+        addLog('Solicitando parada/análise...', 'log-info');
+        const dump = await ipcRenderer.invoke('sharepoint:stop-capture', { sessionId: currentSession });
+        if (dump && dump.ok && Array.isArray(dump.entries)) {
+          addLog('Captura finalizada. Entradas: ' + dump.entries.length, 'log-success');
+          // show a few entries in log
+          dump.entries.slice(0,50).forEach(e => {
+            const short = `${e.type||''} ${e.method||''} ${e.url||''} ${e.status||''}`;
+            addLog('[analyzer] ' + short, 'log-info');
+          });
+          // offer download via main process
+          try { const saved = await ipcRenderer.invoke('save-analyzer-dump', { sessionId: currentSession, entries: dump.entries }); if (saved && saved.ok) addLog('Dump salvo em: ' + saved.path, 'log-success'); else if (saved && saved.error) addLog('Falha ao salvar dump: ' + saved.error, 'log-error'); } catch(_){ }
+        } else if (dump && dump.ok && dump.message) {
+          addLog(dump.message, 'log-info');
+        } else {
+          addLog('Nenhuma captura retornada.', 'log-warning');
+        }
+      } catch (e) { addLog('Erro ao solicitar parada: '+e.message, 'log-error'); }
     });
 
     // Modal confirm
@@ -236,7 +275,8 @@
       modalConfirmBtn.disabled = true; modalConfirmBtn.textContent = 'Executando...';
       addLog(`Solicitando criação de ${count} pastas (sessão ${currentSession})`, 'log-info');
       try {
-        const res = await ipcRenderer.invoke('sharepoint:create-session', { sessionId: currentSession, count });
+        const restBase = (document.getElementById('restBasePathInput') && document.getElementById('restBasePathInput').value) ? document.getElementById('restBasePathInput').value.trim() : null;
+        const res = await ipcRenderer.invoke('sharepoint:create-session', { sessionId: currentSession, count, restBasePath: restBase });
         if (!res || !res.ok) { addLog('Falha ao criar pastas: '+(res && res.error ? res.error : 'erro desconhecido'), 'log-error'); }
         else { addLog('Criação concluída: ' + JSON.stringify(res.result || res), 'log-success'); }
       } catch (e) { addLog('Exceção ao criar: '+e.message, 'log-error'); }
@@ -279,6 +319,11 @@
         modalPreview.innerHTML = previewEl.innerHTML;
       } else { previewEl.innerHTML = `<div style="font-size:13px;color:#444">${p.rootText||''}<br>Itens: ${p.totalItems||0}</div>`; modalPreview.innerHTML = previewEl.innerHTML; }
       modalCount.value = payload.suggested || 3; dynamicModal.style.display = 'flex';
+    });
+
+    // Live analyzer entries (if analyzer enabled)
+    ipcRenderer.on('sharepoint:analyzer-entry', (ev, entry) => {
+      try { const short = `[analyzer] ${entry.type||''} ${entry.method||''} ${entry.url||''} ${entry.status||''}`; addLog(short, 'log-info'); } catch(e){}
     });
 
     // Also listen for general log-message

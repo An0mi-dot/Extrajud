@@ -276,20 +276,56 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
                 // Wait for create folder dialog/panel
                 await page.waitForTimeout(800);
 
-                // Try to find an input for folder name
-                const nameInputSelectors = ['input[aria-label*="Nome" i]', 'input[name*="Name" i]', 'input[type="text"]'];
+                // Try to find an input for folder name (multiple fallbacks)
+                const nameInputSelectors = [
+                    'input[placeholder*="Nome" i]', 'input[aria-label*="Nome" i]',
+                    'input[placeholder*="Name" i]', 'input[aria-label*="Name" i]',
+                    'input[id*="Folder" i]', 'input[id*="Name" i]',
+                    'input[name*="Name" i]', 'input.ms-TextField-field', 'input[role="textbox"]', 'input[type="text"]'
+                ];
                 let nameInput = null;
                 for (const s of nameInputSelectors) {
-                    try { nameInput = await page.$(s); if (nameInput) break; } catch(e){}
+                    try { nameInput = await page.$(s); if (nameInput) { if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Found name input via selector: ${s}`, tech: 'createFolders' }); break; } } catch(e){}
                 }
 
                 if (!nameInput) {
-                    // Try panel: look for contenteditable div
-                    const editable = await page.$('[contenteditable="true"]');
-                    if (editable) nameInput = editable;
+                    // Try panel: look for contenteditable div inside visible dialog/panel
+                    try {
+                        const editable = await page.$('[role="dialog"] [contenteditable="true"], [data-automationid="Panel"] [contenteditable="true"]');
+                        if (editable) { nameInput = editable; if (eventSender) eventSender.send('log-message', { type: 'info', msg: 'Found contenteditable name input inside dialog/panel', tech: 'createFolders' }); }
+                    } catch(e){}
                 }
 
-                if (!nameInput) throw new Error('Campo de nome da pasta não encontrado');
+                // As a last resort, search the document for visible inputs and pick the first likely one
+                if (!nameInput) {
+                    try {
+                        const candidate = await page.evaluate(() => {
+                            function isVisible(el) {
+                                if (!el) return false;
+                                const style = window.getComputedStyle(el);
+                                return style && style.visibility !== 'hidden' && style.display !== 'none' && el.offsetWidth > 0 && el.offsetHeight > 0;
+                            }
+                            const inputs = Array.from(document.querySelectorAll('input, [contenteditable="true"]'));
+                            for (const i of inputs) {
+                                const ph = (i.getAttribute && (i.getAttribute('placeholder')||'')).toLowerCase();
+                                const aria = (i.getAttribute && (i.getAttribute('aria-label')||'')).toLowerCase();
+                                const id = (i.id||'').toLowerCase();
+                                if (!isVisible(i)) continue;
+                                if (ph.includes('nome') || aria.includes('nome') || ph.includes('name') || aria.includes('name') || id.includes('folder') || id.includes('name')) return ({ type: 'selector', value: (i.id ? ('#'+i.id) : (i.getAttribute && i.getAttribute('name') ? ('input[name="'+i.getAttribute('name')+'"]') : null)) });
+                            }
+                            return null;
+                        });
+                        if (candidate && candidate.type === 'selector' && candidate.value) {
+                            try { nameInput = await page.$(candidate.value); if (nameInput && eventSender) eventSender.send('log-message', { type: 'info', msg: `Found name input via heuristic selector: ${candidate.value}`, tech: 'createFolders' }); }
+                            catch(e){}
+                        }
+                    } catch(e){}
+                }
+
+                if (!nameInput) {
+                    if (eventSender) eventSender.send('log-message', { type: 'error', msg: 'Campo de nome da pasta não encontrado (tentadas várias heurísticas).', tech: 'createFolders' });
+                    throw new Error('Campo de nome da pasta não encontrado');
+                }
 
                 await nameInput.fill(name);
                 // Click create/ok button
@@ -487,12 +523,325 @@ async function createSequentialFolders(page, baseSelectorOrText, count = null, o
 
         if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Tentando criar ${names.length} pastas: ${names.join(', ')}`, tech: 'createSequentialFolders' });
 
-        const results = await createFolders(page, baseSelectorOrText, names, eventSender);
+        let results = await createFolders(page, baseSelectorOrText, names, eventSender);
+
+        // Log summary of UI creation results and decide fallback
+        try { const failed = Array.isArray(results) ? results.filter(r => !r.ok) : []; if (eventSender) eventSender.send('log-message', { type: 'info', msg: `createFolders returned ${Array.isArray(results)?results.length:0} entries, failed ${failed.length}`, tech: 'createSequentialFolders' }); } catch(e){}
+
+        // If some creations failed, attempt REST fallback using SharePoint _api (uses page context to obtain digest/path)
+        const failed = Array.isArray(results) ? results.filter(r => !r.ok) : [];
+        if (failed.length > 0) {
+            // First try a UI-based fallback that uses the site's own "New" / "Novo" button and menu flows.
+            if (eventSender) eventSender.send('log-message', { type: 'warn', msg: `Algumas criações falharam (${failed.length}). Tentando fallback via botões do site (New/Novo)...`, tech: 'createSequentialFolders' });
+            for (const r of results) {
+                if (r.ok) continue;
+                try {
+                    const name = r.name;
+                    const uiResp = await createFolderUsingSiteButtons(page, name, eventSender).catch(_=>({ ok:false, error:'ui_button_error' }));
+                    if (uiResp && uiResp.ok) {
+                        r.ok = true; r.reason = 'created_via_ui_buttons';
+                        if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Pasta criada via UI (botões do site): ${name}`, tech: 'createSequentialFolders' });
+                    }
+                } catch (e) {
+                    if (eventSender) eventSender.send('log-message', { type: 'error', msg: `Erro ao tentar fallback UI para ${r && r.name}: ${e && e.message}`, tech: 'createSequentialFolders' });
+                }
+            }
+
+            // Recompute remaining failures and then try REST fallback for any still-failed entries
+            const stillFailed = Array.isArray(results) ? results.filter(r => !r.ok) : [];
+            if (stillFailed.length > 0) {
+                if (eventSender) eventSender.send('log-message', { type: 'warn', msg: `Ainda ${stillFailed.length} falhas após tentativa UI. Tentando fallback REST...`, tech: 'createSequentialFolders' });
+                for (const r of results) {
+                    if (r.ok) continue;
+                    try {
+                        const name = r.name;
+                        const restResp = await createFolderViaRest(page, name, baseSelectorOrText, eventSender, (options && options.restBasePath) ? options.restBasePath : null).catch(_=>({ ok:false, error:'rest_error' }));
+                        if (restResp && restResp.ok) {
+                            r.ok = true; r.reason = 'created_via_rest';
+                            if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Pasta criada via REST: ${name}`, tech: 'createSequentialFolders' });
+                        } else {
+                            r.ok = false; r.reason = restResp && restResp.error ? restResp.error : (restResp && restResp.body ? restResp.body : 'rest_failed');
+                            if (eventSender) eventSender.send('log-message', { type: 'error', msg: `Falha REST ao criar ${name}: ${r.reason}`, tech: 'createSequentialFolders', details: restResp });
+                        }
+                    } catch (e) {
+                        if (eventSender) eventSender.send('log-message', { type: 'error', msg: `Erro ao tentar fallback REST para ${r && r.name}: ${e && e.message}`, tech: 'createSequentialFolders' });
+                    }
+                }
+            }
+        }
 
         return { ok: true, requested: names.length, results };
 
     } catch (e) {
         if (eventSender) eventSender.send('log-message', { type: 'error', msg: `createSequentialFolders error: ${e && e.message}`, tech: 'createSequentialFolders' });
+        return { ok:false, error: e && e.message };
+    }
+}
+
+// Attempt to create a single folder using SharePoint REST API from the page context.
+// Tries to resolve a sensible parent path (from URL 'id' param or _spPageContextInfo) and uses __REQUESTDIGEST.
+async function createFolderViaRest(page, folderName, baseSelectorOrText = null, eventSender = null, manualBasePath = null) {
+    try {
+        const resp = await page.evaluate(async (args) => {
+            const { folderNameInner, baseSelector, manualBase } = args || {};
+            const safe = (v) => v || null;
+            function getDigest() {
+                try {
+                    const el = document.getElementById('__REQUESTDIGEST');
+                    if (el && el.value) return el.value;
+                } catch (e) {}
+                try { if (window._spPageContextInfo && window._spPageContextInfo.formDigestValue) return window._spPageContextInfo.formDigestValue; } catch(e){}
+                try { if (window.__REQUESTDIGEST) return window.__REQUESTDIGEST; } catch(e){}
+                return null;
+            }
+
+            function detectParentPath() {
+                try {
+                    const u = new URL(location.href);
+                    const id = u.searchParams.get('id');
+                    if (id) return decodeURIComponent(id);
+                } catch (e) {}
+                try {
+                    if (window._spPageContextInfo && window._spPageContextInfo.webServerRelativeUrl) {
+                        // Attempt to infer library from page title or baseSelector text
+                        const lib = 'Shared Documents';
+                        const rootText = (function(){
+                            try {
+                                if (baseSelector) {
+                                    const el = document.querySelector(baseSelector);
+                                    if (el && el.innerText) return el.innerText.trim();
+                                }
+                            } catch(e){}
+                            try { const h = document.querySelector('h1'); if (h && h.innerText) return h.innerText.trim(); } catch(e){}
+                            return '';
+                        })();
+                        if (rootText && rootText.length > 0) return window._spPageContextInfo.webServerRelativeUrl + '/' + lib + '/' + rootText;
+                        return window._spPageContextInfo.webServerRelativeUrl + '/' + lib;
+                    }
+                } catch (e) {}
+                return null;
+            }
+
+            const digest = getDigest();
+            let parent = detectParentPath();
+            // If no parent detected, try manualBase provided by caller (injected via args)
+            if (!parent && typeof manualBase === 'string' && manualBase && window._spPageContextInfo && window._spPageContextInfo.webServerRelativeUrl) {
+                parent = window._spPageContextInfo.webServerRelativeUrl.replace(/\/$/, '') + '/' + manualBase.replace(/^\/+|\/+$/g, '');
+            }
+            if (!parent) return { ok:false, error:'no_parent_path_detected', digest };
+
+            // Build creation path — try both parent + '/' + name and library-style path
+            const creationPath = `${parent.replace(/\/$/, '')}/${folderNameInner}`;
+
+            // Try AddUsingPath endpoint first (matches observed tenant behavior)
+            try {
+                // Build @a1 param including encoded single quotes (%27) around the server-relative path
+                const a1 = encodeURIComponent(`'${creationPath.replace(/'/g, "\'")}'`);
+                const endpointAddUsingPath = `${location.origin}/_api/web/folders/AddUsingPath(DecodedUrl=@a1,overwrite=@a2)?@a1=${a1}&@a2=false&$Expand=ListItemAllFields/PermMask`;
+                async function tryAddUsingPath(dg) {
+                    try {
+                        const h = {
+                            'Accept':'application/json;odata=verbose',
+                            'Content-Type':'application/json;odata=verbose; charset=utf-8',
+                            'X-RequestDigest': dg || '',
+                            'X-Requested-With':'XMLHttpRequest',
+                            'Origin': location.origin,
+                            'Referer': location.href,
+                            'Accept-Language': (navigator && navigator.language) ? navigator.language : 'en-US'
+                        };
+                        // Some tenants expect an explicit empty body with content-length 0
+                        const r = await fetch(endpointAddUsingPath, { method: 'POST', headers: h, body: '' });
+                        if (r.ok) return { ok:true, status: r.status, digest: dg };
+                        const body = await r.text().catch(()=>null);
+                        return { ok:false, status: r.status, body, digest: dg };
+                    } catch (e) {
+                        return { ok:false, error: e && e.message ? e.message : String(e), digest: dg };
+                    }
+                }
+
+                // First attempt with any digest we found
+                const try1 = await tryAddUsingPath(digest);
+                if (try1.ok) return try1;
+                // If returned 401/403 or other failure, fallthrough to contextinfo/fallback below
+            } catch (e) {
+                // ignore and continue to older fallback
+            }
+
+            // Fallback: attempt folders/add (older endpoint)
+            const endpoint = `${location.origin}/_api/web/folders/add('${creationPath}')`;
+
+            // Helper to POST create folder with provided digest
+            async function postCreate(dg) {
+                try {
+                    const r = await fetch(endpoint, { method: 'POST', headers: { 'Accept':'application/json;odata=nometadata', 'X-RequestDigest': dg || '' } });
+                    if (r.ok) return { ok:true, status: r.status, digest: dg };
+                    const body = await r.text().catch(()=>null);
+                    return { ok:false, status: r.status, body, digest: dg };
+                } catch (e) {
+                    return { ok:false, error: e && e.message ? e.message : String(e), digest: dg };
+                }
+            }
+
+            // First attempt with any digest we found
+            let first = await postCreate(digest);
+            if (first.ok) return first;
+
+            // If response indicates invalid security validation or digest missing, try to obtain a fresh digest via /_api/contextinfo
+            try {
+                const ctxUrl = `${location.origin}/_api/contextinfo`;
+                // Try with headers that return verbose JSON shape (older SharePoint flavors expect verbose)
+                const ctx = await fetch(ctxUrl, { method: 'POST', headers: { 'Accept':'application/json;odata=verbose', 'Content-Type':'application/json;odata=verbose; charset=utf-8' } }).catch(()=>null);
+                if (ctx) {
+                    const status = ctx.status;
+                    let j = null;
+                    try { j = await ctx.json().catch(()=>null); } catch(e){ j = null; }
+                    // Try multiple locations for FormDigestValue depending on odata format
+                    const fresh = (j && (j.GetContextWebInformation && j.GetContextWebInformation.FormDigestValue))
+                                  || (j && j.d && j.d.GetContextWebInformation && j.d.GetContextWebInformation.FormDigestValue)
+                                  || (j && j.FormDigestValue) || null;
+
+                    if (fresh) {
+                        // retry with fresh digest
+                        const second = await postCreate(fresh);
+                        if (second.ok) return Object.assign({ ok:true, status: second.status || 200 }, second);
+                        // return second even if failed so caller can see body/status/digest
+                        return Object.assign({ ok:false, status: second.status || null }, second);
+                    } else {
+                        // Provide full diagnostic: include parsed JSON if any, and raw text
+                        const raw = await ctx.text().catch(()=>null);
+                        return { ok:false, error:'contextinfo_no_digest', status, parsed: j, body: raw };
+                    }
+                } else {
+                    return { ok:false, error:'contextinfo_failed', status: null, body: null };
+                }
+            } catch (e) {
+                return { ok:false, error: e && e.message ? e.message : String(e), digest };
+            }
+        }, { folderNameInner: folderName, baseSelector: baseSelectorOrText, manualBase: manualBasePath });
+
+        return resp || { ok:false, error:'no_response' };
+    } catch (e) {
+        if (eventSender) eventSender.send('log-message', { type: 'error', msg: `createFolderViaRest error: ${e && e.message}`, tech: 'createFolderViaRest' });
+        return { ok:false, error: e && e.message ? e.message : String(e) };
+    }
+}
+
+// UI-based attempt: use the site's own "New" / "Novo" button and menu to create a folder.
+// This tries multiple flows and is frame-aware. Returns {ok:true} on success or {ok:false, error:..}.
+async function createFolderUsingSiteButtons(page, folderName, eventSender = null) {
+    try {
+        // Targeted flow for the observed DOM:
+        // 1) Click toolbar 'Novo' button (data-automationid: newComposite/newCommand or aria-controls command-bar-menu-id)
+        // 2) Click menu item button[data-automationid="newFolderCommand"] (label: 'Pasta')
+        // 3) Wait for dialog input[data-automation-id="nameDialogTextField"] (or #textField25), fill and click button[data-automation-id="Criar"].
+
+        const tryFlow = async (ctx) => {
+            try {
+                // Click Novo button (several variants)
+                const novoSelectors = [
+                    'button[data-automationid="newComposite"]',
+                    'button[data-automationid="newCommand"]',
+                    'button[aria-controls="command-bar-menu-id"]',
+                    'button[aria-haspopup="menu"][aria-expanded], button:has-text("Novo")'
+                ];
+
+                let clickedNovo = false;
+                for (const s of novoSelectors) {
+                    try {
+                        const el = await ctx.$(s);
+                        if (el) { await el.click().catch(()=>{}); clickedNovo = true; break; }
+                    } catch (e) {}
+                }
+
+                // Wait shortly for contextual menu to appear
+                try { await ctx.waitForSelector('#command-bar-menu-id, .ms-ContextualMenu, .ms-Callout', { timeout: 1200 }); } catch(e){}
+
+                // Click the 'Pasta' menu item
+                const folderBtn = await ctx.$('button[data-automationid="newFolderCommand"], button:has-text("Pasta"), a:has-text("Pasta")');
+                if (!folderBtn) return { ok:false, error: 'menu_folder_button_not_found' };
+                await folderBtn.click().catch(()=>{});
+
+                // Wait for dialog input; prefer data-automation-id
+                let inputSel = 'input[data-automation-id="nameDialogTextField"], input#textField25, input[aria-label*="Nome" i]';
+                let nameInput = null;
+                try { nameInput = await ctx.waitForSelector(inputSel, { timeout: 1600 }); } catch(e) {
+                    // try quick scan
+                    nameInput = await ctx.$(inputSel);
+                }
+
+                if (!nameInput) return { ok:false, error: 'name_input_not_found' };
+
+                // Fill quickly: clear first, then set value and dispatch input event
+                try {
+                    try { await nameInput.fill(''); } catch(e){}
+                    // prefer direct handle evaluate to guarantee value set
+                    try {
+                        await nameInput.evaluate((el, val) => { el.focus(); if ('value' in el) el.value = val; else el.innerText = val; el.dispatchEvent(new Event('input',{bubbles:true})); }, folderName);
+                    } catch(e) {
+                        try { await nameInput.fill(folderName); } catch(e){}
+                    }
+                } catch (e) {}
+
+                // Click Criar button — wait until it becomes enabled after filling (SharePoint may validate async)
+                const createBtn = await ctx.$('button[data-automation-id="Criar"], button:has-text("Criar")');
+                if (createBtn) {
+                    try { await createBtn.evaluate(b => b.removeAttribute && b.removeAttribute('disabled')); } catch(e){}
+
+                    // trigger blur so validation runs
+                    try { await nameInput.evaluate(el => el.blur && el.blur()); } catch(e){}
+
+                    // Wait a short time for the button to enable, polling quickly to stay fast
+                    let clicked = false;
+                    for (let i = 0; i < 12; i++) {
+                        try {
+                            const enabled = await createBtn.evaluate(b => {
+                                const dis = b.getAttribute && (b.getAttribute('disabled') || b.getAttribute('aria-disabled'));
+                                const cls = b.className || '';
+                                return !(dis === 'true' || dis === '' || dis === 'disabled' || cls.indexOf('is-disabled') !== -1 || b.disabled === true);
+                            });
+                            if (enabled) { await createBtn.click().catch(()=>{}); clicked = true; break; }
+                        } catch(e){}
+                        await ctx.waitForTimeout(120);
+                    }
+                    if (!clicked) {
+                        // final attempt: click anyway
+                        try { await createBtn.click().catch(()=>{}); } catch(e){}
+                    }
+                } else {
+                    // press Enter in input
+                    try { await nameInput.press('Enter'); } catch(e){}
+                }
+                // Wait for dialog to close or for the folder to appear
+                try {
+                    // Prefer waiting for dialog title to be detached
+                    await ctx.waitForSelector('h2:has-text("Crie uma pasta"), h2:has-text("Create a folder" )', { state: 'detached', timeout: 2500 });
+                    return { ok:true };
+                } catch (e) {
+                    // As fallback check for new folder name in view
+                    try {
+                        await ctx.waitForTimeout(600);
+                        const found = await ctx.$(`text="${folderName}"`);
+                        if (found) return { ok:true };
+                    } catch(e){}
+                }
+
+                return { ok:false, error: 'not_detected_after_create' };
+            } catch (e) {
+                return { ok:false, error: e && e.message };
+            }
+        };
+
+        // Try main page context first, then frames
+        const contexts = [page, ...page.frames()];
+        for (const c of contexts) {
+            const res = await tryFlow(c);
+            if (eventSender) eventSender.send('log-message', { type: 'debug', msg: `createFolderUsingSiteButtons attempt result: ${JSON.stringify(res)}`, tech: 'createFolderUsingSiteButtons' });
+            if (res && res.ok) return res;
+        }
+
+        return { ok:false, error: 'all_attempts_failed' };
+    } catch (e) {
+        if (eventSender) eventSender.send('log-message', { type: 'error', msg: `createFolderUsingSiteButtons error: ${e && e.message}`, tech: 'createFolderUsingSiteButtons' });
         return { ok:false, error: e && e.message };
     }
 }

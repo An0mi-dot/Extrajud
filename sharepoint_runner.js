@@ -35,7 +35,8 @@ function makeEventSender(webContents) {
 
 // Try to find an email input in the page/frames and fill it + submit 'Next' if possible.
 async function tryFillEmail(page, email, sender = null, timeoutMs = 15000) {
-    const selectors = ['input[type="email"]', 'input#i0116', 'input[name="loginfmt"]', 'input[name="login"]', 'input[aria-label*="Email"]'];
+    const selectors = ['input#i0116', 'input[name="loginfmt"]', 'input[type="email"]', 'input[name="login"]', 'input[aria-label*="Email"]'];
+    const submitSelectors = ['#idSIButton9', 'button:has-text("Next")', 'button:has-text("Próximo")', 'input[type="submit"]', 'button[type="submit"]'];
     const end = Date.now() + (timeoutMs || 15000);
     while (Date.now() < end) {
         try {
@@ -44,17 +45,36 @@ async function tryFillEmail(page, email, sender = null, timeoutMs = 15000) {
                 try {
                     for (const s of selectors) {
                         const el = await f.$(s);
-                        if (el) {
-                            try { await el.fill(email); } catch(e) { continue; }
-                            // Try to press Enter or click Next
-                            try { await el.press('Enter'); } catch(e){}
-                            // Try ms login next button
+                        if (!el) continue;
+                        let filled = false;
+                        // Try normal fill
+                        try { await el.fill(email); filled = true; } catch (e) { /* continue */ }
+                        // Fallback: use evaluate to set value and dispatch events
+                        if (!filled) {
                             try {
-                                const nextBtn = await f.$('#idSIButton9') || await f.$('button:has-text("Next")') || await f.$('input[type="submit"]');
-                                if (nextBtn) { try { await nextBtn.click(); } catch(e){} }
-                            } catch(e) {}
-                            if (sender) sender.send('log-message', { type: 'info', msg: 'Campo de e-mail preenchido automaticamente', tech: 'tryFillEmail' });
-                            // Give the page a moment to react
+                                await f.evaluate((sel, val) => {
+                                    const e = document.querySelector(sel);
+                                    if (e) {
+                                        e.value = val;
+                                        e.dispatchEvent(new Event('input', { bubbles: true }));
+                                        e.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                }, s, email);
+                                filled = true;
+                            } catch (ee) { /* ignore */ }
+                        }
+
+                        if (filled) {
+                            // Try to submit via known MS button or pressing Enter
+                            try { await el.press('Enter'); } catch (e) {}
+                            for (const ss of submitSelectors) {
+                                try {
+                                    const btn = await f.$(ss);
+                                    if (btn) { try { await btn.click(); } catch(e){} }
+                                } catch (ee) { /* ignore */ }
+                            }
+
+                            if (sender) sender.send('log-message', { type: 'info', msg: `Campo de e-mail preenchido automaticamente (${s})`, tech: 'tryFillEmail' });
                             await page.waitForTimeout(1200);
                             return true;
                         }
@@ -62,7 +82,7 @@ async function tryFillEmail(page, email, sender = null, timeoutMs = 15000) {
                 } catch (e) { /* ignore frame errors */ }
             }
         } catch (e) { /* ignore */ }
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(800);
     }
     throw new Error('email_input_not_found');
 }
@@ -96,6 +116,26 @@ function _scheduleAutoClose(sessionId, ttl = 10 * 60 * 1000) {
     }, ttl);
 }
 
+// Stop capture and return captured entries for a session (if any)
+async function stopCapture(sessionId) {
+    const s = sessions.get(sessionId);
+    if (!s) return { ok:false, error:'session_not_found' };
+    try {
+        // detach listeners if we kept references
+        if (s._analyzerListeners && s.page) {
+            try { if (s._analyzerListeners.request) s.page.removeListener('request', s._analyzerListeners.request); } catch(_){}
+            try { if (s._analyzerListeners.response) s.page.removeListener('response', s._analyzerListeners.response); } catch(_){}
+            delete s._analyzerListeners;
+        }
+        const entries = Array.isArray(s.capturedRequests) ? s.capturedRequests.slice() : [];
+        // store in session for later inspection and clear
+        s.capturedRequests = [];
+        return { ok:true, entries };
+    } catch (e) {
+        return { ok:false, error: e && e.message ? e.message : String(e) };
+    }
+}
+
 async function startSession(args = {}, webContents) {
     const sender = makeEventSender(webContents);
     let browser, page, context;
@@ -110,11 +150,17 @@ async function startSession(args = {}, webContents) {
         if (!ok) throw new Error('Falha ao navegar para OFÍCIOS root');
 
         // If an email credential was supplied, attempt to auto-fill the email on login pages
+        let autoFillAttempted = false;
+        let autoFilled = false;
         if (args && args.email) {
+            autoFillAttempted = true;
             sender.send('log-message', { type: 'info', msg: `Tentando preencher email de login: ${args.email}`, tech: 'sharepoint.startSession' });
             try {
-                await tryFillEmail(page, args.email, sender, typeof args.loginTimeoutMs === 'number' ? Math.min(args.loginTimeoutMs, 20000) : 15000);
-                sender.send('log-message', { type: 'info', msg: `Preenchimento automático do email concluído (se o campo estava disponível).`, tech: 'sharepoint.startSession' });
+                const ok = await tryFillEmail(page, args.email, sender, typeof args.loginTimeoutMs === 'number' ? Math.min(args.loginTimeoutMs, 20000) : 15000);
+                if (ok) {
+                    autoFilled = true;
+                    sender.send('log-message', { type: 'info', msg: `Preenchimento automático do email concluído (campo detectado e preenchido).`, tech: 'sharepoint.startSession' });
+                }
             } catch (err) {
                 sender.send('log-message', { type: 'warn', msg: `Preenchimento automático do email falhou ou não encontrado: ${err && err.message ? err.message : String(err)}`, tech: 'sharepoint.startSession' });
             }
@@ -129,8 +175,9 @@ async function startSession(args = {}, webContents) {
 
         // Reserve a session id early so UI can reference it for login confirmation/cancel
         const sessionId = makeSessionId();
-        sessions.set(sessionId, { browser, page, context, createdAt: Date.now() });
-        _scheduleAutoClose(sessionId);
+        sessions.set(sessionId, { browser, page, context, createdAt: Date.now(), capturedRequests: [] });
+        // Keep session open longer (60 minutes) so user has time to inspect/complete actions
+        _scheduleAutoClose(sessionId, 60 * 60 * 1000);
         sender.send('log-message', { type: 'info', msg: `Sessão (pré) reservada: ${sessionId}`, tech: 'sharepoint.startSession' });
 
         while (Date.now() - startTime < WAIT_TIMEOUT) {
@@ -156,34 +203,52 @@ async function startSession(args = {}, webContents) {
                 if ((cur && cur.includes('login.microsoftonline.com')) || frameHasLogin) {
                     if (!loginNotified) {
                         loginNotified = true;
-                        sender.send('log-message', { type: 'info', msg: 'Página de login detectada. Aguardando usuário realizar login...', tech: 'sharepoint.startSession' });
-                        sender.send('sharepoint:waiting-for-login', { url: cur, sessionId });
-
-                        // Ask renderer to show a login confirmation UI and wait for user action
-                        sender.send('sharepoint:request-login', { sessionId });
-
-                        // Wait for user's confirmation or cancellation via ipcMain event
-                        const waitForUserAction = () => new Promise(resolve => {
-                            const handler = (event, arg) => {
-                                // Ensure the response comes from the same renderer that asked
+                        // If an email credential was provided, do not prompt the user; attempt autofill (again) and wait for redirection
+                        if (args && args.email) {
+                            sender.send('log-message', { type: 'info', msg: 'Página de login detectada; credencial fornecida — tentando preenchimento automático e aguardando redirecionamento.', tech: 'sharepoint.startSession' });
+                            // Try autofill again if not already successful
+                            if (!autoFilled) {
                                 try {
-                                    if (event && event.sender && event.sender === webContents && arg && arg.sessionId === sessionId) {
-                                        resolve(arg.action);
+                                    const ok2 = await tryFillEmail(page, args.email, sender, 8000).catch(() => false);
+                                    if (ok2) {
+                                        autoFilled = true;
+                                        sender.send('log-message', { type: 'info', msg: 'Autofill bem-sucedido na detecção da página de login.', tech: 'sharepoint.startSession' });
+                                    } else {
+                                        sender.send('log-message', { type: 'warn', msg: 'Autofill não encontrou o campo na segunda tentativa.', tech: 'sharepoint.startSession' });
                                     }
-                                } catch (e) { /* ignore */ }
-                            };
-                            ipcMain.on('sharepoint:login-action', handler);
+                                } catch (ee) {
+                                    sender.send('log-message', { type: 'warn', msg: `Autofill falhou na segunda tentativa: ${ee && ee.message ? ee.message : String(ee)}`, tech: 'sharepoint.startSession' });
+                                }
+                            }
+                            // Do NOT send any UI prompt (waiting/request) — continue polling for content until timeout
+                        } else {
+                            sender.send('log-message', { type: 'info', msg: 'Página de login detectada. Aguardando usuário realizar login...', tech: 'sharepoint.startSession' });
+                            sender.send('sharepoint:waiting-for-login', { url: cur, sessionId });
+                            sender.send('sharepoint:request-login', { sessionId });
 
-                            // Also auto-resolve after remaining timeout
-                            const remaining = Math.max(0, WAIT_TIMEOUT - (Date.now() - startTime));
-                            const timer = setTimeout(() => { ipcMain.removeListener('sharepoint:login-action', handler); resolve('timeout'); }, remaining);
-                        });
+                            // Wait for user's confirmation or cancellation via ipcMain event
+                            const waitForUserAction = () => new Promise(resolve => {
+                                const handler = (event, arg) => {
+                                    // Ensure the response comes from the same renderer that asked
+                                    try {
+                                        if (event && event.sender && event.sender === webContents && arg && arg.sessionId === sessionId) {
+                                            resolve(arg.action);
+                                        }
+                                    } catch (e) { /* ignore */ }
+                                };
+                                ipcMain.on('sharepoint:login-action', handler);
 
-                        const action = await waitForUserAction();
-                        if (action === 'cancel' || action === 'timeout') {
-                            throw new Error(action === 'cancel' ? 'Usuário cancelou login' : 'Tempo esgotado aguardando confirmação de login');
+                                // Also auto-resolve after remaining timeout
+                                const remaining = Math.max(0, WAIT_TIMEOUT - (Date.now() - startTime));
+                                const timer = setTimeout(() => { ipcMain.removeListener('sharepoint:login-action', handler); resolve('timeout'); }, remaining);
+                            });
+
+                            const action = await waitForUserAction();
+                            if (action === 'cancel' || action === 'timeout') {
+                                throw new Error(action === 'cancel' ? 'Usuário cancelou login' : 'Tempo esgotado aguardando confirmação de login');
+                            }
+                            // if action === 'done' continue; loop will retry detection
                         }
-                        // if action === 'done' continue; loop will retry detection
                     }
                 }
             } catch (e) { /* ignore */ }
@@ -196,6 +261,45 @@ async function startSession(args = {}, webContents) {
         }
 
         sender.send('log-message', { type: 'info', msg: `Sessão iniciada: ${sessionId}`, tech: 'sharepoint.startSession' });
+
+        // If analyzer mode requested, attach network capture handlers for XHR/fetch/_api/Graph
+        try {
+            if (args && args.analyzer && page) {
+                const maxEntries = 1000;
+                const cap = sessions.get(sessionId);
+                cap.capturedRequests = cap.capturedRequests || [];
+                const onRequest = (req) => {
+                    try {
+                        const url = req.url();
+                        if (!url || (!url.includes('/_api/') && !url.includes('graph.microsoft.com'))) return;
+                        const item = { id: Math.random().toString(36).slice(2,9), type: 'request', url, method: req.method(), headers: req.headers(), postData: req.postData ? req.postData() : null, ts: Date.now() };
+                        cap.capturedRequests.push(item);
+                        if (cap.capturedRequests.length > maxEntries) cap.capturedRequests.shift();
+                        sender.send('log-message', { type: 'info', msg: `analyzer: request ${item.method} ${url}`, tech: 'analyzer' });
+                    } catch(e){ }
+                };
+                const onResponse = async (res) => {
+                    try {
+                        const url = res.url();
+                        if (!url || (!url.includes('/_api/') && !url.includes('graph.microsoft.com'))) return;
+                        let body = null; try { body = await res.text().catch(()=>null); } catch(e) { body = null; }
+                        const item = { id: Math.random().toString(36).slice(2,9), type: 'response', url, status: res.status(), headers: res.headers ? res.headers() : {}, body: body, ts: Date.now() };
+                        const cap2 = sessions.get(sessionId);
+                        if (cap2) {
+                            cap2.capturedRequests.push(item);
+                            if (cap2.capturedRequests.length > maxEntries) cap2.capturedRequests.shift();
+                        }
+                        try { sender.send('sharepoint:analyzer-entry', item); } catch(e){}
+                        try { sender.send('log-message', { type: 'info', msg: `analyzer: response ${item.status} ${url}`, tech: 'analyzer' }); } catch(e){}
+                    } catch(e){}
+                };
+                // store listener refs so we can remove later
+                sessions.get(sessionId)._analyzerListeners = { request: onRequest, response: onResponse };
+                page.on('request', onRequest);
+                page.on('response', onResponse);
+                sender.send('log-message', { type: 'info', msg: 'Analisador ativado: capturando requisições /_api/ e Graph', tech: 'analyzer' });
+            }
+        } catch (e) { sender.send('log-message', { type: 'warn', msg: 'Falha ao ativar analisador: '+(e && e.message), tech: 'analyzer' }); }
 
         // Make preview serializable as before
         let safePreview = null;
@@ -215,15 +319,31 @@ async function startSession(args = {}, webContents) {
         const suggested = Math.max(1, Math.min(10, Math.floor(Math.max(3, 20 - totalItems))));
 
         // Prompt renderer to ask the user how many to create (only after browser is open and preview obtained)
-        try { sender.send('sharepoint:prompt-create', { sessionId, preview: safePreview, suggested }); } catch (e) { /* ignore */ }
+        try {
+            // Bring the app window to front so the user sees the confirmation popup
+            try { sender.send('bring-window-front'); } catch (e) { /* ignore */ }
+            sender.send('sharepoint:prompt-create', { sessionId, preview: safePreview, suggested });
+        } catch (e) { /* ignore */ }
 
         return { ok: true, sessionId, preview: safePreview };
     } catch (e) {
-        try { if (page) await page.screenshot({ path: path.join(process.cwd(), `sharepoint_session_error_${Date.now()}.png`) }); } catch(_){ }
+        const errMsg = e && e.message ? e.message : String(e);
+        const errStack = e && e.stack ? e.stack : null;
+        const ts = Date.now();
+        const screenshotPath = path.join(process.cwd(), `sharepoint_session_error_${ts}.png`);
+        const htmlPath = path.join(process.cwd(), `sharepoint_session_error_${ts}.html`);
+        try { if (page) await page.screenshot({ path: screenshotPath }); } catch(_){ }
+        try { if (page) {
+            const html = await page.content().catch(() => null);
+            if (html) fs.writeFileSync(htmlPath, html, 'utf8');
+        } } catch(_){ }
         try { if (browser) await browser.close(); } catch(_){ }
         // Cleanup reserved session if exists
-        try { if (typeof sessionId !== 'undefined') sessions.delete(sessionId); } catch(_){}
-        return { ok: false, error: e && e.message ? e.message : String(e) };
+        try { if (typeof sessionId !== 'undefined') sessions.delete(sessionId); } catch(_){ }
+
+        try { sender.send('log-message', { type: 'error', msg: `startSession error: ${errMsg}`, tech: 'sharepoint.startSession', details: { stack: errStack, screenshot: screenshotPath, html: htmlPath } }); } catch (_){ }
+
+        return { ok: false, error: errMsg, details: { stack: errStack, screenshot: screenshotPath, html: htmlPath } };
     }
 }
 
@@ -245,7 +365,8 @@ async function createInSession(sessionId, args = {}, webContents) {
         sender.send('log-message', { type: 'info', msg: `Iniciando criação de pastas na sessão ${sessionId}...`, tech: 'sharepoint.createInSession' });
 
         const count = typeof args.count === 'number' ? args.count : null;
-        const options = { prefix: args.prefix || 'OFICIO ' };
+        // Default to numeric-only names (no textual prefix) unless user provided one
+        const options = { prefix: (typeof args.prefix === 'string' ? args.prefix : ''), restBasePath: args && args.restBasePath ? args.restBasePath : null };
 
         const resp = await sharepoint.createSequentialFolders(s.page, args.selector || null, count, options, sender, null);
 
@@ -259,11 +380,18 @@ async function createInSession(sessionId, args = {}, webContents) {
     } catch (e) {
         const errMsg = e && e.message ? e.message : String(e);
         // Capture screenshot for debugging
-        try { if (s && s.page) await s.page.screenshot({ path: path.join(process.cwd(), `sharepoint_create_error_${sessionId}_${Date.now()}.png`) }); } catch(_){ }
+        const ts = Date.now();
+        const screenshotPath = path.join(process.cwd(), `sharepoint_create_error_${sessionId}_${ts}.png`);
+        const htmlPath = path.join(process.cwd(), `sharepoint_create_error_${sessionId}_${ts}.html`);
+        try { if (s && s.page) await s.page.screenshot({ path: screenshotPath }); } catch(_){ }
+        try { if (s && s.page) {
+            const html = await s.page.content().catch(() => null);
+            if (html) fs.writeFileSync(htmlPath, html, 'utf8');
+        } } catch(_){ }
         // Keep session/browser open so user can inspect; extend auto-close to 30 minutes
         try { _scheduleAutoClose(sessionId, 30 * 60 * 1000); } catch(_){ }
-        try { sender.send('log-message', { type: 'error', msg: `Erro durante criação; sessão ${sessionId} mantida aberta para depuração. Use 'Cancelar sessão' para fechar. Erro: ${errMsg}`, tech: 'sharepoint.createInSession' }); } catch(_){ }
-        return { ok: false, error: errMsg, sessionKept: true, sessionId };
+        try { sender.send('log-message', { type: 'error', msg: `Erro durante criação; sessão ${sessionId} mantida aberta para depuração. Use 'Cancelar sessão' para fechar. Erro: ${errMsg}`, tech: 'sharepoint.createInSession', details: { screenshot: screenshotPath, html: htmlPath, stack: e && e.stack ? e.stack : null } }); } catch(_){ }
+        return { ok: false, error: errMsg, sessionKept: true, sessionId, details: { screenshot: screenshotPath, html: htmlPath, stack: e && e.stack ? e.stack : null } };
     }
 }
 
@@ -355,4 +483,4 @@ async function createSequential(args = {}, webContents) {
     }
 }
 
-module.exports = { getPreview, createSequential, startSession, createInSession, cancelSession };
+module.exports = { getPreview, createSequential, startSession, createInSession, cancelSession, stopCapture };
