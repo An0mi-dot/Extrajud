@@ -220,7 +220,7 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
         // 1. Nav to base folder: try selector first, else search by name text
         let baseElHandle = null;
 
-        if (baseFolderNameOrSelector && baseFolderNameOrSelector.startsWith('.') || baseFolderNameOrSelector.startsWith('#') || baseFolderNameOrSelector.includes('[')) {
+        if (baseFolderNameOrSelector && (baseFolderNameOrSelector.startsWith('.') || baseFolderNameOrSelector.startsWith('#') || baseFolderNameOrSelector.includes('['))) {
             try { baseElHandle = await page.$(baseFolderNameOrSelector); } catch (e) {}
         }
 
@@ -236,14 +236,20 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
             }
         }
 
-        if (!baseElHandle) {
+        if (!baseElHandle && baseFolderNameOrSelector) {
             throw new Error('Base folder not found on page. Use the DevTools extractor to get selectors.');
         }
 
-        // Click to open base folder
-        try { await baseElHandle.scrollIntoViewIfNeeded(); } catch(e){}
-        try { await baseElHandle.click(); } catch(e) { try { await page.evaluate(el => el.click(), baseElHandle); } catch(e2){} }
-        await page.waitForTimeout(DEFAULT_WAIT);
+        // If we have a base element handle, click to open base folder. Otherwise assume current folder is already active.
+        if (baseElHandle) {
+            try { await baseElHandle.scrollIntoViewIfNeeded(); } catch(e){}
+            try { await baseElHandle.click(); } catch(e) { try { await page.evaluate(el => el.click(), baseElHandle); } catch(e2){} }
+            await page.waitForTimeout(DEFAULT_WAIT);
+        } else {
+            // no-op: operate on current view
+            if (eventSender) eventSender.send('log-message', { type: 'info', msg: 'Nenhuma base selecionada; operando na pasta atual', tech: 'createFolders' });
+            await page.waitForTimeout(800);
+        }
 
         // 2. For each name: try to press "New" -> "Folder" buttons, fallback to keyboard shortcuts
         for (const name of names) {

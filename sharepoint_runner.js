@@ -33,6 +33,40 @@ function makeEventSender(webContents) {
     };
 }
 
+// Try to find an email input in the page/frames and fill it + submit 'Next' if possible.
+async function tryFillEmail(page, email, sender = null, timeoutMs = 15000) {
+    const selectors = ['input[type="email"]', 'input#i0116', 'input[name="loginfmt"]', 'input[name="login"]', 'input[aria-label*="Email"]'];
+    const end = Date.now() + (timeoutMs || 15000);
+    while (Date.now() < end) {
+        try {
+            const frames = [page, ...page.frames()];
+            for (const f of frames) {
+                try {
+                    for (const s of selectors) {
+                        const el = await f.$(s);
+                        if (el) {
+                            try { await el.fill(email); } catch(e) { continue; }
+                            // Try to press Enter or click Next
+                            try { await el.press('Enter'); } catch(e){}
+                            // Try ms login next button
+                            try {
+                                const nextBtn = await f.$('#idSIButton9') || await f.$('button:has-text("Next")') || await f.$('input[type="submit"]');
+                                if (nextBtn) { try { await nextBtn.click(); } catch(e){} }
+                            } catch(e) {}
+                            if (sender) sender.send('log-message', { type: 'info', msg: 'Campo de e-mail preenchido automaticamente', tech: 'tryFillEmail' });
+                            // Give the page a moment to react
+                            await page.waitForTimeout(1200);
+                            return true;
+                        }
+                    }
+                } catch (e) { /* ignore frame errors */ }
+            }
+        } catch (e) { /* ignore */ }
+        await page.waitForTimeout(1000);
+    }
+    throw new Error('email_input_not_found');
+}
+
 async function launchBrowser(edgeExe, webContents) {
     const edgePath = edgeExe || findEdgeExec();
     if (!edgePath) throw new Error('Edge executable not found');
@@ -74,6 +108,17 @@ async function startSession(args = {}, webContents) {
 
         const ok = await sharepoint.openOficiosRoot(page, args.url || null, sender);
         if (!ok) throw new Error('Falha ao navegar para OFÍCIOS root');
+
+        // If an email credential was supplied, attempt to auto-fill the email on login pages
+        if (args && args.email) {
+            sender.send('log-message', { type: 'info', msg: `Tentando preencher email de login: ${args.email}`, tech: 'sharepoint.startSession' });
+            try {
+                await tryFillEmail(page, args.email, sender, typeof args.loginTimeoutMs === 'number' ? Math.min(args.loginTimeoutMs, 20000) : 15000);
+                sender.send('log-message', { type: 'info', msg: `Preenchimento automático do email concluído (se o campo estava disponível).`, tech: 'sharepoint.startSession' });
+            } catch (err) {
+                sender.send('log-message', { type: 'warn', msg: `Preenchimento automático do email falhou ou não encontrado: ${err && err.message ? err.message : String(err)}`, tech: 'sharepoint.startSession' });
+            }
+        }
 
         // Wait until SharePoint content is available or user completes login
         const WAIT_TIMEOUT = typeof args.loginTimeoutMs === 'number' ? args.loginTimeoutMs : (8 * 60 * 1000); // default 8 min

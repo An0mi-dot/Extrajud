@@ -65,6 +65,14 @@
     .modal-title { font-size:1.05rem; font-weight:700; margin-bottom:8px; }
     .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
 
+    /* Preview area styling */
+    .preview { border:1px solid var(--border-color); padding:8px; border-radius:6px; background:#fff; max-height:220px; overflow:auto; font-size:0.95rem; }
+    .preview .item { padding:6px 8px; border-bottom:1px solid #f1f5f9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #modalPreview { font-size:0.95rem; }
+    /* Avoid emojis in lists */
+    .symbol-dir { font-weight:700; color:var(--text-secondary); margin-right:6px; }
+    .symbol-file { color:var(--text-secondary); margin-right:6px; }
+
   </style>
 </head>
 <body>
@@ -92,6 +100,14 @@
       </div>
 
       <div style="margin-top:8px; border-top:1px dashed #e6e6e6; padding-top:10px;">
+        <label style="display:block; font-size:12px; color:var(--text-secondary); font-weight:700; margin-bottom:6px">Credencial (E-mail)</label>
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <select id="emailSelect" style="flex:1; padding:8px; border:1px solid var(--border-color); border-radius:6px;"><option value="">-- selecione --</option></select>
+          <input id="emailInput" type="email" placeholder="adicionar email..." style="width:170px; padding:8px; border:1px solid var(--border-color); border-radius:6px;" />
+          <button id="emailAddBtn" class="btn" style="padding:8px 10px;">Adicionar</button>
+        </div>
+        <small style="color:var(--text-secondary); font-size:12px; display:block; margin-bottom:6px">O app usará o e-mail selecionado para preencher automaticamente o campo de login.</small>
+
         <label style="display:block; font-size:12px; color:var(--text-secondary); font-weight:700; margin-bottom:6px">Preview</label>
         <div id="preview" class="preview"><em>Nenhum preview gerado ainda.</em></div>
       </div>
@@ -172,12 +188,33 @@
       try { ipcRenderer.invoke('clipboard-write', { text: fullLogs.map(l=>l.msg).join('\n') }); addLog('Log copiado para a área de transferência', 'log-success'); } catch(e){ addLog('Erro ao copiar log: '+e.message, 'log-error'); }
     });
 
+    // Email credential UI handling
+    const emailSelect = document.getElementById('emailSelect');
+    const emailInput = document.getElementById('emailInput');
+    const emailAddBtn = document.getElementById('emailAddBtn');
+
+    function loadEmails() {
+      const list = JSON.parse(localStorage.getItem('sp-emails') || '[]');
+      emailSelect.innerHTML = '<option value="">-- selecione --</option>' + list.map(e => `<option value="${e}">${e}</option>`).join('');
+    }
+    function saveEmail(e) {
+      if (!e || !e.includes('@')) return;
+      const list = JSON.parse(localStorage.getItem('sp-emails') || '[]');
+      if (!list.includes(e)) { list.unshift(e); localStorage.setItem('sp-emails', JSON.stringify(list.slice(0,20))); }
+      loadEmails();
+      emailSelect.value = e;
+    }
+    emailAddBtn && emailAddBtn.addEventListener('click', () => { const val = (emailInput.value||'').trim(); if (!val) return; saveEmail(val); emailInput.value = ''; addLog('Credencial adicionada: '+val, 'log-info'); });
+    loadEmails();
+
     btnStart && btnStart.addEventListener('click', async () => {
       addLog('Iniciando sessão (abrindo navegador)...', 'log-info');
       try {
-        const res = await ipcRenderer.invoke('sharepoint:start-session', { url: DEFAULT_SP_URL });
+        const selectedEmail = emailSelect.value || null;
+        const res = await ipcRenderer.invoke('sharepoint:start-session', { url: DEFAULT_SP_URL, email: selectedEmail });
         if (!res || !res.ok) { addLog('Falha ao iniciar sessão: '+(res && res.error ? res.error : 'erro desconhecido'), 'log-error'); return; }
         currentSession = res.sessionId; addLog('Sessão iniciada: '+currentSession, 'log-success');
+        if (selectedEmail) { addLog('Usando credencial: '+selectedEmail, 'log-info'); saveEmail(selectedEmail); }
       } catch (e) { addLog('Erro ao iniciar sessão: '+e.message, 'log-error'); }
     });
 
@@ -209,10 +246,7 @@
       try { loginModalEl.style.display = 'none'; } catch(e){}
     });
 
-    loginCancelBtn && loginCancelBtn.addEventListener('click', () => {
-      try { ipcRenderer.send('sharepoint:login-action', { sessionId: currentSession, action: 'cancel' }); addLog('Usuário cancelou o login.', 'log-warning'); } catch (e) { addLog('Erro ao enviar cancelamento de login: '+e.message, 'log-error'); }
-      try { loginModalEl.style.display = 'none'; } catch(e){}
-    });
+
 
     // IPC listeners
     ipcRenderer.on('sharepoint:waiting-for-login', (ev,p) => { addLog('Aguardando login do usuário (MS Online)...', 'log-info'); btnStop.style.display = 'inline-flex';
@@ -231,7 +265,7 @@
       const p = payload.preview || {};
       if (p.items && Array.isArray(p.items) && p.items.length > 0) {
         previewEl.innerHTML = '';
-        p.items.slice(0,200).forEach(it => { const d = document.createElement('div'); d.className='item'; d.textContent = (it.isFolder ? '📁 ' : '📄 ') + (it.name || '(sem nome)'); previewEl.appendChild(d); });
+        p.items.slice(0,200).forEach(it => { const d = document.createElement('div'); d.className='item'; const sym = it.isFolder ? '[Pasta] ' : ''; d.textContent = sym + (it.name || '(sem nome)'); previewEl.appendChild(d); });
         modalPreview.innerHTML = previewEl.innerHTML;
       } else { previewEl.innerHTML = `<div style="font-size:13px;color:#444">${p.rootText||''}<br>Itens: ${p.totalItems||0}</div>`; modalPreview.innerHTML = previewEl.innerHTML; }
       modalCount.value = payload.suggested || 3; dynamicModal.style.display = 'flex';
