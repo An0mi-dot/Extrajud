@@ -111,7 +111,7 @@
       <div style="margin-top:8px; border-top:1px dashed #e6e6e6; padding-top:10px;">
         <label style="display:block; font-size:12px; color:var(--text-secondary); font-weight:700; margin-bottom:6px">Credencial (E-mail)</label>
         <div class="credential-row">
-          <select id="emailSelect" class="email-select"><option value="">-- selecione --</option></select>
+          <select id="emailSelect" class="email-select"></select>
           <input id="emailInput" class="email-input" type="email" placeholder="adicionar email..." />
           <button id="emailAddBtn" class="btn email-add">Adicionar</button>
         </div>
@@ -204,7 +204,8 @@
 
     function loadEmails() {
       const list = JSON.parse(localStorage.getItem('sp-emails') || '[]');
-      emailSelect.innerHTML = '<option value="">-- selecione --</option>' + list.map(e => `<option value="${e}">${e}</option>`).join('');
+      emailSelect.innerHTML = list.map(e => `<option value="${e}">${e}</option>`).join('');
+      // If no saved emails, keep the select empty and let user add via input
     }
     function saveEmail(e) {
       if (!e || !e.includes('@')) return;
