@@ -78,8 +78,8 @@
     .credential-row .email-select { flex:1 1 120px; min-width:120px; padding:8px; border:1px solid var(--border-color); border-radius:6px; }
     .credential-row .email-input { flex:0 0 170px; max-width:170px; padding:8px; border:1px solid var(--border-color); border-radius:6px; }
     .credential-row .email-add { flex:0 0 auto; padding:8px 10px; }
-    /* Ensure control panel content stays within bounds */
-    .control-panel { box-sizing:border-box; overflow:hidden; }
+    /* Ensure control panel content stays within bounds and is scrollable */
+    .control-panel { box-sizing:border-box; overflow:auto; max-height: calc(100vh - 140px); padding-right:6px; }
     .control-panel .preview { margin-top:6px; }
 
   </style>
