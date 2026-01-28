@@ -116,25 +116,7 @@ function _scheduleAutoClose(sessionId, ttl = 10 * 60 * 1000) {
     }, ttl);
 }
 
-// Stop capture and return captured entries for a session (if any)
-async function stopCapture(sessionId) {
-    const s = sessions.get(sessionId);
-    if (!s) return { ok:false, error:'session_not_found' };
-    try {
-        // detach listeners if we kept references
-        if (s._analyzerListeners && s.page) {
-            try { if (s._analyzerListeners.request) s.page.removeListener('request', s._analyzerListeners.request); } catch(_){}
-            try { if (s._analyzerListeners.response) s.page.removeListener('response', s._analyzerListeners.response); } catch(_){}
-            delete s._analyzerListeners;
-        }
-        const entries = Array.isArray(s.capturedRequests) ? s.capturedRequests.slice() : [];
-        // store in session for later inspection and clear
-        s.capturedRequests = [];
-        return { ok:true, entries };
-    } catch (e) {
-        return { ok:false, error: e && e.message ? e.message : String(e) };
-    }
-}
+// Note: analyzer/capture functionality removed — session stores only browser/context/page.
 
 async function startSession(args = {}, webContents) {
     const sender = makeEventSender(webContents);
@@ -262,44 +244,7 @@ async function startSession(args = {}, webContents) {
 
         sender.send('log-message', { type: 'info', msg: `Sessão iniciada: ${sessionId}`, tech: 'sharepoint.startSession' });
 
-        // If analyzer mode requested, attach network capture handlers for XHR/fetch/_api/Graph
-        try {
-            if (args && args.analyzer && page) {
-                const maxEntries = 1000;
-                const cap = sessions.get(sessionId);
-                cap.capturedRequests = cap.capturedRequests || [];
-                const onRequest = (req) => {
-                    try {
-                        const url = req.url();
-                        if (!url || (!url.includes('/_api/') && !url.includes('graph.microsoft.com'))) return;
-                        const item = { id: Math.random().toString(36).slice(2,9), type: 'request', url, method: req.method(), headers: req.headers(), postData: req.postData ? req.postData() : null, ts: Date.now() };
-                        cap.capturedRequests.push(item);
-                        if (cap.capturedRequests.length > maxEntries) cap.capturedRequests.shift();
-                        sender.send('log-message', { type: 'info', msg: `analyzer: request ${item.method} ${url}`, tech: 'analyzer' });
-                    } catch(e){ }
-                };
-                const onResponse = async (res) => {
-                    try {
-                        const url = res.url();
-                        if (!url || (!url.includes('/_api/') && !url.includes('graph.microsoft.com'))) return;
-                        let body = null; try { body = await res.text().catch(()=>null); } catch(e) { body = null; }
-                        const item = { id: Math.random().toString(36).slice(2,9), type: 'response', url, status: res.status(), headers: res.headers ? res.headers() : {}, body: body, ts: Date.now() };
-                        const cap2 = sessions.get(sessionId);
-                        if (cap2) {
-                            cap2.capturedRequests.push(item);
-                            if (cap2.capturedRequests.length > maxEntries) cap2.capturedRequests.shift();
-                        }
-                        try { sender.send('sharepoint:analyzer-entry', item); } catch(e){}
-                        try { sender.send('log-message', { type: 'info', msg: `analyzer: response ${item.status} ${url}`, tech: 'analyzer' }); } catch(e){}
-                    } catch(e){}
-                };
-                // store listener refs so we can remove later
-                sessions.get(sessionId)._analyzerListeners = { request: onRequest, response: onResponse };
-                page.on('request', onRequest);
-                page.on('response', onResponse);
-                sender.send('log-message', { type: 'info', msg: 'Analisador ativado: capturando requisições /_api/ e Graph', tech: 'analyzer' });
-            }
-        } catch (e) { sender.send('log-message', { type: 'warn', msg: 'Falha ao ativar analisador: '+(e && e.message), tech: 'analyzer' }); }
+        // Analyzer/capture removed — no network capture attached
 
         // Make preview serializable as before
         let safePreview = null;
@@ -483,4 +428,4 @@ async function createSequential(args = {}, webContents) {
     }
 }
 
-module.exports = { getPreview, createSequential, startSession, createInSession, cancelSession, stopCapture };
+module.exports = { getPreview, createSequential, startSession, createInSession, cancelSession };

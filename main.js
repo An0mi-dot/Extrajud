@@ -137,27 +137,16 @@ ipcMain.handle('sharepoint:create-session', async (event, args) => {
 });
 
 // Stop analyzer capture for a session and return captured entries
-ipcMain.handle('sharepoint:stop-capture', async (event, args) => {
+// Cancel a running SharePoint session (close browser and cleanup)
+ipcMain.handle('sharepoint:cancel-session', async (event, args) => {
   try {
     const runner = require('./sharepoint_runner');
-    const res = await runner.stopCapture(args && args.sessionId ? args.sessionId : null);
+    const res = await runner.cancelSession(args && args.sessionId ? args.sessionId : null);
     return res;
   } catch (e) {
-    console.error('sharepoint:stop-capture error', e);
+    console.error('sharepoint:cancel-session error', e);
     return { ok: false, error: e && e.message };
   }
-});
-
-// Save analyzer dump to a file (called from renderer)
-ipcMain.handle('save-analyzer-dump', async (event, args) => {
-  try {
-    if (!args || !args.entries || !args.sessionId) return { ok:false, error:'invalid_args' };
-    const out = { sessionId: args.sessionId, timestamp: Date.now(), entries: args.entries };
-    const fileName = `analyzer_dump_${args.sessionId}_${Date.now()}.json`;
-    const p = path.join(app.getPath('userData'), fileName);
-    fs.writeFileSync(p, JSON.stringify(out, null, 2), 'utf8');
-    return { ok:true, path: p };
-  } catch (e) { console.error('save-analyzer-dump error', e); return { ok:false, error: e && e.message }; }
 });
 
 // Convert a browser dump (localStorage/sessionStorage/cookies) to Playwright storageState format

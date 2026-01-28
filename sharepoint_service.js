@@ -771,12 +771,20 @@ async function createFolderUsingSiteButtons(page, folderName, eventSender = null
 
                 if (!nameInput) return { ok:false, error: 'name_input_not_found' };
 
-                // Fill quickly: clear first, then set value and dispatch input event
+                // Fill: type with a short per-character delay so the page's JS can validate progressively
                 try {
                     try { await nameInput.fill(''); } catch(e){}
-                    // prefer direct handle evaluate to guarantee value set
                     try {
-                        await nameInput.evaluate((el, val) => { el.focus(); if ('value' in el) el.value = val; else el.innerText = val; el.dispatchEvent(new Event('input',{bubbles:true})); }, folderName);
+                        // Prefer ElementHandle.type when available (slower but reliable)
+                        if (typeof nameInput.type === 'function') {
+                            await nameInput.type(folderName, { delay: 50 });
+                        } else {
+                            // Fallback: set value and dispatch events
+                            await nameInput.evaluate((el, val) => { el.focus(); if ('value' in el) el.value = val; else el.innerText = val; el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true})); }, folderName);
+                        }
+
+                        // Ensure change/input events fired
+                        try { await nameInput.evaluate(el => { el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true})); }); } catch(e){}
                     } catch(e) {
                         try { await nameInput.fill(folderName); } catch(e){}
                     }
@@ -790,14 +798,16 @@ async function createFolderUsingSiteButtons(page, folderName, eventSender = null
                     // trigger blur so validation runs
                     try { await nameInput.evaluate(el => el.blur && el.blur()); } catch(e){}
 
-                    // Wait a short time for the button to enable, polling quickly to stay fast
+                    // Wait for the button to enable; poll quickly but allow slightly longer for validation (up to ~1.8s)
                     let clicked = false;
-                    for (let i = 0; i < 12; i++) {
+                    for (let i = 0; i < 15; i++) {
                         try {
                             const enabled = await createBtn.evaluate(b => {
-                                const dis = b.getAttribute && (b.getAttribute('disabled') || b.getAttribute('aria-disabled'));
-                                const cls = b.className || '';
-                                return !(dis === 'true' || dis === '' || dis === 'disabled' || cls.indexOf('is-disabled') !== -1 || b.disabled === true);
+                                try {
+                                    const dis = b.getAttribute && (b.getAttribute('disabled') || b.getAttribute('aria-disabled'));
+                                    const cls = b.className || '';
+                                    return !(dis === 'true' || dis === '' || dis === 'disabled' || cls.indexOf('is-disabled') !== -1 || b.disabled === true);
+                                } catch(e) { return false; }
                             });
                             if (enabled) { await createBtn.click().catch(()=>{}); clicked = true; break; }
                         } catch(e){}
