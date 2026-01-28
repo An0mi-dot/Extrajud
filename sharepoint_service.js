@@ -173,7 +173,7 @@ function attachPopupFocusHandler(page, eventSender = null) {
  * Retorna true se a navegação ocorreu sem erro.
  */
 async function openOficiosRoot(page, url, eventSender = null) {
-    const DEFAULT_URL = "https://iberdrola.sharepoint.com/sites/JUDCOELBA/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FJUDCOELBA%2FShared%20Documents%2FOF%C3%8DCIOS%202026&viewid=b0389131%2Db788%2D4354%2D8edd%2Dcfe27a229f93&ct=1720187493260&or=Teams%2DHL&LOF=1&ovuser=031a09bc%2Da2bf%2D44df%2D888e%2D4e09355b7a24%2Cjoao%2Eaviana%40neoenergia%2Ecom&OR=Teams%2DHL&CT=1769431380333&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiIxNDE1LzI1MTEzMDAxMzEyIiwiSGFzRmVkZXJhdGVkVXNlciI6ZmFsc2V9";
+    const DEFAULT_URL = "https://iberdrola.sharepoint.com/sites/JUDCOELBA/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FJUDCOELBA%2FShared%20Documents%2FCria%C3%A7%C3%A3o%20de%20Pastas&viewid=b0389131%2Db788%2D4354%2D8edd%2Dcfe27a229f93&ct=1720187493260&or=Teams%2DHL&LOF=1&ovuser=031a09bc%2Da2bf%2D44df%2D888e%2D4e09355b7a24%2Cjoao%2Eaviana%40neoenergia%2Ecom&OR=Teams%2DHL&CT=1769606129626&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiIxNDE1LzI2MDEwNDAwOTIzIiwiSGFzRmVkZXJhdGVkVXNlciI6ZmFsc2V9";
     let target = String(url || DEFAULT_URL);
 
     // Sanitize URL to avoid sending ephemeral tokens (keep only safe query params)
@@ -217,6 +217,8 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
     if (eventSender) eventSender.send('bring-window-front', { reason: 'createFolders_start' });
 
     try {
+        // Set an in-page creation flag so external cancelers can observe and stop the process
+        try { await page.evaluate(() => { window.__extrajud_creation_in_progress = true; window.__extrajud_creation_cancelled = false; }); } catch(e) { /* ignore */ }
         // 1. Nav to base folder: try selector first, else search by name text
         let baseElHandle = null;
 
@@ -255,6 +257,11 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
         for (const name of names) {
             const res = { name, ok: false, reason: null };
             try {
+                // Check cancellation flag before attempting each creation
+                try {
+                    const cancelled = await page.evaluate(() => !!window.__extrajud_creation_cancelled).catch(() => false);
+                    if (cancelled) { res.reason = 'cancelled_by_user'; results.push(res); break; }
+                } catch(e) {}
                 // Common modern SharePoint new folder sequence
                 // Try toolbar 'New' button
                 const newBtn = await page.$('button[aria-label*="Novo" i], button[aria-label*="New" i], a[title*="Novo" i], a[title*="New" i]');
@@ -349,6 +356,9 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
             results.push(res);
         }
 
+        // Clear in-page creation flag
+        try { await page.evaluate(() => { window.__extrajud_creation_in_progress = false; }); } catch(e) { /* ignore */ }
+
     } catch (e) {
         if (eventSender) eventSender.send('log-message', { type: 'error', msg: `Erro createFolders: ${e.message}`, tech: 'createFolders' });
         results.push({ name: null, ok: false, reason: e.message });
@@ -358,24 +368,31 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
 }
 
 /**
- * Lista os filhos (itens/pastas) do diretório OFÍCIOS encontrado na página.
- * oficiosSelectorOrText: seletor CSS da raiz ou texto parcial (ex: 'OFÍCIOS 2026').
+ * Lista os filhos (itens/pastas) do diretório Criação de Pastas encontrado na página.
+ * oficiosSelectorOrText: seletor CSS da raiz ou texto parcial (ex: 'Criação de Pastas').
  * Retorna array de { name, isFolder, href, selector }
  */
 
 async function listChildrenOfOficios(page, oficiosSelectorOrText = null, eventSender = null) {
     try {
-        if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Procurando OFÍCIOS: ${oficiosSelectorOrText || '[auto]'}`, tech: 'listChildrenOfOficios' });
+        if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Procurando Criação de Pastas: ${oficiosSelectorOrText || '[auto]'}`, tech: 'listChildrenOfOficios' });
 
-        const data = await page.evaluate((sel) => {
+        const data = await page.evaluate(async (sel) => {
             function safeText(el){ try { return (el && el.innerText) ? el.innerText.trim() : ''; } catch(e){ return ''; } }
             function elementPath(el){ try { if(!el) return ''; const path=[]; let cur=el, depth=0; while(cur && cur.nodeType===1 && depth++<12){ let part=cur.tagName.toLowerCase(); if(cur.id) part += `#${cur.id}`; else if(cur.className) part += `.${(cur.className||'').toString().split(/\s+/).slice(0,3).join('.')}`; const sib = Array.from(cur.parentNode?cur.parentNode.children:[]).indexOf(cur)+1; part += `:nth-child(${sib})`; path.unshift(part); cur = cur.parentNode; } return path.join(' > '); } catch(e){ return ''; } }
 
-            // Find root element by selector or by text
+            // Find root element by selector or by text (support both OFÍCIOS and 'Criação de Pastas')
             let rootEl = null;
             if (sel) rootEl = document.querySelector(sel);
             if (!rootEl) {
-                rootEl = Array.from(document.querySelectorAll('div, section, header, main')).find(d => /OF[IÍ]CIOS\s*\d{4}/i.test(safeText(d)));
+                rootEl = Array.from(document.querySelectorAll('div, section, header, main')).find(d => {
+                    const txt = safeText(d) || '';
+                    const low = txt.toLowerCase();
+                    if (/OF[IÍ]CIOS\s*\d{4}/i.test(txt)) return true;
+                    if (low.includes('cria') || low.includes('criação') || low.includes('cria%c3%a7') ) return true;
+                    if (low.includes('criação de pastas') || low.includes('criaçao de pastas')) return true;
+                    return false;
+                });
             }
             if (!rootEl) return { ok:false, error: 'root_not_found' };
 
@@ -388,6 +405,67 @@ async function listChildrenOfOficios(page, oficiosSelectorOrText = null, eventSe
             const potential = anc || document.body;
             const grid = potential.querySelector('[role="grid"], [role="table"], div.ms-List, table[role="grid"], div#list-content-id');
             const listContainer = grid || potential;
+
+            // Try to expand lazy-loaded lists: detect a scrollable element and perform incremental scroll + wheel events
+            try {
+                let expandedAttempts = 0;
+                let consecutiveNoChange = 0;
+                function delay(ms){ return new Promise(res => setTimeout(res, ms)); }
+                function currentRowCount(){ try { return (listContainer.querySelectorAll('[role="row"], [role="listitem"], .ms-List-cell, div[role="gridcell"], tr') || []).length; } catch(e){ return 0; } }
+
+                function findScrollable(el){
+                    try {
+                        // Prefer descendants that are visibly scrollable
+                        const descendants = Array.from(el.querySelectorAll('*'));
+                        for (const d of [el].concat(descendants)) {
+                            try {
+                                const sh = d.scrollHeight || 0;
+                                const ch = d.clientHeight || 0;
+                                if (sh - ch > 60) return d;
+                            } catch(_){}
+                        }
+                        // Fallback to ancestors
+                        let anc = el;
+                        while (anc) {
+                            try { const sh = anc.scrollHeight || 0; const ch = anc.clientHeight || 0; if (sh - ch > 60) return anc; } catch(_){}
+                            anc = anc.parentElement;
+                        }
+                    } catch(e){}
+                    return null;
+                }
+
+                const initialHref = location.href;
+                const scrollTarget = findScrollable(listContainer) || document.scrollingElement || document.documentElement || document.body;
+                try { listContainer.__scrollTarget = elementPath(scrollTarget); } catch(e){}
+
+                const maxAttempts = 80;
+                let prevCount = currentRowCount();
+                let expansionError = null;
+                for (let i = 0; i < maxAttempts; i++) {
+                    // Guard against navigation/context loss
+                    if (location.href !== initialHref || document.hidden) { expansionError = 'navigation_or_hidden'; break; }
+
+                    // Try step scroll and wheel event to stimulate virtualized renderers
+                    try { if (scrollTarget && scrollTarget !== document && scrollTarget.scrollTop !== undefined) scrollTarget.scrollTop = Math.min((scrollTarget.scrollHeight || 0), (scrollTarget.scrollTop || 0) + Math.max(300, (scrollTarget.clientHeight || 600) * 0.7)); } catch(e){}
+                    try { if (scrollTarget && scrollTarget.dispatchEvent) scrollTarget.dispatchEvent(new WheelEvent('wheel', { deltaY: 800, bubbles: true })); } catch(e){}
+                    try { window.scrollTo(0, document.body.scrollHeight); } catch(e){}
+
+                    await delay(300 + Math.min(700, i*40));
+                    expandedAttempts++;
+
+                    const cur = currentRowCount();
+                    if (cur > prevCount) {
+                        prevCount = cur;
+                        consecutiveNoChange = 0;
+                        continue;
+                    } else {
+                        consecutiveNoChange++;
+                        if (consecutiveNoChange >= 6) break;
+                    }
+                }
+                try { listContainer.__expandedAttempts = expandedAttempts; } catch(e){}
+                try { listContainer.__expansionError = expansionError; } catch(e){}
+            } catch (e) { /* ignore expansion errors */ }
 
             const rows = Array.from(listContainer.querySelectorAll('[role="row"], [role="listitem"], .ms-List-cell, div[role="gridcell"], tr'));
             const items = [];
@@ -422,7 +500,7 @@ async function listChildrenOfOficios(page, oficiosSelectorOrText = null, eventSe
                 } catch(e) { /* ignore */ }
             }
 
-            return { ok: true, rootText: safeText(rootEl), containerSelector: elementPath(listContainer), items };
+            return { ok: true, rootText: safeText(rootEl), containerSelector: elementPath(listContainer), items, expandedAttempts: (typeof expandedAttempts !== 'undefined' ? expandedAttempts : 0), finalRowCount: (typeof items !== 'undefined' ? items.length : 0), expansionError: (typeof expansionError !== 'undefined' ? expansionError : null), scrollTarget: (typeof scrollTarget !== 'undefined' ? elementPath(scrollTarget) : null) };
         }, oficiosSelectorOrText);
 
         if (eventSender) {
@@ -434,11 +512,13 @@ async function listChildrenOfOficios(page, oficiosSelectorOrText = null, eventSe
                     // Ensure they are marked as folders
                     numericItems.forEach(i => i.isFolder = true);
                     data.items = numericItems;
-                    eventSender.send('log-message', { type: 'info', msg: `OFÍCIOS encontrados: ${numericItems.length} pastas numéricas detectadas (container: ${data.containerSelector})`, tech: 'listChildrenOfOficios' });
+                    eventSender.send('log-message', { type: 'info', msg: `Criação de Pastas encontrados: ${numericItems.length} pastas numéricas detectadas (container: ${data.containerSelector})`, tech: 'listChildrenOfOficios' });
                 } else {
                     // No pure-numeric names found; fall back to original detection but log that none were pure numeric
-                    eventSender.send('log-message', { type: 'info', msg: `OFÍCIOS encontrados: ${data.items.length} itens (container: ${data.containerSelector}), nenhum nome puramente numérico detectado`, tech: 'listChildrenOfOficios' });
+                    eventSender.send('log-message', { type: 'info', msg: `Criação de Pastas encontrados: ${data.items.length} itens (container: ${data.containerSelector}), nenhum nome puramente numérico detectado`, tech: 'listChildrenOfOficios' });
                 }
+                // Diagnostic: report how many "show more" expansions were attempted (0 = none)
+                eventSender.send('log-message', { type: 'info', msg: `listChildrenOfOficios: expansion attempts = ${data && data.expandedAttempts ? data.expandedAttempts : 0}, finalRows=${data && data.finalRowCount ? data.finalRowCount : 0}, expansionError=${data && data.expansionError ? data.expansionError : 'none'}, scrollTarget=${data && data.scrollTarget ? data.scrollTarget : data.containerSelector}`, tech: 'listChildrenOfOficios' });
             } else {
                 eventSender.send('log-message', { type: 'warn', msg: `listChildrenOfOficios: ${data && data.error ? data.error : 'unknown'}`, tech: 'listChildrenOfOficios' });
             }
@@ -456,8 +536,19 @@ async function listChildrenOfOficios(page, oficiosSelectorOrText = null, eventSe
 async function createSequentialFolders(page, baseSelectorOrText, count = null, options = {}, eventSender = null, inputReceiver = null) {
     try {
         // 1. list existing
-        const listResp = await listChildrenOfOficios(page, baseSelectorOrText, eventSender);
-        if (!listResp || !listResp.ok) return { ok:false, error: listResp && listResp.error ? listResp.error : 'list_failed' };
+        let listResp = await listChildrenOfOficios(page, baseSelectorOrText, eventSender);
+        // If root not found, treat as empty folder to allow creation attempts (avoids abort when folder exists but root detection is finicky)
+        if (!listResp || !listResp.ok) {
+            if (listResp && listResp.error === 'root_not_found') {
+                if (eventSender) eventSender.send('log-message', { type: 'warn', msg: 'createSequentialFolders: root_not_found detected; assuming empty folder and proceeding with creation.', tech: 'createSequentialFolders' });
+                listResp = { ok: true, items: [], rootText: '', containerSelector: '' };
+            } else {
+                if (eventSender) eventSender.send('log-message', { type: 'error', msg: `createSequentialFolders: aborting due to list failure: ${listResp && listResp.error ? listResp.error : 'unknown'}`, tech: 'createSequentialFolders' });
+                return { ok:false, error: listResp && listResp.error ? listResp.error : 'list_failed' };
+            }
+        }
+
+        if (eventSender) eventSender.send('log-message', { type: 'info', msg: `createSequentialFolders: proceeding with listResp summary: ok=${!!listResp.ok}, items=${Array.isArray(listResp.items)?listResp.items.length:0}`, tech: 'createSequentialFolders' });
 
         const folders = listResp.items.filter(i => i.isFolder);
         // Prefer folder names that are purely numeric (e.g., "1", "20", "010").

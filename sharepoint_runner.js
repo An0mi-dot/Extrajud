@@ -152,6 +152,7 @@ async function startSession(args = {}, webContents) {
         const WAIT_TIMEOUT = typeof args.loginTimeoutMs === 'number' ? args.loginTimeoutMs : (8 * 60 * 1000); // default 8 min
         const POLL_INTERVAL = 1500;
         let list = null;
+        let rootNotFoundCount = 0;
         let loginNotified = false;
         const startTime = Date.now();
 
@@ -165,8 +166,24 @@ async function startSession(args = {}, webContents) {
         while (Date.now() - startTime < WAIT_TIMEOUT) {
             try {
                 list = await sharepoint.listChildrenOfOficios(page, args.selector || null, sender);
-                if (list && list.ok && Array.isArray(list.items) && list.items.length > 0) {
-                    // Found content
+                // If the evaluator couldn't find the root twice in a row, assume the target folder is present but empty (avoid infinite loop)
+                if (list && (!list.ok && list.error === 'root_not_found')) {
+                    rootNotFoundCount++;
+                    sender.send('log-message', { type: 'warn', msg: `listChildrenOfOficios root_not_found (consecutive=${rootNotFoundCount})`, tech: 'sharepoint.startSession' });
+                    if (rootNotFoundCount >= 2) {
+                        sender.send('log-message', { type: 'info', msg: 'Assumindo pasta vazia após múltiplas tentativas; prosseguindo com preview vazio.', tech: 'sharepoint.startSession' });
+                        // Treat as valid empty list so UI shows empty preview
+                        list = { ok: true, items: [], rootText: '', containerSelector: '' };
+                        break;
+                    }
+                } else {
+                    // Reset counter when we have any other result (including valid empty array)
+                    rootNotFoundCount = 0;
+                }
+
+                // Accept valid list even if empty: treat empty folder as valid content (avoid infinite loop)
+                if (list && list.ok && Array.isArray(list.items)) {
+                    // Found content (may be empty)
                     if (loginNotified) {
                         sender.send('log-message', { type: 'info', msg: `Login detectado (URL atual: ${page.url()})`, tech: 'sharepoint.startSession' });
                         sender.send('sharepoint:login-completed', { url: page.url() });
@@ -313,9 +330,22 @@ async function createInSession(sessionId, args = {}, webContents) {
         // Default to numeric-only names (no textual prefix) unless user provided one
         const options = { prefix: (typeof args.prefix === 'string' ? args.prefix : ''), restBasePath: args && args.restBasePath ? args.restBasePath : null };
 
-        const resp = await sharepoint.createSequentialFolders(s.page, args.selector || null, count, options, sender, null);
+        let resp;
+        try {
+            resp = await sharepoint.createSequentialFolders(s.page, args.selector || null, count, options, sender, null);
+        } catch (e) {
+            resp = { ok: false, error: e && e.message ? e.message : String(e) };
+        }
 
-        // close browser and cleanup
+        // If creation failed due to root_not_found, keep the browser open for debugging instead of closing immediately
+        if (resp && resp.ok === false && resp.error === 'root_not_found') {
+            try { sender.send('log-message', { type: 'warn', msg: `createInSession: creation failed with root_not_found; keeping session ${sessionId} open for inspection.`, tech: 'sharepoint.createInSession' }); } catch(e){}
+            // extend auto-close to 30 minutes
+            try { _scheduleAutoClose(sessionId, 30 * 60 * 1000); } catch(e){}
+            return { ok: false, error: resp.error, sessionKept: true, sessionId };
+        }
+
+        // close browser and cleanup for other outcomes
         try { if (s.browser) await s.browser.close(); } catch (e) { sender.send('log-message', { type: 'warn', msg: 'Erro ao fechar o navegador: ' + (e.message||e), tech: 'sharepoint.createInSession' }); }
         sessions.delete(sessionId);
 
@@ -344,7 +374,11 @@ async function cancelSession(sessionId) {
     try {
         const s = sessions.get(sessionId);
         if (!s) return { ok: false, error: 'session_not_found' };
-        try { if (s.browser) await s.browser.close(); } catch(e){}
+        try {
+            // Signal page scripts to cancel any ongoing creation work before closing
+            try { if (s.page) await s.page.evaluate(() => { window.__extrajud_creation_cancelled = true; }); } catch(e) {}
+            if (s.browser) await s.browser.close();
+        } catch(e){}
         sessions.delete(sessionId);
         return { ok: true };
     } catch (e) { return { ok: false, error: e && e.message ? e.message : String(e) }; }

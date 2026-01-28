@@ -179,7 +179,7 @@
 
   <script>
     const { ipcRenderer } = require('electron');
-    const DEFAULT_SP_URL = "https://iberdrola.sharepoint.com/sites/JUDCOELBA/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FJUDCOELBA%2FShared%20Documents%2FOF%C3%8DCIOS%202026&viewid=b0389131%2Db788%2D4354%2D8edd%2Dcfe27a229f93&ct=1720187493260&or=Teams%2DHL&LOF=1&ovuser=031a09bc%2Da2bf%2D44df%2D888e%2D4e09355b7a24%2Cjoao%2Eaviana%40neoenergia%2Ecom&OR=Teams%2DHL&CT=1769431380333&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiIxNDE1LzI1MTEzMDAxMzEyIiwiSGFzRmVkZXJhdGVkVXNlciI6ZmFsc2V9";
+    const DEFAULT_SP_URL = "https://iberdrola.sharepoint.com/sites/JUDCOELBA/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FJUDCOELBA%2FShared%20Documents%2FCria%C3%A7%C3%A3o%20de%20Pastas&viewid=b0389131%2Db788%2D4354%2D8edd%2Dcfe27a229f93&ct=1720187493260&or=Teams%2DHL&LOF=1&ovuser=031a09bc%2Da2bf%2D44df%2D888e%2D4e09355b7a24%2Cjoao%2Eaviana%40neoenergia%2Ecom&OR=Teams%2DHL&CT=1769606129626&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiIxNDE1LzI2MDEwNDAwOTIzIiwiSGFzRmVkZXJhdGVkVXNlciI6ZmFsc2V9";
 
     const btnStart = document.getElementById('btnStart');
     const btnStop = document.getElementById('btnStop');
@@ -303,11 +303,19 @@
       currentSession = payload.sessionId || currentSession;
       // render preview in panel and modal
       const p = payload.preview || {};
-      if (p.items && Array.isArray(p.items) && p.items.length > 0) {
+      // If the folder is present but contains no items, show a clear empty message
+      if (Array.isArray(p.items) && p.items.length === 0) {
+        const msg = `<div style="font-size:13px;color:#444"><strong>Pasta vazia</strong><br>Não existem pastas predefinidas nesta pasta. Você pode prosseguir para criar novas pastas.</div>`;
+        previewEl.innerHTML = msg;
+        modalPreview.innerHTML = msg;
+      } else if (p.items && Array.isArray(p.items) && p.items.length > 0) {
         previewEl.innerHTML = '';
         p.items.slice(0,200).forEach(it => { const d = document.createElement('div'); d.className='item'; const sym = it.isFolder ? '[Pasta] ' : ''; d.textContent = sym + (it.name || '(sem nome)'); previewEl.appendChild(d); });
         modalPreview.innerHTML = previewEl.innerHTML;
-      } else { previewEl.innerHTML = `<div style="font-size:13px;color:#444">${p.rootText||''}<br>Itens: ${p.totalItems||0}</div>`; modalPreview.innerHTML = previewEl.innerHTML; }
+      } else {
+        previewEl.innerHTML = `<div style="font-size:13px;color:#444">${p.rootText||''}<br>Itens: ${p.totalItems||0}</div>`;
+        modalPreview.innerHTML = previewEl.innerHTML;
+      }
       modalCount.value = payload.suggested || 3; dynamicModal.style.display = 'flex';
     });
 
