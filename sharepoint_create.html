@@ -82,11 +82,21 @@
     .control-panel { box-sizing:border-box; overflow:auto; max-height: calc(100vh - 140px); padding-right:6px; }
     .control-panel .preview { margin-top:6px; }
 
+    /* Back button style (copied from extrator_projudi) */
+    .btn-back svg { width:16px; height:16px; }
+    .btn-back { background: none; border: 1px solid var(--border-color); color: #666; margin-bottom: 30px; padding: 8px 12px; font-size: 13px; justify-content: flex-start; }
+    .btn-back:hover { background-color: #f8f9fa; color: var(--primary-color); border-color: var(--primary-color); }
+
   </style>
 </head>
 <body>
   <div class="header">
-    <button class="back-btn" onclick="window.location.href='index.html'"><i class="fas fa-arrow-left"></i> Voltar</button>
+    <button class="btn-back" onclick="window.location.href='index.html'">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Voltar ao Hub
+    </button>
     <h1><i class="fas fa-folder-plus"></i> Criar Pastas - OFÍCIOS (SharePoint)</h1>
   </div>
 
