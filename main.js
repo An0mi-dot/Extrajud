@@ -4,7 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const { exec, execSync } = require('child_process');
 const https = require('https');
-const automacaoService = require('./automacao_service');
+const automacaoService = (() => { try { return require('./src/automacao_service'); } catch (e) { return require('./automacao_service'); } })();
 
 let mainWindow;
 
@@ -92,7 +92,7 @@ ipcMain.on('bring-window-front', (event, args) => {
 // SharePoint preview and creation handlers
 ipcMain.handle('sharepoint:get-preview', async (event, args) => {
   try {
-    const runner = require('./sharepoint_runner');
+    const runner = (() => { try { return require('./src/sharepoint_runner'); } catch (e) { return require('./sharepoint_runner'); } })();
     const res = await runner.getPreview(args || {}, event.sender);
     return res;
   } catch (e) {
@@ -103,7 +103,7 @@ ipcMain.handle('sharepoint:get-preview', async (event, args) => {
 
 ipcMain.handle('sharepoint:create', async (event, args) => {
   try {
-    const runner = require('./sharepoint_runner');
+    const runner = (() => { try { return require('./src/sharepoint_runner'); } catch (e) { return require('./sharepoint_runner'); } })();
     const res = await runner.createSequential(args || {}, event.sender);
     return res;
   } catch (e) {
@@ -115,7 +115,7 @@ ipcMain.handle('sharepoint:create', async (event, args) => {
 // Start a long-lived session: opens Edge, navigates and returns a sessionId + preview. Browser stays open until create-session is called or timeout.
 ipcMain.handle('sharepoint:start-session', async (event, args) => {
   try {
-    const runner = require('./sharepoint_runner');
+    const runner = (() => { try { return require('./src/sharepoint_runner'); } catch (e) { return require('./sharepoint_runner'); } })();
     const res = await runner.startSession(args || {}, event.sender);
     return res;
   } catch (e) {
@@ -127,7 +127,7 @@ ipcMain.handle('sharepoint:start-session', async (event, args) => {
 // Create using an existing session and then close it
 ipcMain.handle('sharepoint:create-session', async (event, args) => {
   try {
-    const runner = require('./sharepoint_runner');
+    const runner = (() => { try { return require('./src/sharepoint_runner'); } catch (e) { return require('./sharepoint_runner'); } })();
     const res = await runner.createInSession(args && args.sessionId ? args.sessionId : null, args || {}, event.sender);
     return res;
   } catch (e) {
@@ -140,7 +140,7 @@ ipcMain.handle('sharepoint:create-session', async (event, args) => {
 // Cancel a running SharePoint session (close browser and cleanup)
 ipcMain.handle('sharepoint:cancel-session', async (event, args) => {
   try {
-    const runner = require('./sharepoint_runner');
+    const runner = (() => { try { return require('./src/sharepoint_runner'); } catch (e) { return require('./sharepoint_runner'); } })();
     const res = await runner.cancelSession(args && args.sessionId ? args.sessionId : null);
     return res;
   } catch (e) {
