@@ -5,7 +5,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const root = path.join(__dirname, '..', 'paginas_html');
+const root = path.join(__dirname, '..', 'public');
 const port = process.env.PORT || 8080;
 
 const mime = {

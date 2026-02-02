@@ -482,7 +482,7 @@ function createWindow() {
     width: 1000,
     height: 750,
     autoHideMenuBar: true, // Oculta a barra de menu padrão
-    icon: path.join(__dirname, 'assets', 'logo2.png'), // Ícone da janela e barra de tarefas
+    icon: path.join(__dirname, 'public', 'assets', 'logo2.png'), // Ícone da janela e barra de tarefas
     webPreferences: {
         nodeIntegration: true,
         contextIsolation: false
@@ -490,7 +490,7 @@ function createWindow() {
   });
 
   mainWindow.setMenu(null); // Remove o menu completamente
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile(path.join('public', 'index.html'));
 
   // Send initial automation status to renderer after load
   mainWindow.webContents.on('did-finish-load', () => {
