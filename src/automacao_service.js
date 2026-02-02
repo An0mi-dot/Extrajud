@@ -1808,23 +1808,45 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
         let dadosPje2 = {};
 
         const runPje1 = async () => {
-            log(eventSender, "Preparando transição para PJE 1º Grau...", null, 'info');
-            await page.goto(PJE_1_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
-
-            // Solicita Login Manual PJE 1 (se necessário)
-            const login1 = await waitForInput(eventSender, ipcReceiver, 'confirm', {
-                title: 'Login PJE 1º Grau',
-                message: 'Realize o login no PJE 1º Grau. Clique em Continuar quando estiver na tela inicial (painel do advogado).',
-                confirmText: 'Continuar'
-            });
-            if (login1 === false || login1 === 'cancel') { log(eventSender, 'Login PJE 1 cancelado pelo usuário. Pulando PJE 1.', null, 'warn'); return; }
-
-            // Save updated storageState after successful manual login to capture HttpOnly cookies
+            log(eventSender, "Acessando PJE 1º Grau (verificando sessão)...", null, 'info');
             try {
-                await context.storageState({ path: PJE_STORAGE });
-                log(eventSender, `Sessão PJE salva em: ${PJE_STORAGE}`, 'PJE Session', 'success');
-            } catch (e) {
-                log(eventSender, `Erro salvando sessão PJE (1): ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+                await page.goto(PJE_1_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                await delay(2000); // aguarda renderização inicial
+            } catch(e) { log(eventSender, `Nav erro (ignorado): ${e.message}`, 'PJE Nav', 'warn'); }
+
+            // Verificação inteligente de sessão
+            const isLogged = await safeEvaluate(() => {
+                const bodyText = document.body ? document.body.innerText : '';
+                // Termos comuns do painel logado
+                return bodyText.includes('Mesa de Trabalho') || 
+                       bodyText.includes('Painel do advogado') || 
+                       bodyText.includes('Aguardando Leitura') ||
+                       !!document.querySelector('a[href*="logout"]');
+            }).catch(() => false);
+
+            if (isLogged) {
+                log(eventSender, "Sessão PJE 1º Grau válida detectada! (Reutilizando storage)", 'PJE Session', 'success');
+                // Salvar novamente para renovar timestamp do arquivo se desejar, mas não estritamente necessário
+            } else {
+                log(eventSender, "Sessão não detectada. Solicitando login manual...", 'PJE Session', 'warn');
+                const login1 = await waitForInput(eventSender, ipcReceiver, 'confirm', {
+                    title: 'Login Necessário - PJE 1º Grau',
+                    message: '1. Realize o login no PJE 1º Grau.\n2. **SELECIONE O PERFIL DE PROCURADORIA** no topo da tela.\n3. Aguarde o painel inicial carregar.\n\nClique em Continuar APÓS selecionar o perfil correto.',
+                    confirmText: 'Continuar'
+                });
+
+                if (login1 === false || login1 === 'cancel') { 
+                    log(eventSender, 'Login PJE 1 cancelado/recusado. Pulando etapa.', null, 'warn'); 
+                    return; 
+                }
+
+                // Se o usuário confirmou, assumimos que logou. Salvamos o estado novo.
+                try {
+                    await context.storageState({ path: PJE_STORAGE });
+                    log(eventSender, `Login novo detectado. Sessão salva em: ${PJE_STORAGE}`, 'PJE Session', 'success');
+                } catch (e) {
+                    log(eventSender, `Erro salvando sessão PJE (1): ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+                }
             }
 
             // Ensure the page is on the expected PJE 1 URL and stable before running evaluations
@@ -1894,97 +1916,96 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                 await delay(1000);
                 log(eventSender, `URL atual após goto: ${page.url()}`, 'Navigation', 'info');
 
-                // 1) Selecionar perfil de Procuradoria (se existir)
+                // 1) Selecionar perfil de Procuradoria (HTML Específico)
                 try {
-                    const anchors = await page.$$('a');
-                    let foundProcurador = null;
-                    for (const a of anchors) {
-                        const text = (await a.evaluate(n => n.innerText || '')).toUpperCase();
-                        if (text && text.includes('PROCURADOR')) {
-                            if (text.includes('ELETRICIDADE')) { foundProcurador = a; break; }
-                            if (!foundProcurador) foundProcurador = a;
+                    // Clica no menu dropdown do usuário
+                    const menuLink = await page.$('.menu-usuario .dropdown-toggle');
+                    if (menuLink && await menuLink.isVisible()) {
+                        log(eventSender, "Abrindo menu de usuário...", 'Navigation', 'info');
+                        await menuLink.click();
+                        await delay(800);
+                        
+                        // Localiza o link específico da Procuradoria
+                        // Procura por qualquer link que tenha "Procuradoria" E ("Coelba" ou "Eletricidade")
+                        const profileLink = await page.evaluateHandle(() => {
+                             const anchors = Array.from(document.querySelectorAll("#papeisUsuarioForm\\:dtPerfil a"));
+                             return anchors.find(a => {
+                                 const t = (a.innerText || "").toUpperCase();
+                                 return t.includes("PROCURADORIA") && (t.includes("COELBA") || t.includes("ELETRICIDADE"));
+                             });
+                        });
+
+                        if (profileLink) {
+                             const nomePerfil = await profileLink.evaluate(el => el.innerText);
+                             log(eventSender, `Perfil encontrado: ${nomePerfil}. Trocando...`, 'Navigation', 'info');
+                             
+                             // Dispara o clique nativo do JSF (onclick)
+                             await profileLink.evaluate(el => el.click());
+                             
+                             // Aguarda reload (pode demorar)
+                             log(eventSender, "Aguardando recarregamento do perfil...", 'Navigation', 'warn');
+                             await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => log(eventSender, "Timeout aguardando nav (pode ter ido via AJAX).", 'Nav', 'warn'));
+                             await delay(3000);
+                        } else {
+                            log(eventSender, "Perfil de Procuradoria não encontrado na lista.", 'Navigation', 'warn');
                         }
                     }
-                    if (foundProcurador) {
-                        log(eventSender, 'Perfil de Procuradoria detectado. Clicando...', 'Navigation', 'info');
-                        try { await clickWithRetries(foundProcurador, 'Perfil de Procuradoria'); } catch (e) { log(eventSender, `Falha ao clicar no perfil de Procuradoria: ${e.message || e}`, 'Navigation', 'warn'); }
-                        await delay(5000);
-                        log(eventSender, `URL após selecionar perfil: ${page.url()}`, 'Navigation', 'info');
-                    } else {
-                        log(eventSender, 'Nenhum perfil de Procuradoria detectado. Pulando seleção.', 'Navigation', 'info');
-                    }
-                } catch (e) { log(eventSender, `Erro ao selecionar perfil: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'warn'); }
+                } catch (e) { log(eventSender, `Erro na troca de perfil: ${e.message}`, 'Navigation', 'warn'); }
 
-                // 2) Clicar em Expedientes
+                // 2) Clicar em Expedientes (HTML Específico)
                 try {
-                    let tabExp = await page.$('#tabExpedientes_lbl');
-                    if (!tabExp) tabExp = await page.$("td[class*='abaExpediendes']");
-                    if (!tabExp) {
-                        try {
-                            const res = (typeof page.$x === 'function') ? await page.$x("//td[contains(text(), 'Expedientes') and (contains(@class,'rich-tab-header') or contains(@class,'abaExpediendes'))]") : null;
-                            if (res && res[0]) tabExp = res[0];
-                        } catch (e) { /* ignore xpath errors */ }
-                    }
+                    // ID exato do HTML fornecido
+                    const tabExp = await page.$('#tabExpedientes_lbl');
                     if (tabExp) {
-                        log(eventSender, 'Aba Expedientes encontrada. Clicando...', 'Navigation', 'info');
-                        try { await clickWithRetries(tabExp, 'Aba Expedientes'); } catch (e) { log(eventSender, `Falha ao clicar em Expedientes: ${e.message || e}`, 'Navigation', 'warn'); }
-                        await delay(2000);
-                        log(eventSender, `URL após clicar Expedientes: ${page.url()}`, 'Navigation', 'info');
+                         // Verifica se já está ativo (active)
+                        const classes = await tabExp.getAttribute('class');
+                        if (classes && !classes.includes('rich-tab-header-act')) {
+                            log(eventSender, 'Clicando na aba Expedientes...', 'Navigation', 'info');
+                            // Clique JSF nativo
+                            await tabExp.evaluate(el => el.click());
+                            await delay(4000); // Aguarda AJAX
+                        } else {
+                            log(eventSender, 'Aba Expedientes já ativa.', 'Navigation', 'info');
+                        }
                     } else {
-                        log(eventSender, 'Aba Expedientes não encontrada.', 'Navigation', 'warn');
+                        // Fallback classe
+                        const tabExpCls = await page.$('.abaExpediendes');
+                        if(tabExpCls) {
+                             await tabExpCls.evaluate(el => el.click());
+                             await delay(4000);
+                        }
                     }
-                } catch (e) { log(eventSender, `Erro ao interagir com Expedientes: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'warn'); }
+                } catch (e) { log(eventSender, `Erro ao clicar Expedientes: ${e.message}`, 'Navigation', 'warn'); }
 
-                // 3) Clicar em 'Pendentes de ciência ou de resposta'
+                // 3) Navegação interna (Pendentes) - Igual ao PJE 2 (Injeção é melhor aqui)
+                // A lógica abaixo tenta clicar nos nós da árvore. Se falhar, a extração via script injetado (mais abaixo) tenta "expandir menus".
+                
                 try {
                     const exactXPath = "//span[contains(@class,'nomeTarefa') and normalize-space(text())='Pendentes de ciência ou de resposta']";
-                    let nodes = (typeof page.$x === 'function') ? await page.$x(exactXPath) : null;
-                    if (nodes && nodes.length > 0) {
-                        log(eventSender, "Nó 'Pendentes de ciência ou de resposta' encontrado (exato). Clicando...", 'Navigation', 'info');
-                        try { await clickWithRetries(nodes[0], "Nó 'Pendentes' (exato)"); } catch (e) { log(eventSender, `Falha ao clicar nó Pendentes (exato): ${e.message || e}`, 'Navigation', 'warn'); }
-                        await delay(4000);
-                        log(eventSender, `URL após clicar Pendentes (exato): ${page.url()}`, 'Navigation', 'info');
+                    // Tenta clicar via evaluate direto para evitar problemas de coordenadas
+                    const clicked = await page.evaluate(async (xp) => {
+                        const node = document.evaluate(xp, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (node) { node.click(); return true; }
+                        return false;
+                    }, exactXPath);
+
+                    if (clicked) {
+                        log(eventSender, "Nó 'Pendentes' clicado.", 'Navigation', 'info');
+                        await delay(5000);
                     } else {
-                        log(eventSender, "Nó exato 'Pendentes de ciência ou de resposta' NÃO encontrado. Tentando fallback...", 'Navigation', 'warn');
-                        const xpathFallback = "//span[contains(@class,'nomeTarefa') and contains(text(), 'Pendentes de ciência')]";
-                        nodes = (typeof page.$x === 'function') ? await page.$x(xpathFallback) : null;
-                        if (nodes && nodes.length > 0) {
-                            log(eventSender, "Nó 'Pendentes de ciência' encontrado (fallback). Clicando...", 'Navigation', 'info');
-                            try { await clickWithRetries(nodes[0], "Nó 'Pendentes' (fallback)"); } catch (e) { log(eventSender, `Falha ao clicar nó Pendentes (fallback): ${e.message || e}`, 'Navigation', 'warn'); }
-                            await delay(4000);
-                            log(eventSender, `URL após clicar Pendentes (fallback): ${page.url()}`, 'Navigation', 'info');
-                        } else {
-                            // If page.$x is not available or returned nothing, attempt to click via document.evaluate inside the page
-                            const clicked = await page.evaluate(async (x) => {
-                                try {
-                                    const node = document.evaluate(x, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                                    if (node) { node.click(); return true; }
-                                    return false;
-                                } catch (e) { return false; }
-                            }, xpathFallback);
-                            if (clicked) {
-                                log(eventSender, "Nó Pendentes clicado via evaluate() (fallback alternativo).", 'Navigation', 'info');
-                                await delay(4000);
-                                log(eventSender, `URL após clicar Pendentes (evaluate fallback): ${page.url()}`, 'Navigation', 'info');
-                            } else {
-                                const spans = await page.$$('span.nomeTarefa');
-                                let found = null;
-                                for (const s of spans) {
-                                    const t = (await s.evaluate(n => n.innerText || '')).toLowerCase();
-                                    if (t.includes('pendentes')) { found = s; break; }
-                                }
-                                if (found) {
-                                    log(eventSender, "Nó contendo 'pendentes' encontrado (último recurso). Clicando...", 'Navigation', 'info');
-                                    try { await clickWithRetries(found, "Nó 'Pendentes' (último recurso)"); } catch (e) { log(eventSender, `Falha ao clicar nó Pendentes (último recurso): ${e.message || e}`, 'Navigation', 'warn'); }
-                                    await delay(4000);
-                                    log(eventSender, `URL após clicar Pendentes (último recurso): ${page.url()}`, 'Navigation', 'info');
-                                } else {
-                                    log(eventSender, 'Nenhum nó de Pendentes encontrado. A extração pode falhar.', 'Navigation', 'error');
-                                }
-                            }
-                        }
+                        // Fallback genérico
+                         await page.evaluate(async () => {
+                             const spans = Array.from(document.querySelectorAll("span.nomeTarefa"));
+                             const target = spans.find(s => s.innerText.includes("Pendentes de ci") || s.innerText.includes("Pendentes de re"));
+                             if(target) target.click();
+                         });
+                         await delay(5000);
                     }
-                } catch (e) { log(eventSender, `Erro na navegação para Pendentes: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'warn'); }
+                } catch(e) { /* ignore */ }
+                
+            } catch (e) {
+                log(eventSender, `Erro durante navegação PJE1: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'error');
+            }
 
             } catch (e) {
                 log(eventSender, `Erro durante navegação PJE1: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'error');
@@ -2034,35 +2055,83 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                             const esperar = (ms) => new Promise(res => setTimeout(res, ms));
                             const limparTexto = (t) => t ? t.split('\n').map(l=>l.trim()).filter(l=>l.length>0).join('\n') : "";
 
-                            let xpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${cidadeNome}"]`;
-                            let result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                            let element = result.singleNodeValue;
-                            if (!element) {
-                                const menus = ["Expedientes", "Pendentes de ciência", "Pendentes de resposta"];
-                                for (const menu of menus) {
-                                    let mXpath = `//span[contains(@class, 'nomeTarefa') and contains(text(), "${menu}")]`;
-                                    let mNode = document.evaluate(mXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                                    if (mNode && mNode.offsetParent !== null) {
-                                        mNode.click();
+                            // --- FUNCOES DE NAVEGACAO E PAGINACAO ROBUSTA (Do Script DevTools) ---
+                            // Helper: find pager
+                            const findPager = (tbl) => {
+                                let el = tbl; while(el && el!==document.body){ if(el.querySelector && el.querySelector('.rich-datascr-button')) return el; el=el.parentElement; }
+                                const near = document.querySelectorAll('.rich-datascr');
+                                for(const n of near) if(n.contains(tbl) || tbl.compareDocumentPosition(n)&Node.DOCUMENT_POSITION_PRECEDING) return n;
+                                return null;
+                            };
+                            const isVisible = (el) => !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
+                            const isDisabled = (el) => {
+                                if(!el) return true;
+                                if(el.classList && el.classList.contains('rich-datascr-inact')) return true;
+                                if(el.getAttribute && el.getAttribute('aria-disabled')==='true') return true;
+                                return !!(el.style && (el.style.display==='none' || el.style.visibility==='hidden'));
+                            };
+
+                            const tryExpandMenus = async () => {
+                                const preferred = ["Pendentes de ciência ou de resposta", "Pendentes de ciência", "Pendentes de resposta", "Expedientes", "Caixa de entrada"];
+                                for (const menu of preferred) {
+                                    let menuXpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${menu}"]`;
+                                    let menuNode = document.evaluate(menuXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                                    if (!menuNode) {
+                                        menuXpath = `//span[contains(@class, 'nomeTarefa') and contains(normalize-space(text()), "${menu}")]`;
+                                        menuNode = document.evaluate(menuXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                                    }
+                                    if (menuNode) {
+                                        menuNode.click();
                                         await esperar(1000);
+                                        const cityXpath = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${cidadeNome}"]`;
+                                        const found = document.evaluate(cityXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                                        if (found) return;
                                     }
                                 }
-                                result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                                element = result.singleNodeValue;
-                            }
+                            };
 
-                            if (!element) return null;
-                            element.scrollIntoView({ block: "center", behavior: "auto" });
-                            await esperar(500);
-                            element.click();
-                            let evt = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
-                            element.dispatchEvent(evt);
-                            await esperar(4000);
+                            // Activate city logic
+                            const activateCityWithRetries = async (nm, attempts=3) => {
+                                const xp = `//span[contains(@class, 'nomeTarefa') and normalize-space(text())="${nm}"]`;
+                                for(let attempt=1; attempt<=attempts; attempt++){
+                                    if(attempt > 1) await tryExpandMenus();
+                                    let res = document.evaluate(xp, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                                    let node = res.singleNodeValue;
+                                    if(!node) { await esperar(500); res = document.evaluate(xp, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null); node = res.singleNodeValue; }
+                                    if(!node) continue;
+                                    
+                                    const clickable = node.closest('a') || node;
+                                    try{ clickable.scrollIntoView({block:'center',behavior:'auto'}); }catch(e){}
+                                    await esperar(300);
+                                    try{ clickable.click(); }catch(e){}
+                                    try{ clickable.dispatchEvent(new MouseEvent('click', {view:window,bubbles:true,cancelable:true})); }catch(e){}
+                                    
+                                    await esperar(4000); // Wait for load
+                                    const tabela = document.querySelector("table[id$='tbExpedientes']");
+                                    if(tabela && tabela.querySelectorAll('tbody > tr').length > 0) return true;
+                                    await esperar(300);
+                                }
+                                return false;
+                            };
 
+                            const ativado = await activateCityWithRetries(cidadeNome);
+                            if(!ativado) return null;
+
+                            // Extraction loop
                             let data = [];
+                            const tableSel = "table[id$='tbExpedientes']";
+                            const tableEl = document.querySelector(tableSel);
+                            const pager = tableEl ? findPager(tableEl) : null;
+                            const seenFirsts = new Set();
+                            const MAX_PAGES = 400;
+                            let guard = 0;
+
                             while (true) {
-                                let linhas = document.querySelectorAll("table[id$='tbExpedientes'] > tbody > tr");
+                                let linhas = document.querySelectorAll(tableSel + " > tbody > tr");
                                 if (linhas.length > 0) {
+                                    const firstTxt = linhas[0].innerText.trim();
+                                    if(seenFirsts.has(firstTxt)) break; // loop detected
+                                    seenFirsts.add(firstTxt);
                                     linhas.forEach(linha => {
                                         let cels = linha.querySelectorAll("td");
                                         if (cels.length >= 3) {
@@ -2071,10 +2140,39 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                                         }
                                     });
                                 }
-                                let nextBtn = document.querySelector(".rich-datascr-button[onclick*='fastforward']");
-                                if (nextBtn && !nextBtn.classList.contains('rich-datascr-inact')) {
-                                    nextBtn.click();
-                                    await esperar(1500);
+
+                                // Find next button
+                                let btnNext = null;
+                                if(pager) {
+                                    const cands = Array.from(pager.querySelectorAll('.rich-datascr-button, button, a'));
+                                    const pref = cands.find(b => {
+                                        const oc = (b.getAttribute('onclick')||'').toLowerCase();
+                                        const x = (b.innerText||'').trim();
+                                        return (oc.includes('fastforward')||oc.includes('next')||['»','>>','>','Próxima'].includes(x));
+                                    });
+                                    if(pref && isVisible(pref)) btnNext=pref;
+                                    else btnNext = cands.find(c => isVisible(c) && !isDisabled(c));
+                                }
+                                if(!btnNext) {
+                                     // Fallback global
+                                     btnNext = document.querySelector(".rich-datascr-button[onclick*='fastforward']") 
+                                              || document.querySelector(".rich-datascr-button[onclick*='next']");
+                                }
+
+                                if (btnNext && !isDisabled(btnNext)) {
+                                    btnNext.click();
+                                    // Wait for change
+                                    const prevCount = linhas.length;
+                                    const prevFirst = linhas[0]?linhas[0].innerText.trim():'';
+                                    let changed = false;
+                                    for(let w=0; w<15; w++){
+                                        await esperar(500);
+                                        const curRows = document.querySelectorAll(tableSel + " > tbody > tr");
+                                        const curFirst = curRows[0]?curRows[0].innerText.trim():'';
+                                        if(curRows.length !== prevCount || curFirst !== prevFirst){ changed=true; break; }
+                                    }
+                                    if(!changed) break; // stuck
+                                    guard++; if(guard > MAX_PAGES) break;
                                 } else {
                                     break;
                                 }
@@ -2103,115 +2201,205 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
         const runPje2 = async () => {
             log(eventSender, "Acessando PJE 2º Grau...", PJE_2_URL, 'info');
             await page.goto(PJE_2_URL, { waitUntil: 'domcontentloaded', timeout: 120000 });
+            await delay(2000);
 
-            // Solicita login manual do usuário (100% manual)
-            log(eventSender, "Aguardando login manual do usuário...", "Waiting User Input", 'warn');
-            const loginResp = await waitForInput(eventSender, ipcReceiver, 'confirm', {
-                title: 'Login PJE 2º Grau',
-                message: 'Realize o login no PJE 2 e aguarde a tela inicial carregar. Clique em Continuar quando estiver pronto.',
-                confirmText: 'Continuar'
-            });
-
-            if (loginResp === false || loginResp === 'cancel') {
-                log(eventSender, "Login cancelado pelo usuário. Pulando PJE 2.", null, 'warn');
-                return;
-            }
-
-            // Save updated storageState after successful manual login to capture HttpOnly cookies
+            // Aguarda estabilização da página (assumindo sessão do PJE 1)
             try {
-                await context.storageState({ path: PJE_STORAGE });
-                log(eventSender, `Sessão PJE salva em: ${PJE_STORAGE}`, 'PJE Session', 'success');
-            } catch (e) {
-                log(eventSender, `Erro salvando sessão PJE (2): ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
-            }
-
-            // Ensure the page is on the expected PJE 2 URL and stable before running evaluations
-            try {
-                try { await page.waitForLoadState('domcontentloaded', { timeout: 15000 }); } catch (__) {}
-                await delay(800);
-                const curUrl2 = page.url ? page.url() : '';
-                if (!curUrl2 || !curUrl2.startsWith(PJE_2_URL)) {
-                    log(eventSender, `URL atual inesperada (${curUrl2}). Navegando para ${PJE_2_URL} para estabilizar.`, 'PJE Session', 'warn');
-                    await page.goto(PJE_2_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
-                    await delay(1500);
-                }
-
-                // Wait for dashboard indicators (Mesa de Trabalho, Aguardando Leitura, tree nodes or Expedientes tab)
-                const indicators2 = ['text=Mesa de Trabalho', 'text=Aguardando Leitura', 'span.nomeTarefa', '#tabExpedientes_lbl'];
-                let foundIndicator2 = false;
-                for (const sel of indicators2) {
-                    try {
-                        await page.waitForSelector(sel, { timeout: 20000 });
-                        log(eventSender, `Indicador de painel detectado (PJE2): ${sel}`, 'PJE Session', 'info');
-                        foundIndicator2 = true;
-                        break;
-                    } catch (__) { /* try next */ }
-                }
-                if (!foundIndicator2) {
-                    log(eventSender, 'Aviso: não foi detectado indicador claro do painel PJE2 após login. Prosseguindo mesmo assim (pode falhar).', 'PJE Session', 'warn');
-                }
-            } catch (e) {
-                log(eventSender, `Aviso ao estabilizar página PJE2: ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
-            }
-
-            log(eventSender, "Confirmado. Iniciando varredura PJE 2...", null, 'info');
-
-            // Navegar até o local correto (Lógica do User: mariana campelo -> Expedientes -> Apenas pendentes)
-            await page.evaluate(async () => {
-                const esperar = ms => new Promise(r => setTimeout(r, ms));
-                console.log("Iniciando navegação interna PJE 2...");
-
-                // 1. Expedientes (Tab)
-                // Tenta clicar na aba Expedientes se ela existir
-                let tabExp = document.querySelector("td[class*='abaExpediendes']"); 
-                if(!tabExp) tabExp = document.evaluate("//td[contains(text(), 'Expedientes')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                // Tenta esperar indicadores de sucesso
+                await Promise.any([
+                    page.waitForSelector('text=Mesa de Trabalho', { timeout: 15000 }),
+                    page.waitForSelector('#tabExpedientes_lbl', { timeout: 15000 }),
+                    page.waitForSelector('span.nomeTarefa', { timeout: 15000 }),
+                    page.waitForSelector('td.rich-tab-header', { timeout: 15000 })
+                ]).catch(() => {});
                 
+                log(eventSender, "PJE 2 carregado/estabilizado.", null, 'info');
+            } catch (e) {
+                log(eventSender, "Aviso: Tempo limite aguardando carga completa do PJE 2.", null, 'warn');
+            }
+
+            log(eventSender, "Iniciando navegação interna PJE 2 (Modo Cirúrgico)...", null, 'info');
+
+            // --- NAVEGAÇÃO PJE 2 (REPLICADA DO PJE 1) ---
+            
+            try {
+                 // 1) Selecionar perfil de Procuradoria (Se necessário)
+                try {
+                    // Clica no menu dropdown do usuário
+                    const menuLink = await page.$('.menu-usuario .dropdown-toggle');
+                    if (menuLink && await menuLink.isVisible()) {
+                        log(eventSender, "(PJE 2) Verificando menu de usuário...", 'Navigation', 'info');
+                        await menuLink.click();
+                        await delay(800);
+                        
+                        // Localiza o link específico da Procuradoria
+                        const profileLink = await page.evaluateHandle(() => {
+                             const anchors = Array.from(document.querySelectorAll("#papeisUsuarioForm\\:dtPerfil a"));
+                             return anchors.find(a => {
+                                 const t = (a.innerText || "").toUpperCase();
+                                 return t.includes("PROCURADORIA") && (t.includes("COELBA") || t.includes("ELETRICIDADE"));
+                             });
+                        });
+
+                        if (profileLink) {
+                             const nomePerfil = await profileLink.evaluate(el => el.innerText);
+                             log(eventSender, `(PJE 2) Perfil encontrado: ${nomePerfil}. Trocando...`, 'Navigation', 'info');
+                             await profileLink.evaluate(el => el.click());
+                             log(eventSender, "Aguardando recarregamento do perfil (PJE 2)...", 'Navigation', 'warn');
+                             await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => {});
+                             await delay(3000);
+                        } else {
+                            // Se não achar, apenas fecha o menu ou segue
+                            log(eventSender, "(PJE 2) Perfil alvo não encontrado ou já ativo.", 'Navigation', 'info');
+                             // Tenta fechar menu
+                            await page.keyboard.press('Escape');
+                        }
+                    }
+                } catch (e) { log(eventSender, `(PJE 2) Erro na verificação de perfil: ${e.message}`, 'Navigation', 'warn'); }
+
+
+                // --- PASSO NOVO: Navegar pelo Menu Principal até o Painel do Advogado ---
+                try {
+                    log(eventSender, '(PJE 2) Tentando acessar Painel do Representante via Menu...', 'Navigation', 'info');
+                    
+                    // 1. Clicar no botão "Abrir menu" (Hamburger)
+                    // Seletor: a.botao-menu[title="Abrir menu"]
+                    const btnMenu = await page.$('a.botao-menu[title="Abrir menu"]');
+                    if (btnMenu) {
+                        log(eventSender, '(PJE 2) Abrindo Menu Principal...', 'Navigation', 'info');
+                        await btnMenu.evaluate(el => el.click());
+                        await delay(1000);
+
+                        // 2. Expandir submenu "Painel"
+                        // Busca por link que tenha icone desktop e texto Painel
+                        const linkPainel = await page.evaluateHandle(() => {
+                            // Procura todos os links visíveis no menu
+                            const links = Array.from(document.querySelectorAll('ul.ul-menu a'));
+                            return links.find(a => a.innerText.includes('Painel') && a.querySelector('.fa-desktop'));
+                        });
+
+                        if (linkPainel) {
+                            log(eventSender, '(PJE 2) Expandindo submenu Painel...', 'Navigation', 'info');
+                            await linkPainel.evaluate(el => el.click());
+                            await delay(1000);
+
+                            // 3. Clicar em "Painel do representante processual"
+                            // href="/pje/Painel/painel_usuario/advogado.seam"
+                            const linkRep = await page.evaluateHandle(() => {
+                                const links = Array.from(document.querySelectorAll('ul.ul-menu a'));
+                                return links.find(a => 
+                                    a.innerText.includes('Painel do representante processual') || 
+                                    (a.getAttribute('href') && a.getAttribute('href').includes('advogado.seam'))
+                                );
+                            });
+
+                            if (linkRep) {
+                                log(eventSender, '(PJE 2) Clicando em Painel do Representante..', 'Navigation', 'info');
+                                await linkRep.evaluate(el => el.click());
+                                log(eventSender, 'Aguardando navegação para o Painel...', 'Navigation', 'warn');
+                                await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(e => log(eventSender, "Timeout nav painel (ok se AJAX).", 'warn'));
+                                await delay(3000);
+                            } else {
+                                log(eventSender, '(PJE 2) Link "Painel do representante" não encontrado.', 'Navigation', 'warn');
+                            }
+                        } else {
+                            log(eventSender, '(PJE 2) Submenu "Painel" não encontrado.', 'Navigation', 'warn');
+                        }
+                    } else {
+                        log(eventSender, '(PJE 2) Botão de Menu Principal não encontrado. Tentando seguir...', 'Navigation', 'warn');
+                    }
+
+                } catch(e) {
+                    log(eventSender, `(PJE 2) Erro na navegação de menu: ${e.message}`, 'Navigation', 'warn');
+                }
+                // --------------------------------------------------------------------------
+
+
+                // 2) Aba Expedientes (Idêntico ao PJE 1)
+                const tabExp = await page.$('#tabExpedientes_lbl');
                 if (tabExp) {
-                    tabExp.click();
-                    await esperar(2000);
-                }
-
-                // 2. "Apenas pendentes de ciência"
-                // Procura o nó na árvore
-                let xpathNode = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Apenas pendentes de ciência')]";
-                let node = document.evaluate(xpathNode, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                
-                if (node) {
-                    node.scrollIntoView({block: 'center'});
-                    node.click();
-                    await esperar(4000); // Aguarda carregar a sub-arvore
+                    // Verifica se já está ativo (active)
+                    const classes = await tabExp.getAttribute('class');
+                    if (classes && !classes.includes('rich-tab-header-act')) {
+                        log(eventSender, '(PJE 2) Clicando aba Expedientes...', 'Navigation', 'info');
+                        // Clique JSF nativo
+                        await tabExp.evaluate(el => el.click());
+                        await delay(4000); // Aguarda AJAX
+                    } else {
+                        log(eventSender, '(PJE 2) Aba Expedientes já ativa.', 'Navigation', 'info');
+                    }
                 } else {
-                    console.warn("Nó 'Apenas pendentes de ciência' não encontrado. Tentando 'Pendentes de ciência'...");
-                    // Fallback
-                    let xpathAlt = "//span[contains(@class, 'nomeTarefa') and contains(text(), 'Pendentes de ciência')]";
-                    let nodeAlt = document.evaluate(xpathAlt, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                    if(nodeAlt) {
-                         nodeAlt.click();
-                         await esperar(4000);
+                    log(eventSender, '(PJE 2) Aba Expedientes não encontrada pelo ID #tabExpedientes_lbl.', null, 'warn');
+                    // Tenta fallback classe
+                    const tabExpCls = await page.$('td.rich-tab-header');
+                    if(tabExpCls) {
+                         const txt = await tabExpCls.innerText();
+                         if(txt.includes('Expedientes')) {
+                             await tabExpCls.evaluate(el => el.click());
+                             await delay(4000);
+                         }
                     }
                 }
-            });
+
+                // 3. Nó Pendentes
+                const exactXPath = "//span[contains(@class,'nomeTarefa') and (contains(text(), 'Pendentes de ciência') or contains(text(), 'Pendentes de resposta'))]";
+                const clicked = await page.evaluate(async (xp) => {
+                    const node = document.evaluate(xp, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    if (node) { node.click(); return true; }
+                    return false;
+                }, exactXPath);
+
+                if (clicked) {
+                    log(eventSender, "(PJE 2) Nó 'Pendentes' clicado.", 'Navigation', 'info');
+                    await delay(4000);
+                } else {
+                    log(eventSender, "(PJE 2) Nó 'Pendentes' não encontrado prontamente.", 'Navigation', 'warn');
+                }
+
+            } catch (e) {
+                log(eventSender, `(PJE 2) Navegação interna: ${e.message}`, null, 'warn');
+            }
 
             // --- SCAN PJE 2 ---
-            const scanPje2 = await safeEvaluate(() => {
-                const limparNomeNo = (nomeCompleto) => {
-                    let nome = nomeCompleto.toUpperCase().trim();
-                    nome = nome.replace(/\s*\(\d+\)/g, '').trim();
-                    return nome;
-                };
+            // Antes de escanear, verificamos se os nós alvo estão visíveis. Se não, pedimos ajuda ao usuário.
+            let scanPje2 = [];
+            let retryScan = true;
+            
+            while(retryScan && !isStopping) {
+                scanPje2 = await safeEvaluate(() => {
+                    const limparNomeNo = (nomeCompleto) => {
+                        let nome = nomeCompleto.toUpperCase().trim();
+                        nome = nome.replace(/\s*\(\d+\)/g, '').trim();
+                        return nome;
+                    };
+                    let nosDaArvore = Array.from(document.querySelectorAll(".rich-tree-node-text a"));
+                    return nosDaArvore.filter(el => {
+                        const nome = el.innerText.trim().toUpperCase();
+                        return nome.includes("TRIBUNAL DE JUSTIÇA") || nome.includes("TURMAS RECURSAIS");
+                    }).map((el, index) => ({
+                        index: index,
+                        nomeOriginal: el.innerText.trim(),
+                        nomeLimpo: limparNomeNo(el.innerText)
+                    }));
+                });
 
-                let nosDaArvore = Array.from(document.querySelectorAll(".rich-tree-node-text a"));
-                let listaNos = nosDaArvore.filter(el => {
-                    const nome = el.innerText.trim().toUpperCase();
-                    return nome.includes("TRIBUNAL DE JUSTIÇA") || nome.includes("TURMAS RECURSAIS");
-                }).map((el, index) => ({
-                    index: index,
-                    nomeOriginal: el.innerText.trim(),
-                    nomeLimpo: limparNomeNo(el.innerText)
-                }));
-
-                return listaNos;
-            });
+                if (scanPje2 && scanPje2.length > 0) {
+                    retryScan = false;
+                } else {
+                    log(eventSender, "PJE 2: Nós 'Tribunal' ou 'Turmas' não encontrados na tela.", null, 'warn');
+                    const help = await waitForInput(eventSender, ipcReceiver, 'confirm', {
+                        title: 'Ajuda na Navegação (PJE 2)',
+                        message: 'O robô não encontrou "Tribunal de Justiça" ou "Turmas Recursais".\n\nPor favor, navegue manualmente na árvore à esquerda até que esses nomes estejam visíveis.\n\nClique em Continuar quando eles aparecerem.',
+                        confirmText: 'Continuar (Escanear novamente)',
+                        cancelText: 'Pular PJE 2'
+                    });
+                    if (help === false || help === 'cancel') {
+                        retryScan = false;
+                        scanPje2 = []; // aborta PJE 2
+                    }
+                    // se continuar, o loop roda de novo e tenta escanear
+                }
+            }
 
             if (scanPje2 && scanPje2.length > 0) {
                 log(eventSender, `PJE 2: Encontrados ${scanPje2.length} nós.`, null, 'success');
