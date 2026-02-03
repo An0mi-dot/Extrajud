@@ -105,6 +105,92 @@
             z-index: 1;
         }
 
+        /* --- INTRO ANIMATION --- */
+        #intro-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease-in-out;
+        }
+        #intro-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .intro-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .intro-logo {
+            width: 80px; height: 80px;
+            color: var(--primary-color);
+            animation: pulse-logo 2s infinite;
+        }
+        .intro-logo svg { width: 100%; height: 100%; }
+        
+        @keyframes pulse-logo {
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(16,185,129,0.3)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 25px rgba(16,185,129,0.6)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(16,185,129,0.3)); }
+        }
+
+        .intro-title {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--text-color);
+            opacity: 0;
+            animation: slide-up 0.8s forwards 0.5s;
+        }
+        
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .intro-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(128,128,128,0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+            margin-top: 10px;
+        }
+        .intro-progress {
+            position: absolute;
+            left: 0; top: 0; height: 100%;
+            width: 0%;
+            background: var(--primary-color);
+            animation: progress-fill 2.5s ease-in-out forwards 0.8s;
+        }
+        @keyframes progress-fill {
+            0% { width: 0%; }
+            50% { width: 40%; }
+            80% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .intro-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: monospace;
+            opacity: 0;
+            animation: text-blink 2.5s forwards 1s;
+        }
+        @keyframes text-blink {
+            0% { opacity: 0; }
+            20% { opacity: 1; content: "Carregando..."; }
+            100% { opacity: 1; }
+        }
+        /* ----------------------- */
+
         .service-card {
             /* Variable placeholder */
             --mouse-x: 0px;
@@ -554,8 +640,23 @@
             } catch(e) { /* ignore if not available */ }
         })();
     </script>
+    <div id="intro-overlay">
+        <div class="intro-content">
+            <div class="intro-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+            <div class="intro-title">EXTRATJUD</div>
+            <div class="intro-bar">
+                <div class="intro-progress"></div>
+            </div>
+            <div class="intro-status">Inicializando sistema...</div>
+        </div>
+    </div>
+
     <!-- Loader overlay shown while app loads -->
-    <div id="app-loader" role="status" aria-live="polite">
+    <div id="app-loader" role="status" aria-live="polite" style="display:none;">
         <div class="loader-box">
             <div class="spinner" aria-hidden="true"></div>
             <div class="loader-text">Carregando aplicação...</div>
@@ -1296,6 +1397,15 @@
 
             // close when clicking outside
             window.addEventListener('click', (ev) => { if(ev.target === modalUpd) closeModal(); });
+
+            // --- Intro Animation Logic ---
+            setTimeout(() => {
+                const overlay = document.getElementById('intro-overlay');
+                if(overlay) {
+                    overlay.classList.add('fade-out');
+                    setTimeout(() => { overlay.remove(); document.body.classList.add('loaded'); }, 800);
+                }
+            }, 3500); // 3.5s total duration
         })();
     </script>
 
