@@ -2007,10 +2007,6 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                 log(eventSender, `Erro durante navegação PJE1: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'error');
             }
 
-            } catch (e) {
-                log(eventSender, `Erro durante navegação PJE1: ${e && e.message ? e.message : String(e)}`, 'Navigation', 'error');
-            }
-
             // SCAN PJE 1
             const scanPje1 = await safeEvaluate(async () => {
                 let nosIniciais = Array.from(document.querySelectorAll("span.nomeTarefa"));
