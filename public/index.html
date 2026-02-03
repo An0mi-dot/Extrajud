@@ -88,6 +88,56 @@
             opacity: 1;
         }
 
+        /* --- PROCEDURAL ANIMATIONS CSS --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; /* Changed from -1 to 0 to be visible above body bg */
+            pointer-events: none;
+        }
+
+        /* Ensure content sits above the canvas */
+        .header, .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .service-card {
+            /* Variable placeholder */
+            --mouse-x: 0px;
+            --mouse-y: 0px;
+        }
+
+        /* Glow effect overlay */
+        .service-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            background: radial-gradient(
+                600px circle at var(--mouse-x) var(--mouse-y),
+                rgba(16, 185, 129, 0.06),
+                transparent 40%
+            );
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .service-card:hover::before {
+            opacity: 1;
+        }
+        
+        .service-card > * {
+            position: relative;
+            z-index: 1;
+        }
+        /* -------------------------------- */
+
         .header {
             background-color: var(--card-bg);
             padding: 20px 40px;
@@ -480,6 +530,7 @@
     </style>
 </head>
 <body>
+    <canvas id="bg-canvas"></canvas>
     <script>
         // Show top-level JS errors to user (no app-clock used)
         window.onerror = function(message, source, lineno, colno, error) {
@@ -1248,5 +1299,92 @@
         })();
     </script>
 
+    <!-- Procedural Animation & Card Spotlight Logic -->
+    <script>
+        (function() {
+            // --- 1. Background Particles ---
+            const canvas = document.getElementById('bg-canvas');
+            if(canvas) {
+                const ctx = canvas.getContext('2d');
+                let width, height;
+                let particles = [];
+                const particleCount = 60;
+                const connectionDistance = 150;
+                
+                function resize() {
+                    width = window.innerWidth;
+                    height = window.innerHeight;
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+                window.addEventListener('resize', resize);
+                resize();
+                
+                class Particle {
+                    constructor() {
+                        this.x = Math.random() * width;
+                        this.y = Math.random() * height;
+                        this.vx = (Math.random() - 0.5) * 0.4;
+                        this.vy = (Math.random() - 0.5) * 0.4;
+                        this.size = Math.random() * 2 + 1;
+                    }
+                    update() {
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        if(this.x < 0 || this.x > width) this.vx *= -1;
+                        if(this.y < 0 || this.y > height) this.vy *= -1;
+                    }
+                    draw() {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(16, 185, 129, 0.4)'; // Increased opacity
+                        ctx.fill();
+                    }
+                }
+                
+                for(let i=0; i<particleCount; i++) particles.push(new Particle());
+                
+                function animate() {
+                    ctx.clearRect(0, 0, width, height);
+                    particles.forEach((p, i) => {
+                        p.update();
+                        p.draw();
+                        for(let j=i+1; j<particles.length; j++) {
+                            const p2 = particles[j];
+                            const dx = p.x - p2.x;
+                            const dy = p.y - p2.y;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            if(dist < connectionDistance) {
+                                ctx.beginPath();
+                                ctx.moveTo(p.x, p.y);
+                                ctx.lineTo(p2.x, p2.y);
+                                ctx.strokeStyle = `rgba(16, 185, 129, ${0.12 * (1 - dist/connectionDistance)})`;
+                                ctx.lineWidth = 1;
+                                ctx.stroke();
+                            }
+                        }
+                    });
+                    requestAnimationFrame(animate);
+                }
+                animate();
+            }
+            
+            // --- 2. Card Spotlight ---
+            const cards = document.querySelectorAll('.service-card');
+            if(cards.length > 0) {
+                // Throttle for performance? Not strictly needed for modern engines if calc is simple.
+                document.body.addEventListener('mousemove', (e) => {
+                    const { clientX, clientY } = e;
+                    cards.forEach(card => {
+                        const rect = card.getBoundingClientRect();
+                        const x = clientX - rect.left;
+                        const y = clientY - rect.top;
+                        card.style.setProperty('--mouse-x', `${x}px`);
+                        card.style.setProperty('--mouse-y', `${y}px`);
+                    });
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
