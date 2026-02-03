@@ -571,6 +571,10 @@ ipcMain.on('run-pje-script', (event, args) => {
     automacaoService.runPjeAutomation(event.sender, ipcMain, args);
 });
 
+ipcMain.on('skip-pje-script', (event) => {
+    automacaoService.skipCurrentStep(event.sender);
+});
+
 ipcMain.on('stop-script', (event) => {
     automacaoService.stopAutomation(event.sender);
     event.sender.send('log-message', 'Processo de parada iniciado...');

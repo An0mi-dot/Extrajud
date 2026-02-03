@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extrator PROJUDI - Automação Jurídica</title>
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #10b981;
@@ -20,7 +22,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -30,6 +32,21 @@
             overflow: hidden;
             opacity: 0; /* Fade in start */
             transition: opacity 0.4s ease-in-out;
+        }
+
+        /* Typography Updates */
+        h1, h2, h3, .brand, .card h3 {
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        button, .menu-label, .status-badge, .log-header {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .card .value, #logs, code {
+            font-family: 'JetBrains Mono', monospace;
         }
 
         body.loaded {

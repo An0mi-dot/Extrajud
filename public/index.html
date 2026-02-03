@@ -948,10 +948,32 @@
                     ipcRenderer.send('save-app-state', cur);
                 } catch (e) { /* ignore */ }
 
-                document.body.style.opacity = '0';
+                // Show Intro Overlay as Loading Indicator
+                const overlay = document.getElementById('intro-overlay');
+                if (overlay) {
+                    overlay.classList.remove('fade-out');
+                    overlay.style.display = 'flex';
+                    overlay.style.opacity = '1';
+                    
+                    // Reset animations if possible to make it look like "loading"
+                    // Force restart of progress bar
+                    const bar = overlay.querySelector('.intro-progress');
+                    if(bar) {
+                        bar.style.animation = 'none';
+                        bar.offsetHeight; /* trigger reflow */
+                        bar.style.animation = 'progress-fill 2.5s ease-in-out forwards 0s';
+                    }
+                    const txt = overlay.querySelector('.intro-status');
+                    if(txt) {
+                        txt.style.animation = 'none';
+                        txt.textContent = 'Carregando Serviço...';
+                        txt.style.opacity = '1';
+                    }
+                }
+
                 setTimeout(() => {
                     window.location.href = target;
-                }, 400); // Espera a animação
+                }, 100); 
             });
         });
 
@@ -1411,13 +1433,28 @@
             window.addEventListener('click', (ev) => { if(ev.target === modalUpd) closeModal(); });
 
             // --- Intro Animation Logic ---
-            setTimeout(() => {
-                const overlay = document.getElementById('intro-overlay');
-                if(overlay) {
-                    overlay.classList.add('fade-out');
-                    setTimeout(() => { overlay.remove(); document.body.classList.add('loaded'); }, 800);
+            const overlay = document.getElementById('intro-overlay');
+            const hasSeenIntro = sessionStorage.getItem('extjt-intro-seen');
+
+            if (overlay) {
+                if (hasSeenIntro) {
+                    // Skip animation instantly if already seen in this session
+                    overlay.style.display = 'none';
+                    // We keep the element in DOM for reuse as a loading screen
+                    document.body.classList.add('loaded');
+                } else {
+                    // Play animation if first time
+                    setTimeout(() => {
+                        overlay.classList.add('fade-out');
+                        setTimeout(() => { 
+                            overlay.style.display = 'none'; // Hide instead of remove
+                            overlay.classList.remove('fade-out'); // Reset class for next use (but keep hidden)
+                            document.body.classList.add('loaded'); 
+                            sessionStorage.setItem('extjt-intro-seen', 'true');
+                        }, 800);
+                    }, 3500); 
                 }
-            }, 3500); // 3.5s total duration
+            }
         })();
     </script>
 
