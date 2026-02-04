@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -398,6 +399,12 @@ ipcMain.handle('check-for-updates', async () => {
 });
 
 ipcMain.on('perform-update', (event, url) => {
+  if (url === 'restart') {
+      try {
+          autoUpdater.quitAndInstall();
+      } catch(e) { console.error('AutoUpdater quitAndInstall error', e); }
+      return;
+  }
   try { if (url) shell.openExternal(url); }
   catch (e) { console.error('perform-update', e); }
 });
@@ -515,32 +522,27 @@ app.whenReady().then(() => {
     }
   } catch (e) { /* ignore */ }
 
-  // check auto-update on startup if enabled (opt-in)
-  (async () => {
-    try {
-      const state = readStateFile();
-      const updateCfg = (state.update && state.update) || {};
-      const updateServer = updateCfg.updateServer || (require(path.join(__dirname, 'package.json')).updateServer) || null;
-      if (updateCfg.autoUpdate && updateServer) {
-        try {
-          const meta = await fetchJson(updateServer);
-          if (!meta || meta.__raw) return; // ignore invalid or non-JSON meta when auto-checking
-          const localVer = require(path.join(__dirname, 'package.json')).version || '0.0.0';
-          const latest = meta.version || meta.tag_name || null;
-          const toParts = (v) => (''+v).replace(/^v/i,'').split('.').map(n => parseInt(n)||0);
-          const L = toParts(latest), C = toParts(localVer);
-          let newer = false;
-          for (let i=0;i<Math.max(L.length,C.length);i++) {
-            if ((L[i]||0) > (C[i]||0)) { newer = true; break; }
-            if ((L[i]||0) < (C[i]||0)) break;
-          }
-          if (newer && (meta.url || meta.html_url || meta.download_url)) {
-            shell.openExternal(meta.url || meta.html_url || meta.download_url);
-          }
-        } catch (e) { /* ignore */ }
-      }
-    } catch (e) { /* ignore */ }
-  })();
+  // --- Auto-Updater Setup ---
+  try {
+     autoUpdater.logger = console;
+     // Trigger check
+     autoUpdater.checkForUpdatesAndNotify();
+
+     autoUpdater.on('update-available', (info) => {
+        // Notify frontend
+        const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
+        if(win) win.webContents.send('updater:status', { status: 'available', info });
+     });
+     
+     autoUpdater.on('update-downloaded', (info) => {
+        const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
+        if(win) win.webContents.send('updater:status', { status: 'ready', info });
+     });
+     
+     autoUpdater.on('error', (err) => {
+        console.error('Updater Error:', err);
+     });
+  } catch(e) { console.error('Updater Init Failed:', e); }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

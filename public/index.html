@@ -239,23 +239,72 @@
         /* -------------------------------- */
 
         .header {
-            background-color: var(--card-bg);
-            padding: 20px 40px;
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.85);
+            /* Subtle premium gradients */
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 25%),
+                radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 25%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 14px 40px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+        }
+
+        /* Header Dark Mode */
+        html.dark .header {
+            background: rgba(31, 36, 40, 0.85);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 30%),
+                radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 30%);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
         }
 
         .brand {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary-color);
+            font-size: 26px;
+            font-weight: 800;
+            /* Gradient Text */
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
+            letter-spacing: -0.5px;
+            position: relative;
         }
+
+        /* Badge Beta/V2 */
+        .brand::after {
+            content: "HUB";
+            font-size: 10px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            font-family: 'JetBrains Mono', monospace;
+            -webkit-text-fill-color: var(--primary-color);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* Brand Logo refinement */
+        .brand img {
+            height: 90px !important; /* Aumentado para destaque */
+            width: auto;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)); /* Sombra estática para "pop" */
+        }
+        
+        /* Animações removidas conforme solicitado */
 
         .brand svg {
             width: 32px;
@@ -1431,6 +1480,58 @@
 
             // close when clicking outside
             window.addEventListener('click', (ev) => { if(ev.target === modalUpd) closeModal(); });
+
+            // --- Auto-Updater Listeners ---
+            ipcRenderer.on('updater:status', (ev, data) => {
+                if (!document.getElementById('upd-anim-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'upd-anim-style';
+                    style.textContent = `@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
+                    document.head.appendChild(style);
+                }
+
+                if(data.status === 'available') {
+                    const banner = document.createElement('div');
+                    Object.assign(banner.style, {
+                        position: 'fixed', bottom: '20px', right: '20px',
+                        backgroundColor: '#10b981', color: '#fff',
+                        padding: '16px 24px', borderRadius: '8px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                        zIndex: '99999', display: 'flex', alignItems: 'center', gap: '12px',
+                        fontFamily: "'Inter', sans-serif", fontSize: '14px',
+                        animation: 'slideIn 0.4s ease-out'
+                    });
+                    banner.innerHTML = `
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <div>
+                            <div style="font-weight:600">Atualização v${data.info.version} encontrada</div>
+                            <div style="opacity:0.9">Baixando em segundo plano...</div>
+                        </div>
+                    `;
+                    document.body.appendChild(banner);
+                    setTimeout(() => { if(banner.parentNode) banner.remove(); }, 6000); 
+                }
+                if(data.status === 'ready') {
+                    const banner = document.createElement('div');
+                    Object.assign(banner.style, {
+                        position: 'fixed', bottom: '20px', right: '20px',
+                        backgroundColor: '#059669', color: '#fff', /* Darker green for action */
+                        padding: '16px 24px', borderRadius: '8px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                        zIndex: '100000', cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                        fontFamily: "'Inter', sans-serif", fontSize: '14px',
+                        animation: 'slideIn 0.4s ease-out'
+                    });
+                    banner.innerHTML = `
+                        <div style="font-weight:600; margin-bottom:4px; display:flex; align-items:center; gap:8px">
+                             <span>🚀 Atualização Pronta</span>
+                        </div>
+                        <div style="opacity:0.9">Clique para reiniciar e instalar v${data.info.version}</div>
+                    `;
+                    banner.onclick = () => ipcRenderer.send('perform-update', 'restart');
+                    document.body.appendChild(banner);
+                }
+            });
 
             // --- Intro Animation Logic ---
             const overlay = document.getElementById('intro-overlay');
