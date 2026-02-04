@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrator PJE - TJBA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --primary-hover: #059669;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #dfe1e5;
+            --log-bg: #1e1e1e;
+            --log-text: #00ff9d;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        body.loaded { opacity: 1; }
+
+        /* Sidebar similar to extrator_projudi */
+        .sidebar {
+            width: 280px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.02);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        /* Typography */
+        h1, h2, h3, .brand, .modal-title {
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-back {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: #666;
+            padding: 8px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-back:hover {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .label-section {
+            font-size: 11px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        button.btn-action {
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        button.btn-action:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        #btnStart { background-color: var(--primary-color); color: white; }
+        #btnStart:hover:not(:disabled) { background-color: var(--primary-hover); }
+
+        #btnStop { background-color: white; color: var(--danger-color); border: 1px solid var(--danger-color); }
+        #btnStop:hover:not(:disabled) { background-color: #fff5f5; }
+
+        .btn-secondary {
+            background-color: #eef2ff; color: #4338ca;
+            font-size: 13px; padding: 10px;
+        }
+        .btn-secondary:hover { background-color: #e0e7ff; }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+            min-width: 0;
+        }
+
+        .info-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .alert-box {
+            background: #fff7ed;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        /* Logs Console (Standardized) */
+        .logs-wrapper {
+            flex: 1;
+            background-color: var(--log-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .logs-header {
+            background-color: #2d2d2d;
+            padding: 8px 15px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .dots { display: flex; gap: 6px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
+        
+        .log-title-text { color: #aaa; font-size: 12px; font-family: 'Inter', sans-serif; margin-left:10px;}
+
+        #logs {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #d4d4d4;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .log-entry { margin-bottom: 4px; padding-left: 8px; border-left: 3px solid transparent; }
+        .log-info { border-left-color: #3b82f6; }
+        .log-success { border-left-color: #10b981; color: #a7f3d0; }
+        .log-warning { border-left-color: #f59e0b; color: #fde68a; }
+        .log-error { border-left-color: #ef4444; color: #fca5a5; }
+
+        /* Utilities */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Modal (Standard) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 12px; width: 400px;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.1);
+        }
+        .modal-input { width: 100%; padding: 10px; margin-top:10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .modal-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <i class="fas fa-gavel"></i> EXTRATOR PJE
+        </div>
+        
+        <button class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar ao Hub
+        </button>
+
+        <div class="control-group">
+            <div class="label-section">Automação</div>
+            <button id="btnStart" class="btn-action" onclick="startAutomation()">
+                <i class="fas fa-play"></i> INICIAR SERVIÇO
+            </button>
+            <button id="btnStop" class="btn-action" onclick="stopAutomation()" style="display:none;">
+                <i class="fas fa-stop"></i> PARAR SERVIÇO
+            </button>
+            <button id="btnSkip" class="btn-action btn-secondary" onclick="skipAutomation()" style="display:none; border:1px solid #ccc; color:#555;">
+                <i class="fas fa-forward"></i> PULAR ETAPA
+            </button>
+        </div>
+
+
+
+        <div class="control-group" style="margin-top:auto;">
+            <div class="label-section">Destino dos Arquivos</div>
+            <div style="display:flex; gap:5px; margin-top:5px;">
+                <input type="text" id="inp-output-dir" readonly placeholder="Pasta Padrão" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:11px; color:#555; background:#f9f9f9; font-family:'Inter',sans-serif;">
+                <button id="btn-select-dir" style="padding:0 8px; width:40px; border:1px solid #ccc; background:#eee; cursor:pointer; border-radius:4px;" title="Selecionar Pasta">
+                    <i class="fas fa-folder-open" style="color:#555; font-size:12px;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Banner Dev -->
+        <div class="alert-box">
+            <strong>EM DESENVOLVIMENTO:</strong> Funcionalidades de extração em fase beta. Verifique sempre os arquivos gerados.
+        </div>
+
+        <div class="info-card">
+            <strong>Fluxo de Trabalho:</strong> O robô abrirá o navegador PJE. Realize o login manualmente. Após o login, a navegação será automática para extração de expedientes (Citações/Intimações) de 1º e 2º Grau.
+        </div>
+
+        <div class="logs-wrapper">
+            <div class="logs-header">
+                <div style="display:flex; align-items:center;">
+                    <div class="dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <span class="log-title-text">TERMINAL DE EXECUÇÃO</span>
+                </div>
+                <button onclick="copyLog()" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Copiar Log">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="dynamicModal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <div id="modalTitle" class="modal-title" style="font-size:18px;">Título</div>
+                <button id="modalCloseX" style="background:none; border:none; font-size:20px; cursor:pointer; color:#999;">&times;</button>
+            </div>
+            <div id="modalBody" style="font-size:14px; color:#444;"></div>
+            <div class="modal-actions">
+                <button id="modalCancelBtn" class="btn-action btn-secondary" style="background:#f1f1f1; color:#555;">Cancelar</button>
+                <button id="modalConfirmBtn" class="btn-action" style="background:var(--primary-color); color:#fff;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        const btnStart = document.getElementById('btnStart');
+        const btnStop = document.getElementById('btnStop');
+        const logArea = document.getElementById('logs'); 
+        const modal = document.getElementById('dynamicModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+        // --- Page Transitions ---
+        window.addEventListener('DOMContentLoaded', () => { document.body.classList.add('loaded'); });
+        document.querySelector('.btn-back').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.body.classList.remove('loaded');
+            setTimeout(() => { window.location.href = 'index.html'; }, 400); 
+        });
+
+        // --- State & Logs Persistence ---
+        let fullLogs = [];
+        let saveTimer = null;
+        const MAX_SAVED_LOGS = 300;
+
+        function scheduleSave() {
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                try {
+                    const state = ipcRenderer.invoke('load-app-state'); 
+                    (async () => {
+                        const cur = await state;
+                        cur.pje = cur.pje || {};
+                        cur.pje.logs = fullLogs.slice(-MAX_SAVED_LOGS);
+                        cur.pje.isRunning = (btnStop.style.display !== 'none');
+                        cur.pje.scrollTop = logArea.scrollTop;
+                        cur.pje.outputDir = (document.getElementById('inp-output-dir') ? document.getElementById('inp-output-dir').value : '');
+                        ipcRenderer.send('save-app-state', cur);
+                    })();
+                } catch (e) { console.error('scheduleSave error', e); }
+            }, 800);
+        }
+
+        async function restoreState() {
+            try {
+                const state = await ipcRenderer.invoke('load-app-state');
+                const s = state && state.pje ? state.pje : null;
+                if (!s) return;
+                if (Array.isArray(s.logs)) {
+                    s.logs.forEach(l => addLog(l.msg || l, l.type ? ('log-'+l.type) : 'log-info', false));
+                    if (s.scrollTop) logArea.scrollTop = s.scrollTop;
+                }
+                if (s.outputDir && document.getElementById('inp-output-dir')) {
+                    document.getElementById('inp-output-dir').value = s.outputDir;
+                }
+                if (s.isRunning) {
+                    btnStart.style.display = 'none'; btnStop.style.display = 'flex';
+                }
+            } catch (e) { console.error('Error restoring PJE state', e); }
+        }
+
+        // Listeners
+        ipcRenderer.on('log-message', (event, data) => {
+            if (typeof data === 'string') addLog(data, 'log-info');
+            else {
+                let cssClass = 'log-info';
+                if(data.type === 'success') cssClass = 'log-success';
+                else if(data.type === 'error') cssClass = 'log-error';
+                else if(data.type === 'warning') cssClass = 'log-warning';
+                addLog(`> ${data.msg}`, cssClass);
+            }
+        });
+
+        ipcRenderer.on('automation-status', (event, status) => {
+            if (status === true) { 
+                btnStart.style.display = 'none'; 
+                btnStop.style.display = 'flex'; 
+                btnSkip.style.display = 'flex';
+                btnStop.disabled = false;
+                btnSkip.disabled = false;
+            }
+            else if (status === false) { 
+                btnStart.style.display = 'flex'; 
+                btnStop.style.display = 'none'; 
+                btnSkip.style.display = 'none';
+            }
+            else if (status === 'stopping') { 
+                btnStop.disabled = true; 
+                btnSkip.disabled = true;
+            }
+            scheduleSave();
+        });
+
+        window.addEventListener('DOMContentLoaded', () => { restoreState(); });
+
+        ipcRenderer.on('script-finished', () => {
+             btnStart.style.display = 'flex';
+             btnStop.style.display = 'none';
+             btnSkip.style.display = 'none';
+             btnStop.disabled = false;
+             addLog('[DONE] Execução finalizada.', 'log-success');
+             scheduleSave();
+        });
+
+        ipcRenderer.on('request-pje-input', (event, data) => { showModal(data); });
+
+        function addLog(msg, typeClass, doSave = true) {
+            const div = document.createElement('div');
+            div.className = `log-entry ${typeClass}`;
+            div.textContent = msg;
+            logArea.appendChild(div);
+            logArea.scrollTop = logArea.scrollHeight;
+            fullLogs.push({ timestamp: new Date().toISOString(), msg, type: typeClass.replace(/^log-/, '') });
+            if (fullLogs.length > 1000) fullLogs.shift();
+            if (doSave) scheduleSave();
+        }
+
+        // Directory Selector
+        function attachSelectDirHandler() {
+            const btn = document.getElementById('btn-select-dir');
+            if(!btn) return;
+            btn.addEventListener('click', async () => {
+                const dir = await ipcRenderer.invoke('dialog:openDirectory');
+                if (dir) {
+                    document.getElementById('inp-output-dir').value = dir;
+                    scheduleSave();
+                }
+            });
+        }
+        if (document.readyState === 'loading') window.addEventListener('DOMContentLoaded', attachSelectDirHandler);
+        else attachSelectDirHandler();
+
+        function startAutomation() {
+            logArea.innerHTML = '';
+            btnStart.style.display = 'none';
+            btnStop.style.display = 'flex';
+            btnSkip.style.display = 'flex';
+            addLog('>>> Iniciando Serviço PJE...', 'log-info');
+            scheduleSave();
+            const outputDir = document.getElementById('inp-output-dir').value || '';
+            ipcRenderer.send('run-pje-script', { outputDir });
+        }
+
+        function stopAutomation() {
+            ipcRenderer.send('stop-script');
+            btnStop.disabled = true; 
+            btnSkip.disabled = true;
+            addLog('!!! Solicitando parada...', 'log-warning');
+            scheduleSave();
+        }
+
+        function skipAutomation() {
+            ipcRenderer.send('skip-pje-script');
+            addLog('>> Pulando etapa atual...', 'log-warning');
+        }
+
+        function copyLog() {
+            navigator.clipboard.writeText(logArea.innerText);
+            // alert('Log copiado!');
+        }
+
+        // Modal Logic Refactored
+        function showModal(data) {
+            modal.style.display = 'flex';
+            modalTitle.innerText = data.title;
+            modalBody.innerHTML = '';
+            
+            // Basic Confirm
+             modalConfirmBtn.onclick = () => {
+                let result = true;
+                const input = document.getElementById('modalInputVal');
+                if (input) result = input.value;
+                modal.style.display = 'none';
+                ipcRenderer.send('pje-input-response', result);
+            };
+
+            // Cancel
+            modalCancelBtn.onclick = () => {
+                 modal.style.display = 'none';
+                 ipcRenderer.send('pje-input-response', false);
+            };
+            const closeX = document.getElementById('modalCloseX');
+            if(closeX) closeX.onclick = modalCancelBtn.onclick;
+
+            if (data.type === 'number') {
+                const p = document.createElement('p'); p.innerText = data.message;
+                const inp = document.createElement('input'); 
+                inp.type = 'number'; inp.className = 'modal-input'; inp.id = 'modalInputVal';
+                inp.value = '1'; if(data.max) inp.max = data.max;
+                modalBody.append(p, inp);
+            } else if (data.type === 'confirm') {
+                const p = document.createElement('p'); p.innerText = data.message;
+                modalBody.append(p);
+            } else if (data.type === 'select') {
+                const p = document.createElement('p'); p.innerText = data.message;
+                const sel = document.createElement('select'); sel.className = 'modal-input'; sel.id = 'modalInputVal';
+                data.options.forEach(o => {
+                    const opt = document.createElement('option'); opt.value = o.value; opt.innerText = o.label; sel.appendChild(opt);
+                });
+                modalBody.append(p, sel);
+            }
+        }
+
+
+
+    </script>
+</body>
+</html>

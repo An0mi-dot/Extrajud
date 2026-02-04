@@ -1,5 +1,5 @@
 const { chromium } = require('playwright-core');
-const sharepoint = require('./src/sharepoint_service');
+const sharepoint = require('./sharepoint_service');
 const path = require('path');
 const fs = require('fs');
 const { BrowserWindow, ipcMain } = require('electron');

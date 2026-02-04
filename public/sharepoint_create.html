@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Pastas - Sharepoint</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --primary-hover: #059669;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #dfe1e5;
+            --log-bg: #1e1e1e;
+            --log-text: #00ff9d;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        body.loaded { opacity: 1; }
+
+        /* Sidebar similar to extrator_projudi */
+        .sidebar {
+            width: 280px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.02);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        /* Typography */
+        h1, h2, h3, .brand {
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-back {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: #666;
+            padding: 8px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-back:hover {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .label-section {
+            font-size: 11px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        button.btn-action {
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        button.btn-action:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        #btnStart { background-color: var(--primary-color); color: white; }
+        #btnStart:hover:not(:disabled) { background-color: var(--primary-hover); }
+
+        #btnStop { background-color: white; color: var(--danger-color); border: 1px solid var(--danger-color); }
+        #btnStop:hover:not(:disabled) { background-color: #fff5f5; }
+
+        .btn-mini {
+            padding: 6px 10px; font-size: 12px; border-radius: 4px; border:1px solid #ddd; background:#f9f9f9; cursor:pointer;
+        }
+        
+        /* Inputs specific */
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-std { padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+            min-width: 0;
+        }
+
+        .info-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .badge-fixed {
+            background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 11px; display:inline-block; margin-top:5px;
+        }
+
+        /* Preview Box */
+        .preview-box {
+            background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; max-height: 150px; overflow-y: auto; font-size: 13px; 
+        }
+        .preview-item { padding: 5px 0; border-bottom: 1px solid #f0f0f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+        /* Logs Console */
+        .logs-wrapper {
+            flex: 1;
+            background-color: var(--log-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .logs-header {
+            background-color: #2d2d2d;
+            padding: 8px 15px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .dots { display: flex; gap: 6px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
+        
+        .log-title-text { color: #aaa; font-size: 12px; font-family: 'Inter', sans-serif; margin-left:10px;}
+
+        #logs {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #d4d4d4;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .log-entry { margin-bottom: 4px; padding-left: 8px; border-left: 3px solid transparent; }
+        .log-info { border-left-color: #3b82f6; }
+        .log-success { border-left-color: #10b981; color: #a7f3d0; }
+        .log-warning { border-left-color: #f59e0b; color: #fde68a; }
+        .log-error { border-left-color: #ef4444; color: #fca5a5; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 12px; width: 450px;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.1);
+        }
+        .modal-title { font-size: 18px; margin-bottom: 10px; }
+        .modal-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <i class="fas fa-folder-plus"></i> CRIAR PASTAS
+        </div>
+        
+        <button class="btn-back">
+            <i class="fas fa-arrow-left"></i> Voltar ao Hub
+        </button>
+
+        <div class="control-group">
+            <div class="label-section">Automação</div>
+            <button id="btnStart" class="btn-action">
+                <i class="fas fa-play"></i> INICIAR (ABRIR EDGE)
+            </button>
+            <button id="btnStop" class="btn-action" style="display:none;">
+                <i class="fas fa-stop"></i> PARAR
+            </button>
+        </div>
+
+        <div class="control-group">
+            <div class="label-section">Pasta Fixa</div>
+            <div style="font-size:11px; color:#555; line-height:1.4;">
+                JUD COELBA - Documentos - OFÍCIOS (Ano Atual)
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-top:auto;">
+            <div class="label-section">Credenciais (Microsoft)</div>
+            <div style="font-size:11px; color:#888; margin-bottom:5px;">Selecione ou adicione um e-mail para pré-preenchimento.</div>
+            
+            <div class="input-group">
+                <select id="emailSelect" class="input-std" style="display:none;"></select>
+                <div style="display:flex; gap:5px;">
+                    <input id="emailInput" class="input-std" type="email" placeholder="Novo email..." style="width:100%;">
+                    <button id="emailAddBtn" class="btn-mini"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="alert-box">
+            <strong>COMO USAR:</strong> Clique em Iniciar. O robô abrirá o SharePoint. Faça login (se necessário). Aguarde o preview das pastas e confirme a quantidade.
+        </div>
+        
+        <!-- Preview Section -->
+        <div style="display:flex; flex-direction:column; gap:5px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                 <div class="label-section" style="color:#555;">PREVIEW DO DIRETÓRIO</div>
+                 <div style="font-size:11px; color:#888;" id="status-text">Aguardando início...</div>
+            </div>
+            <div id="preview" class="preview-box">
+                <em style="color:#999; padding:10px; display:block;">Nenhum conteúdo carregado ainda.</em>
+            </div>
+        </div>
+
+        <div class="logs-wrapper">
+            <div class="logs-header">
+                <div style="display:flex; align-items:center;">
+                    <div class="dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <span class="log-title-text">TERMINAL DE EXECUÇÃO</span>
+                </div>
+                <button id="btnCopyLog" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Copiar Log">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <!-- Modal Create Config -->
+    <div id="dynamicModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Criar Pastas Sequenciais</div>
+            <div id="modalBody">
+                <div id="modalPreview" style="max-height:140px; overflow:auto; border:1px solid #eee; padding:8px; border-radius:6px; margin-bottom:15px; font-size:13px; color:#555; background:#fafafa;"></div>
+                
+                <div style="display:flex; align-items:center; gap:10px; background:#f0f9ff; padding:15px; border-radius:8px;">
+                     <i class="fas fa-plus-circle" style="color:var(--primary-color);"></i>
+                     <div style="flex:1; font-weight:600; font-size:14px;">Quantas novas pastas criar?</div>
+                     <input id="modalCount" type="number" min="1" value="3" style="width:60px; padding:8px; border:1px solid #ccc; border-radius:4px; text-align:center; font-weight:bold;">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="modalCancel" class="btn-action btn-secondary" style="background:#eee; color:#333;">Cancelar</button>
+                <button id="modalConfirm" class="btn-action" style="background:var(--primary-color); color:#fff;">Confirmar Criação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Wait Modal -->
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-content" style="text-align:center; width:350px;">
+            <div style="font-size:40px; color:#3b82f6; margin-bottom:15px;">
+                <i class="fas fa-user-lock"></i>
+            </div>
+            <div class="modal-title">Aguardando Login</div>
+            <p style="font-size:14px; color:#666; line-height:1.5;">
+                Por favor, realize o login da Microsoft na janela do navegador que foi aberta.
+            </p>
+            <div class="modal-actions" style="justify-content:center; margin-top:25px;">
+                <button id="loginCancel" class="btn-action btn-secondary" style="background:#eee; color:#333;">Cancelar</button>
+                <button id="loginDone" class="btn-action" style="background:#3b82f6; color:#white;">Login Concluído</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const DEFAULT_SP_URL = "https://iberdrola.sharepoint.com/sites/JUDCOELBA/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FJUDCOELBA%2FShared%20Documents%2FCria%C3%A7%C3%A3o%20de%20Pastas&viewid=b0389131%2Db788%2D4354%2D8edd%2Dcfe27a229f93";
+
+        const btnStart = document.getElementById('btnStart');
+        const btnStop = document.getElementById('btnStop');
+        const logArea = document.getElementById('logs');
+        const btnCopyLog = document.getElementById('btnCopyLog');
+        const previewEl = document.getElementById('preview');
+
+        // Modals
+        const dynamicModal = document.getElementById('dynamicModal');
+        const modalConfirmBtn = document.getElementById('modalConfirm');
+        const modalCancelBtn = document.getElementById('modalCancel');
+        const modalPreview = document.getElementById('modalPreview');
+        const modalCount = document.getElementById('modalCount');
+
+        const loginModal = document.getElementById('loginModal');
+        const loginDoneBtn = document.getElementById('loginDone');
+        const loginCancelBtn = document.getElementById('loginCancel');
+
+        // --- Page Transitions ---
+        window.addEventListener('DOMContentLoaded', () => { document.body.classList.add('loaded'); });
+        document.querySelector('.btn-back').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.body.classList.remove('loaded');
+            setTimeout(() => { window.location.href = 'index.html'; }, 400); 
+        });
+
+        let currentSession = null;
+        let fullLogs = [];
+
+        // Logs
+        function addLog(msg, typeClass) {
+            const div = document.createElement('div');
+            div.className = `log-entry ${typeClass}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logArea.appendChild(div);
+            logArea.scrollTop = logArea.scrollHeight;
+            fullLogs.push({msg, type: typeClass});
+        }
+
+        if(btnCopyLog) {
+            btnCopyLog.onclick = () => {
+                const txt = fullLogs.map(l => l.msg).join('\\n');
+                navigator.clipboard.writeText(txt);
+            };
+        }
+
+        // Email Credentials Logic
+        const emailSelect = document.getElementById('emailSelect');
+        const emailInput = document.getElementById('emailInput');
+        const emailAddBtn = document.getElementById('emailAddBtn');
+
+        function loadEmails() {
+            try {
+                const list = JSON.parse(localStorage.getItem('sp-emails') || '[]');
+                if (!Array.isArray(list) || list.length === 0) {
+                    emailSelect.style.display = 'none';
+                    return;
+                }
+                emailSelect.innerHTML = list.map(e => `<option value="${e}">${e}</option>`).join('');
+                emailSelect.style.display = 'block';
+            } catch(e) {}
+        }
+        function saveEmail(e) {
+            if (!e || !e.includes('@')) return;
+            const list = JSON.parse(localStorage.getItem('sp-emails') || '[]');
+            if (!list.includes(e)) { 
+                list.unshift(e); 
+                localStorage.setItem('sp-emails', JSON.stringify(list.slice(0,20))); 
+            }
+            loadEmails();
+            emailSelect.value = e; 
+        }
+
+        if(emailAddBtn) {
+            emailAddBtn.addEventListener('click', () => {
+                const val = (emailInput.value||'').trim();
+                if(val) { saveEmail(val); emailInput.value = ''; }
+            });
+        }
+        loadEmails();
+
+        // Main Actions
+        btnStart.addEventListener('click', async () => {
+            addLog('Iniciando sessão Sharepoint...', 'log-info');
+            btnStart.disabled = true;
+            try {
+                const selectedEmail = (emailSelect.style.display !== 'none' && emailSelect.value) ? emailSelect.value : (emailInput.value ? emailInput.value.trim() : null);
+                const res = await ipcRenderer.invoke('sharepoint:start-session', { url: DEFAULT_SP_URL, email: selectedEmail });
+                
+                if (!res || !res.ok) { 
+                    addLog('Falha ao iniciar: ' + (res?.error || 'Unknown'), 'log-error'); 
+                    btnStart.disabled = false;
+                    return; 
+                }
+                
+                currentSession = res.sessionId; 
+                addLog(`Sessão iniciada [${currentSession}]. Browser aberto.`, 'log-success');
+                btnStart.style.display = 'none';
+                btnStop.style.display = 'flex';
+                
+                if(selectedEmail) saveEmail(selectedEmail);
+
+            } catch(e) { 
+                addLog('Erro fatal: ' + e.message, 'log-error'); 
+                btnStart.disabled = false;
+            }
+        });
+
+        btnStop.addEventListener('click', async () => {
+            if(!currentSession) return;
+            addLog('Cancelando sessão...', 'log-warning');
+            try {
+                await ipcRenderer.invoke('sharepoint:cancel-session', { sessionId: currentSession });
+                addLog('Sessão encerrada.', 'log-info');
+            } catch(e) { addLog('Erro ao cancelar: ' + e.message, 'log-error'); }
+            
+            resetState();
+        });
+
+        function resetState() {
+            currentSession = null;
+            btnStop.style.display = 'none';
+            btnStart.style.display = 'flex';
+            btnStart.disabled = false;
+        }
+
+        // Logic flow events
+        ipcRenderer.on('sharepoint:waiting-for-login', () => {
+             addLog('Necessário login manual.', 'log-warning');
+             loginModal.style.display = 'flex';
+        });
+
+        ipcRenderer.on('sharepoint:login-completed', () => {
+            addLog('Login detectado/concluído.', 'log-success');
+            loginModal.style.display = 'none';
+        });
+
+        ipcRenderer.on('sharepoint:prompt-create', (ev, payload) => {
+             // Show count modal
+             if(payload && payload.previewHTML) {
+                 previewEl.innerHTML = payload.previewHTML; // update main preview
+                 modalPreview.innerHTML = payload.previewHTML; // update modal preview
+             } else if (payload && payload.preview) {
+                 // Fallback: generate HTML from raw preview data
+                 let folders = [];
+                 if (Array.isArray(payload.preview.items)) {
+                     folders = payload.preview.items.filter(i => i.isFolder).map(i => i.name);
+                 } else if (Array.isArray(payload.preview.folders)) {
+                     folders = payload.preview.folders.map(f => f.name);
+                 }
+                 
+                 // Sort numerically if possible
+                 folders.sort((a,b) => {
+                     const na = parseInt(a); const nb = parseInt(b);
+                     if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                     return a.localeCompare(b);
+                 });
+
+                 if (folders.length > 0) {
+                     // Determine last folder if numeric
+                     let lastMsg = "";
+                     const last = folders[folders.length-1];
+                     if (/^\d+$/.test(last)) {
+                        lastMsg = `<div style="margin-top:5px; font-size:12px; color:#166534; background:#f0fdf4; padding:4px; border-radius:4px;">Última pasta: <b>${last}</b></div>`;
+                        // Update default count
+                        // (Optional: logic to auto-increment input could go here, but user asked for display)
+                     }
+
+                     const html = `
+                         <div style="margin-bottom:8px; font-weight:bold; color:#333;">
+                            ${folders.length} pastas encontradas no destino:
+                         </div>
+                         ${lastMsg}
+                         <ul style="margin:5px 0 0 0; padding-left:20px; color:#555; max-height:100px; overflow-y:auto;">
+                            ${folders.map(f => `<li>${f}</li>`).join('')}
+                         </ul>`;
+                     previewEl.innerHTML = html;
+                     modalPreview.innerHTML = html;
+                 } else {
+                     const html = `<div style="padding:10px; color:#999; font-style:italic;">Nenhuma pasta encontrada (Diretório vazio). A contagem iniciará de 1.</div>`;
+                     previewEl.innerHTML = html;
+                     modalPreview.innerHTML = html;
+                }
+             }
+
+             addLog('Preview carregado. Solicitando confirmação...', 'log-info');
+             dynamicModal.style.display = 'flex';
+        });
+
+        // Modal Confirm
+        modalConfirmBtn.onclick = async () => {
+            const count = parseInt(modalCount.value, 10);
+            if(!count || count < 1) return;
+            
+            dynamicModal.style.display = 'none';
+            addLog(`Criando ${count} pastas...`, 'log-info');
+            
+            try {
+                const res = await ipcRenderer.invoke('sharepoint:create-session', { sessionId: currentSession, count });
+                if(res && res.ok) {
+                    addLog('Sucesso! Pastas criadas.', 'log-success');
+                    addLog(JSON.stringify(res.result), 'log-info');
+                } else {
+                    addLog('Falha na criação: ' + res?.error, 'log-error');
+                }
+            } catch(e) { addLog('Erro: ' + e.message, 'log-error'); }
+            
+            resetState();
+        };
+
+        modalCancelBtn.onclick = () => {
+            dynamicModal.style.display = 'none';
+            addLog('Operação cancelada pelo usuário.', 'log-warning');
+            resetState(); // assume cancelling creation ends session or resets
+        };
+
+        // Login Modal Actions
+        loginDoneBtn.onclick = () => {
+            loginModal.style.display = 'none';
+            ipcRenderer.send('sharepoint:login-action', { sessionId: currentSession, action: 'done' });
+        };
+        
+        loginCancelBtn.onclick = () => {
+            loginModal.style.display = 'none';
+            // Trigger stop
+            btnStop.click(); 
+        };
+
+    </script>
+</body>
+</html>

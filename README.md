@@ -72,7 +72,8 @@ npm start
   - `extractTableCustom(html, mode)`: parse robusto com Cheerio e regex para normalizar datas e campos.
   - `saveToExcel(...)` (ExcelJS) e `saveEvidencePDF(...)` (PDF generation).
 
-- `script_pje_problema.js` — heurísticas específicas para PJE (menus, retries, fallback selectors).
+- `externas/pje-problema/script_pje_problema.js` — heurísticas específicas para PJE (menus, retries, fallback selectors).
+- `externas/pje-problema/script_pje2_problema.js` — scripts auxiliares e testes para PJE (menos prioritários).
 
 - `pje_extrator.html`, `extrator_projudi.html`, `arquivados_projudi.html` — UIs / logs por extrator.
 

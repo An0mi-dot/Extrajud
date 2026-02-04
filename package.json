@@ -1,6 +1,6 @@
 {
   "name": "projudi_cita_inti",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Automação de extração de Citações e Intimações do Portal PROJUDI",
   "main": "main.js",
   "scripts": {
@@ -20,12 +20,21 @@
     "productName": "EXTRATJUD",
     "win": {
       "target": [
+        "nsis",
         "portable",
         "dir"
       ],
       "forceCodeSigning": false,
-      "verifyUpdateCodeSignature": false
+      "verifyUpdateCodeSignature": false,
+      "publish": ["github"]
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "An0mi-dot",
+        "repo": "Extrajud"
+      }
+    ],
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -51,6 +60,7 @@
   "dependencies": {
     "cheerio": "^1.1.2",
     "dayjs": "^1.11.19",
+    "electron-updater": "^6.7.3",
     "exceljs": "^4.4.0",
     "playwright-core": "^1.57.0"
   }
