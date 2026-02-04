@@ -55,3 +55,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 058b092
 - Notes: Merge branch 'reorg/safe' of https://github.com/An0mi-dot/Extrajud into reorg/safe
+## v1.1.3 - 2026-02-04
+
+- Commit: 44c3d20
+- Notes: Merge branch 'reorg/safe' of https://github.com/An0mi-dot/Extrajud into reorg/safe
