@@ -2,20 +2,23 @@ name: Auto Bump Patch Version
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - main
+      - 'reorg/*' # Enable for testing on reorg branches
 
 permissions:
   contents: write
 
 jobs:
   bump:
-    if: "\${{ github.actor }} != 'github-actions[bot]'"
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && github.actor != 'github-actions[bot]'"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           persist-credentials: true
+          fetch-depth: 0 # Full history for accurate bumping
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -27,11 +30,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump patch version, commit and tag
+      - name: Bump Version & Commit
         run: |
-          # Ensure npm is ready
-          npm --version
-          # Bump patch version and create annotated tag + commit (message includes [skip ci])
-          npm version patch -m "chore(release): %s [skip ci]"
-          # Push commit and tags back to repo
-          git push origin HEAD --tags
+          npm ci
+          # Use the project's bump script
+          npm run bump-version -- --force
+          
+      - name: Create Tag & Push
+        run: |
+          # Extract new version
+          VERSION=$(node -p "require('./package.json').version")
+          git tag "v$VERSION"
+          # Push to the current branch specifically
+          git push origin HEAD:${{ github.ref_name }} --tags
