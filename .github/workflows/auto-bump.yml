@@ -47,10 +47,23 @@ jobs:
           git tag "v${{ steps.bump.outputs.version }}"
           git push origin "v${{ steps.bump.outputs.version }}"
 
-      - name: Build & Publish API
+      - name: Build Electron App
         if: steps.bump.outputs.bumped == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Force publish to always upload artifacts to the tag
-          npm run dist -- --publish always
+          # Build artifacts but treat publishing as 'never' to avoid internal electron-builder errors
+          # We will upload artifacts explicitly in the next step
+          npm run dist -- -c.publish=never
+
+      - name: Create GitHub Release
+        if: steps.bump.outputs.bumped == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.bump.outputs.version }}
+          name: Release v${{ steps.bump.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/*.exe
+            dist/latest.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
