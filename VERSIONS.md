@@ -22,3 +22,7 @@ script will append a new entry for the current version with the commit message a
 ## v1.0.5 - 2026-02-04
 
 - Notes: feat: PJE file naming logic (Start+1 to Current), Skip/Stop buttons, UI Refactoring (Header glassmorphism, larger Logo), SharePoint folder preview improvements.
+## v1.0.6 - 2026-02-04
+
+- Commit: b227888
+- Notes: fix(ci): update workflow to use proper push target and custom bump script

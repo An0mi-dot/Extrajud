@@ -1,6 +1,6 @@
 {
   "name": "projudi_cita_inti",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Automação de extração de Citações e Intimações do Portal PROJUDI",
   "main": "main.js",
   "scripts": {
@@ -26,7 +26,9 @@
       ],
       "forceCodeSigning": false,
       "verifyUpdateCodeSignature": false,
-      "publish": ["github"]
+      "publish": [
+        "github"
+      ]
     },
     "publish": [
       {
