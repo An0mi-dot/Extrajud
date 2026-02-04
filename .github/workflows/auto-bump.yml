@@ -70,6 +70,7 @@ jobs:
           prerelease: false
           files: |
             dist/*.exe
+            dist/*.zip
             dist/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

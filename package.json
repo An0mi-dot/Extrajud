@@ -21,6 +21,7 @@
     "win": {
       "target": [
         "nsis",
+        "zip",
         "portable",
         "dir"
       ],
