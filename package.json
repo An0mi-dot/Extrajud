@@ -44,7 +44,10 @@
       "shortcutName": "EXTRATJUD",
       "installerIcon": "public/assets/icon.ico",
       "uninstallerIcon": "public/assets/icon.ico",
-      "installerHeaderIcon": "public/assets/icon.ico"
+      "installerHeaderIcon": "public/assets/icon.ico",
+      "installerSidebar": "public/assets/installerSidebar.bmp",
+      "uninstallerSidebar": "public/assets/installerSidebar.bmp",
+      "installerHeader": "public/assets/installerHeader.bmp"
     },
     "files": [
       "**/*",
@@ -60,6 +63,7 @@
     "electron": "^39.2.7",
     "electron-builder": "^26.4.0",
     "electron-reload": "^2.0.0-alpha.1",
+    "jimp": "^1.6.0",
     "png-to-ico": "^3.0.1"
   },
   "dependencies": {
