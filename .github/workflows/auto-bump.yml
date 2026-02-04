@@ -52,4 +52,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm run dist
+          # Force publish to always upload artifacts to the tag
+          npm run dist -- --publish always
