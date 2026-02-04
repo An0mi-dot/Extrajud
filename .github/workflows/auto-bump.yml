@@ -49,10 +49,16 @@ jobs:
 
       - name: Build Electron App
         if: steps.bump.outputs.bumped == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Build artifacts but treat publishing as 'never' to avoid internal electron-builder errors
-          # We will upload artifacts explicitly in the next step
-          npm run dist -- -c.publish=never
+          # Use standard flag --publish=never to prevent internal upload attempts
+          npm run dist -- --publish=never
+
+      - name: List Artifacts (Debug)
+        if: steps.bump.outputs.bumped == 'true'
+        run: |
+          ls -R dist
 
       - name: Create GitHub Release
         if: steps.bump.outputs.bumped == 'true'
