@@ -26,3 +26,12 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: b227888
 - Notes: fix(ci): update workflow to use proper push target and custom bump script
+## v1.0.7 - 2026-02-04
+
+- Commit: 74b2345
+- Notes: Merge branch 'reorg/safe' of https://github.com/An0mi-dot/Extrajud into reorg/safe
+# Please enter a commit message to explain why this merge is necessary,
+# especially if it merges an updated upstream into a topic branch.
+#
+# Lines starting with '#' will be ignored, and an empty message aborts
+# the commit.
