@@ -108,6 +108,11 @@ try {
   execSync(`git commit -m "chore(release): v${newVersion}"`);
   console.log('Bumped version to', newVersion);
   console.log('Committed release files.');
+  
+  // Output for GitHub Actions
+  if (process.env.GITHUB_OUTPUT) {
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `bumped=true\nversion=${newVersion}\n`, 'utf8');
+  }
 } catch (e) {
   console.log('Bumped version to', newVersion, '(no commit created)');
 }

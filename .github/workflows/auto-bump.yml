@@ -1,45 +1,55 @@
-name: Auto Bump Patch Version
+name: Release Pipeline
 
 on:
   push:
     branches: 
       - main
-      - 'reorg/*' # Enable for testing on reorg branches
+      - 'reorg/*'
 
 permissions:
   contents: write
 
 jobs:
-  bump:
+  release:
     if: "!contains(github.event.head_commit.message, '[skip ci]') && github.actor != 'github-actions[bot]'"
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           persist-credentials: true
-          fetch-depth: 0 # Full history for accurate bumping
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
 
       - name: Configure git user
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump Version & Commit
+      - name: Bump Version
+        id: bump
         run: |
           npm ci
-          # Use the project's bump script
+          # Script now writes to GITHUB_OUTPUT: bumped=true/false and version=x.x.x
           npm run bump-version -- --force
-          
-      - name: Create Tag & Push
+        env:
+          FORCE_BUMP: true # Temporarily forcing bump for testing the pipeline
+
+      - name: Push Changes & Tag
+        if: steps.bump.outputs.bumped == 'true'
         run: |
-          # Extract new version
-          VERSION=$(node -p "require('./package.json').version")
-          git tag "v$VERSION"
-          # Push to the current branch specifically
-          git push origin HEAD:${{ github.ref_name }} --tags
+          git push origin HEAD:${{ github.ref_name }}
+          git tag "v${{ steps.bump.outputs.version }}"
+          git push origin "v${{ steps.bump.outputs.version }}"
+
+      - name: Build & Publish API
+        if: steps.bump.outputs.bumped == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm run dist
