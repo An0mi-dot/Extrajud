@@ -14,7 +14,7 @@ O README abaixo foi escrito para ser entregue a outros mantenedores: explica arq
 - Requisitos
 - Estrutura do projeto e descrição de arquivos
 - IPC e contratos entre `renderer` e `main`
-- Update-checker (`updates.json`) e configuração
+- Auto-Update e workflow de Release
 - Modal "Solicitar Serviço" (envio de e-mail)
 - Execução e empacotamento
 - Testes e scaffold local
