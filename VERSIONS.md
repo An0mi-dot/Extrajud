@@ -71,3 +71,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: a670876
 - Notes: Merge branch 'reorg/safe' of https://github.com/An0mi-dot/Extrajud into reorg/safe
+## v1.1.7 - 2026-02-04
+
+- Commit: 88a56a0
+- Notes: merge: resolve conflicts from remote auto-bump
