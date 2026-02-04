@@ -20,11 +20,9 @@
     "productName": "EXTRATJUD",
     "win": {
       "target": [
-        "nsis",
-        "zip",
-        "portable",
-        "dir"
+        "nsis"
       ],
+      "icon": "public/assets/icon.ico",
       "forceCodeSigning": false,
       "verifyUpdateCodeSignature": false,
       "publish": [
@@ -43,7 +41,10 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "EXTRATJUD"
+      "shortcutName": "EXTRATJUD",
+      "installerIcon": "public/assets/icon.ico",
+      "uninstallerIcon": "public/assets/icon.ico",
+      "installerHeaderIcon": "public/assets/icon.ico"
     },
     "files": [
       "**/*",
@@ -58,7 +59,8 @@
     "cross-env": "^10.1.0",
     "electron": "^39.2.7",
     "electron-builder": "^26.4.0",
-    "electron-reload": "^2.0.0-alpha.1"
+    "electron-reload": "^2.0.0-alpha.1",
+    "png-to-ico": "^3.0.1"
   },
   "dependencies": {
     "cheerio": "^1.1.2",
