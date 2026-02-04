@@ -35,3 +35,7 @@ script will append a new entry for the current version with the commit message a
 #
 # Lines starting with '#' will be ignored, and an empty message aborts
 # the commit.
+## v1.0.8 - 2026-02-04
+
+- Commit: d58e498
+- Notes: Merge branch 'reorg/safe' of https://github.com/An0mi-dot/Extrajud into reorg/safe
