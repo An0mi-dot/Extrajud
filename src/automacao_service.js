@@ -71,22 +71,6 @@ async function runAutomation(eventSender, inputReceiver, args) {
         }
     }, 8000);
 
-    // Bring main window to front once so the automation window (Edge) won't be hidden by other apps
-    try {
-        const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
-        if (win) {
-            log(eventSender, 'Trazendo a janela do app para frente (uma vez) para priorizar a automação', 'Window Focus', 'info');
-            // Temporarily set always on top to ensure visibility, then restore
-            win.setAlwaysOnTop(true, 'screen');
-            // small delay to ensure stacking
-            await delay(300);
-            win.setAlwaysOnTop(false);
-            try { win.focus(); } catch (e) { /* ignore */ }
-        }
-    } catch (e) {
-        log(eventSender, `Não foi possível focar a janela: ${e && e.message ? e.message : String(e)}`, 'Window Focus', 'warn');
-    }
-
     log(eventSender, "Iniciando Robô de Automação", "Thread Start | Loading Playwright Engine", 'info');
     log(eventSender, "Carregando configurações...", "Edge Browser | Mode: Scanner | Lib: ExcelJS", 'info');
 
@@ -126,6 +110,23 @@ async function runAutomation(eventSender, inputReceiver, args) {
         // Aumenta timeout de navegação padrão
         page.setDefaultTimeout(60000); 
         page.setDefaultNavigationTimeout(60000);
+
+        // Bring main window to front once so the automation window (Edge) won't be hidden by other apps
+        try {
+            // Find main Electron window
+            const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed()); 
+            if (win) {
+                log(eventSender, 'Trazendo a janela do app para frente (uma vez) para garantir visibilidade sobre o navegador...', 'Window Focus', 'info');
+                // Temporarily set always on top to ensure visibility, then restore
+                win.setAlwaysOnTop(true, 'screen');
+                // increased delay to ensure it overrides browser focus initialization
+                await delay(500); 
+                win.setAlwaysOnTop(false);
+                try { win.focus(); } catch (e) { /* ignore */ }
+            }
+        } catch (e) {
+            log(eventSender, `Não foi possível focar a janela: ${e && e.message ? e.message : String(e)}`, 'Window Focus', 'warn');
+        }
 
         // 2. Acesso e Login
         log(eventSender, "Acessando Portal PROJUDI...", `Navigation: ${PROJUDI_URL}`, 'info');
@@ -1727,8 +1728,8 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
     }
 
     try {
-        // 1. Inicializar Browser
-        log(eventSender, "Abrindo navegador na direita...", "Edge Chromium", 'info');
+        // 1. Inicializar Browser (MODO PERSISTENTE)
+        log(eventSender, "Abrindo navegador AUTOMÁTICO (Perfil Persistente)...", "Edge Chromium", 'info');
         const edgePaths = [
             "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
             "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
@@ -1742,40 +1743,50 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
         const browserX = x + appWidth;
         const browserWidth = width - appWidth;
         
-        browser = await chromium.launch({
+        // DEFINIR DIRETÓRIO DE PERFIL PERSISTENTE
+        // Isso garante que cookies, cache e sessão sejam salvos no DISCO real, sobrevivendo a reboots.
+        const userDataDir = path.join(app.getPath('userData'), 'pje-profile-data');
+        if (!fs.existsSync(userDataDir)) {
+             try { fs.mkdirSync(userDataDir, { recursive: true }); } catch(e){}
+        }
+
+        // Tenta usar PJE Session antiga como "boot" se existir
+        const pjeStorage = path.join(app.getPath('userData'), 'playwright-storage', 'pje.json');
+        
+        // Lança Contexto Persistente (Substitui launch + newContext)
+        // Nota: browser agora será o próprio contexto envelopado
+        context = await chromium.launchPersistentContext(userDataDir, {
             executablePath: edgeExe,
             headless: false,
+            channel: "msedge", // Força uso do canal estável
+            viewport: null,
             args: [
                 `--window-position=${browserX},${y}`,
                 `--window-size=${browserWidth},${height}`,
-                "--disable-blink-features=AutomationControlled"
+                "--disable-blink-features=AutomationControlled",
+                "--no-first-run",
+                "--no-default-browser-check"
             ]
         });
+        
+        // Em contexto persistente, a página já vem aberta ou abrimos uma se não houver
+        page = context.pages().length > 0 ? context.pages()[0] : await context.newPage();
+        
+        // Referência para fechamento posterior (o context age como browser em persistent mode)
+        browser = context; 
 
-        // If the user previously imported a PJE storageState, reuse it to avoid repeated 2FA/logins
+        // Tenta injetar cookies/storage antigos apenas se o perfil estiver vazio/novo
+        // (Para tentar migrar seu login atual para o novo sistema persistente)
         try {
-            const pjeStorage = path.join(app.getPath('userData'), 'playwright-storage', 'pje.json');
-            const localPjeStorage = path.join(__dirname, 'playwright-storage', 'pje.json');
-            const contextOptions = { viewport: null };
-
             if (fs.existsSync(pjeStorage)) {
-                log(eventSender, `PJE session storage found in userData. Reusing storageState: ${pjeStorage}`, 'PJE Session', 'info');
-                contextOptions.storageState = pjeStorage;
-            } else if (fs.existsSync(localPjeStorage)) {
-                log(eventSender, `PJE session storage found in project. Reusing storageState: ${localPjeStorage}`, 'PJE Session', 'info');
-                contextOptions.storageState = localPjeStorage;
-            } else {
-                log(eventSender, 'No PJE session storage found. Will require manual login.', 'PJE Session', 'info');
+                 const data = JSON.parse(fs.readFileSync(pjeStorage, 'utf8'));
+                 if (data.cookies) await context.addCookies(data.cookies);
+                 // Origins/LocalStorage é mais complexo injetar em persistent context iniciado, 
+                 // mas o próprio 'userDataDir' vai assumir esse papel daqui pra frente.
+                 log(eventSender, 'Cookies legados injetados no perfil persistente.', 'Migration', 'info');
             }
+        } catch(e) { /* ignore */ }
 
-            context = await browser.newContext(contextOptions);
-            page = await context.newPage();
-        } catch (e) {
-            // Fallback to default newContext if anything goes wrong
-            log(eventSender, `Aviso: não foi possível carregar storageState: ${e && e.message ? e.message : String(e)}. Abrindo contexto limpo.`, 'PJE Session', 'warn');
-            context = await browser.newContext({ viewport: null });
-            page = await context.newPage();
-        }
         
         // Helper to expose control signals to the browser context
         const exposeControls = async () => {
@@ -1907,8 +1918,8 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                 log(eventSender, "Sessão não detectada. Solicitando login manual...", 'PJE Session', 'warn');
                 const login1 = await waitForInput(eventSender, ipcReceiver, 'confirm', {
                     title: 'Login Necessário - PJE 1º Grau',
-                    message: '1. Realize o login no PJE 1º Grau.\n2. **SELECIONE O PERFIL DE PROCURADORIA** no topo da tela.\n3. Aguarde o painel inicial carregar.\n\nClique em Continuar APÓS selecionar o perfil correto.',
-                    confirmText: 'Continuar'
+                    message: '1. Realize o login no PJE 1º Grau.\n2. **SELECIONE O PERFIL DE PROCURADORIA** no topo da tela.\n3. Aguarde o painel inicial carregar.\n\nClique em Continuar APÓS selecionar o perfil correto.\n\n(Para testes: Clique em Continuar mesmo sem login para tentar contornar)',
+                    confirmText: 'Continuar / Testar'
                 });
 
                 if (login1 === false || login1 === 'cancel') { 
@@ -1916,12 +1927,23 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                     return; 
                 }
 
-                // Se o usuário confirmou, assumimos que logou. Salvamos o estado novo.
-                try {
-                    await context.storageState({ path: PJE_STORAGE });
-                    log(eventSender, `Login novo detectado. Sessão salva em: ${PJE_STORAGE}`, 'PJE Session', 'success');
-                } catch (e) {
-                    log(eventSender, `Erro salvando sessão PJE (1): ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+                // Verifica novamente se o login foi bem sucedido antes de salvar, 
+                // para evitar sobrescrever um storage válido com estado de "não logado".
+                const checkLoginAgain = await safeEvaluate(() => {
+                    const bodyText = document.body ? document.body.innerText : '';
+                    return bodyText.includes('Mesa de Trabalho') || bodyText.includes('Painel do advogado') || bodyText.includes('Aguardando Leitura') || !!document.querySelector('a[href*="logout"]');
+                }).catch(() => false);
+
+                if (checkLoginAgain) {
+                    try {
+                        await context.storageState({ path: PJE_STORAGE });
+                        log(eventSender, `Login novo CONFIRMADO. Sessão salva em: ${PJE_STORAGE}`, 'PJE Session', 'success');
+                    } catch (e) {
+                        log(eventSender, `Erro salvando sessão PJE (1): ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+                    }
+                } else {
+                    log(eventSender, "Aviso: Login não detectado automaticamente. AVANÇANDO EM MODO DE TESTE (Sem salvar sessão).", 'PJE Session', 'warn');
+                    // Não retorna, permitindo o fluxo seguir (Bypass)
                 }
             }
 
