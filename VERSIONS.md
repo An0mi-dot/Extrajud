@@ -75,3 +75,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 88a56a0
 - Notes: merge: resolve conflicts from remote auto-bump
+## v1.1.8 - 2026-02-06
+
+- Commit: ecf9f2d
+- Notes: feat: use persistent browser profile for PJE and allow login bypass
