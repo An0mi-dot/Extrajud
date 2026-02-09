@@ -87,3 +87,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: dc911e6
 - Notes: fix: restore solid UI styles and fix transparency after theme removal
+## v1.2.1 - 2026-02-09
+
+- Commit: 065ba3d
+- Notes: feat: restructure app with new main hub and services hub
