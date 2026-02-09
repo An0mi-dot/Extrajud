@@ -91,3 +91,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 065ba3d
 - Notes: feat: restructure app with new main hub and services hub
+## v1.2.2 - 2026-02-09
+
+- Commit: c1ecdcc
+- Notes: fix: update home page title and welcome text
