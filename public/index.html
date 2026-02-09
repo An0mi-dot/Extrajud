@@ -3,39 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXTRATJUD - Hub de Serviços</title>
+    <title>EXTRATJUD - Principal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="assets/theme.css">
 
     <style>
-        /* Specific page overrides only */
         :root {
             --card-icon-bg: var(--primary-light);
             --card-icon-color: var(--primary-color);
             --card-icon-disabled-bg: #e9ecef;
             --card-icon-disabled-color: #adb5bd;
         }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        
 
         body {
             font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -46,160 +28,17 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 24px 24px;
         }
 
-        /* --- TYPOGRAPHY UPDATES --- */
-        h1, h2, h3, .brand, .card-title, .intro-title {
+        h1, h2, h3, .brand {
             font-family: 'Rajdhani', sans-serif;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
-        .platform-tag, .estimated-time, .card-status, .intro-status, .loader-text, code, .version-info, .intro-bar {
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -0.5px;
-        }
-
-        body.loaded {
-            opacity: 1;
-        }
-
-        /* --- PROCEDURAL ANIMATIONS CSS --- */
-        #bg-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        /* Ensure content sits above the canvas */
-        .header, .container {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* --- INTRO ANIMATION --- */
-        #intro-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.8s ease-in-out;
-        }
-        #intro-overlay.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
-        .intro-content {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-        .intro-logo {
-            width: 80px; height: 80px;
-            color: var(--primary-color);
-            animation: pulse-logo 2s infinite;
-        }
-        .intro-logo svg { width: 100%; height: 100%; }
-        
-        @keyframes pulse-logo {
-            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(16,185,129,0.3)); }
-            50% { transform: scale(1.1); filter: drop-shadow(0 0 25px rgba(16,185,129,0.6)); }
-            100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(16,185,129,0.3)); }
-        }
-
-        .intro-title {
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            color: var(--text-color);
-            opacity: 0;
-            animation: slide-up 0.8s forwards 0.5s;
-        }
-        
-        @keyframes slide-up {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .intro-bar {
-            width: 200px;
-            height: 4px;
-            background: rgba(128,128,128,0.2);
-            border-radius: 2px;
-            overflow: hidden;
-            position: relative;
-            margin-top: 10px;
-        }
-        .intro-progress {
-            position: absolute;
-            left: 0; top: 0; height: 100%;
-            width: 0%;
-            background: var(--primary-color);
-            animation: progress-fill 2.5s ease-in-out forwards 0.8s;
-        }
-        @keyframes progress-fill {
-            0% { width: 0%; }
-            50% { width: 40%; }
-            80% { width: 70%; }
-            100% { width: 100%; }
-        }
-
-        .intro-status {
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-family: monospace;
-            opacity: 0;
-            animation: text-blink 2.5s forwards 1s;
-        }
-        @keyframes text-blink {
-            0% { opacity: 0; }
-            20% { opacity: 1; content: "Carregando..."; }
-            100% { opacity: 1; }
-        }
-        /* ----------------------- */
-
-        .service-card {
-            /* Variable placeholder */
-            --mouse-x: 0px;
-            --mouse-y: 0px;
-        }
-
-        /* Glow effect overlay */
-        .service-card::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: inherit;
-            background: radial-gradient(
-                600px circle at var(--mouse-x) var(--mouse-y),
-                rgba(16, 185, 129, 0.06),
-                transparent 40%
-            );
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .service-card:hover::before {
-            opacity: 1;
-        }
-        
-        .service-card > * {
-            position: relative;
-            z-index: 1;
-        }
-        /* -------------------------------- */
-
+        /* Header Styles */
         .header {
             background-color: var(--card-bg);
             padding: 14px 40px;
@@ -211,13 +50,11 @@
             top: 0;
             z-index: 100;
             box-shadow: var(--shadow-sm);
-            transition: all 0.3s ease;
         }
 
         .brand {
             font-size: 26px;
             font-weight: 800;
-            /* Gradient Text */
             background: linear-gradient(135deg, var(--primary-color) 0%, #34d399 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -225,1343 +62,188 @@
             align-items: center;
             gap: 16px;
             letter-spacing: -0.5px;
-            position: relative;
-        }
-
-        /* Badge Beta/V2 */
-        .brand::after {
-            content: "HUB";
-            font-size: 10px;
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--primary-color);
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            font-family: 'JetBrains Mono', monospace;
-            -webkit-text-fill-color: var(--primary-color);
-            margin-top: 4px;
-            font-weight: 600;
-        }
-
-        /* Brand Logo refinement */
-        .brand img {
-            height: 90px !important; /* Aumentado para destaque */
-            width: auto;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)); /* Sombra estática para "pop" */
         }
         
-        /* Animações removidas conforme solicitado */
-
-        .brand svg {
-            width: 32px;
-            height: 32px;
+        /* Make sure icon is visible (override text-fill-color for img) */
+        .brand img {
+            -webkit-text-fill-color: initial;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
 
         .container {
             flex: 1;
-            padding: 40px;
+            padding: 60px 40px;
             overflow-y: auto;
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            .header {
-                padding: 14px 20px;
-            }
-            .brand {
-                font-size: 20px;
-            }
+        .welcome-section {
+            margin-bottom: 50px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
         }
 
-        .btn-theme {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
-            box-shadow: none;
-        }
-        .btn-theme:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(2,6,23,0.06);
-            background: linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02));
-            color: var(--primary-color);
-        }
-        .btn-theme:active { transform: translateY(0); }
-        .btn-theme:focus { outline: none; box-shadow: 0 0 0 4px rgba(16,185,129,0.10); color: var(--primary-color); }
-
-        /* Prevent overflow issues on dev reload */
-        .service-card { word-break: break-word; }
-
-
-        .welcome-text {
-            margin-bottom: 30px;
+        .intro-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
-        .welcome-text h2 {
-            margin: 0 0 10px 0;
-            font-size: 28px;
-            color: #2c3e50;
-        }
-
-        .welcome-text p {
-            margin: 0;
-            color: var(--text-secondary);
+        .intro-subtitle {
             font-size: 16px;
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 25px;
-            width: 100%;
-        }
-
-        @media (min-width: 1600px) {
-            .services-grid {
-                grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            }
-            .container {
-                max-width: 1600px;
-            }
-        }
-
-        .service-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            padding: 25px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .service-card:hover:not(.disabled) {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        }
-
-        .service-card.disabled {
-            cursor: default;
-            opacity: 0.7;
-            background-color: #f8f9fa;
-        }
-
-        .platform-tag {
-            font-size: 10px;
-            text-transform: uppercase;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-bottom: 10px;
-            align-self: flex-start; /* prevent stretching in column flex container */
-            white-space: nowrap;
-        }
-
-        .service-card.disabled .card-icon {
-            background-color: var(--card-icon-disabled-bg);
-            color: var(--card-icon-disabled-color);
-        }
-
-        .card-icon svg { width: 24px; height: 24px; color: inherit; }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-
-        .card-desc {
-            font-size: 14px;
             color: var(--text-secondary);
+            max-width: 600px;
             line-height: 1.5;
-            flex: 1;
+            margin: 0;
         }
 
-        /* Service metadata removed (versão/ambiente/empresa) */
-        
-        
+        /* Wrapper for Grid */
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 32px;
+            padding-bottom: 40px;
+        }
 
-        .card-status {
-            margin-top: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 10px;
+        /* Card Styles */
+        .hub-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 20px;
-            align-self: flex-start;
-            display: inline-block; /* don't stretch full width, behave like a badge */
-        }
-
-        /* Estimated time label inside service cards */
-        .estimated-time {
-            margin-top: 8px;
-            font-size: 12px;
-            color: #374151; /* gray-700 */
-            font-weight: 600;
-        }
-        .estimated-time small { color: #6b7280; font-weight: 500; display:block; margin-top:2px; font-size:11px; }
-
-        .status-active {
-            background-color: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .status-soon {
-            background-color: #ffecb5;
-            color: #664d03;
-        }
-
-        .arrow-icon {
-            position: absolute;
-            bottom: 25px;
-            right: 25px;
-            color: var(--primary-color);
-            opacity: 0;
-            transform: translateX(-10px);
-            transition: all 0.3s ease;
-        }
-
-        .service-card:hover:not(.disabled) .arrow-icon {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        
-        .tag-projudi { background-color: #fce7f3; color: #9d174d; }
-        .tag-pje { background-color: #e0e7ff; color: #3730a3; }
-        .tag-espaider { background-color: #ffedd5; color: #9a3412; }
-
-        .footer {
-            text-align: center;
-            padding: 8px 12px;
-            color: var(--text-secondary);
-            font-size: 12px;
-            border-top: 1px solid var(--border-color);
-            background-color: var(--card-bg);
+            padding: 30px;
             position: relative;
-            min-height: 40px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
         }
 
-        /* Footer contact highlight (more discrete) */
-        .footer-contact {
-            display: inline-block;
-            margin-top: 6px;
-            padding: 5px 8px;
-            background: rgba(16, 185, 129, 0.06); /* softer tint */
-            border-radius: 10px;
-            border: 1px solid rgba(16, 185, 129, 0.08);
-            color: #065f46; /* darker green */
-            font-weight: 600;
-            font-size: 12px;
+        .hub-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
         }
 
-        /* Subtle variant for inline 'About' modal usage */
-        .contact-muted {
-            display: inline-block;
-            margin-top: 6px;
-            padding: 4px 8px;
-            background: rgba(16, 185, 129, 0.04);
-            border-radius: 8px;
+        /* Optional decorative circle in card background */
+        .circle-deco {
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            opacity: 0.5;
+            z-index: 0;
+            transition: transform 0.5s ease;
+        }
+        .hub-card:hover .circle-deco {
+            transform: scale(1.5);
         }
 
-        /* --- Loader Overlay --- */
-        #app-loader {
-            position: fixed;
-            inset: 0;
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            background-color: var(--card-icon-bg);
+            color: var(--card-icon-color);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,0.85);
-            z-index: 9999;
-            transition: opacity 0.35s ease, visibility 0.35s ease;
-        }
-
-        #app-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-
-        .loader-box {
-            background: #ffffff;
-            padding: 18px 22px;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(2,6,23,0.08);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-direction: row;
-        }
-
-        .spinner {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 5px solid #e6eef2;
-            border-top-color: var(--primary-color);
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loader-text { font-weight: 600; color: #2b3440; }
-
-        /* Plain footer note (no highlight) */
-        .footer-note {
-            margin: 6px 0 0 0;
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        /* App Clock removed per user request */
-
-        /* Modal Styles */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.5); 
-            backdrop-filter: blur(2px);
-            animation: fadeIn 0.3s;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto; 
-            padding: 30px;
-            border: 1px solid #888;
-            width: 500px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-size: 24px;
+            transition: all 0.3s ease;
             position: relative;
-            animation: slideIn 0.3s;
+            z-index: 1;
+            flex-shrink: 0;
         }
 
-        @keyframes fadeIn {
-            from {opacity: 0;}
-            to {opacity: 1;}
+        .hub-card:hover .card-icon {
+            transform: rotate(10deg);
+            background-color: var(--primary-color);
+            color: white;
         }
 
-        @keyframes slideIn {
-            from {transform: translateY(-50px); opacity: 0;}
-            to {transform: translateY(0); opacity: 1;}
+        .card-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
         }
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 20px;
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin: 0 0 8px 0;
         }
 
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
+        .card-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .card-arrow {
+            color: var(--border-color);
+            align-self: center;
+            font-size: 18px;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
         }
         
-        .btn-about {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 140ms ease, color 140ms ease, transform 140ms ease;
-        }
-        .btn-about:hover {
-            background: rgba(16,185,129,0.06);
+        .hub-card:hover .card-arrow {
             color: var(--primary-color);
-            transform: translateY(-1px);
+            transform: translateX(5px);
         }
-        .btn-about:focus { outline: none; box-shadow: 0 0 0 4px rgba(16,185,129,0.06); }
-
-        /* Actions dropdown */
-        .actions-menu {
-            position: absolute;
-            right: 0;
-            top: 44px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 6px 24px rgba(2,6,23,0.08);
-            z-index: 1200;
-            min-width: 220px;
-            opacity: 0;
-            transform: translateY(-8px);
-            pointer-events: none;
-            transition: opacity 160ms ease, transform 160ms ease;
-        }
-        .actions-menu[aria-hidden="false"] {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-        #btn-actions { padding: 6px 10px; transition: transform 160ms ease; }
-        #btn-actions.open { transform: translateY(-1px); }
-        .actions-menu button { text-align: left; }
-
-        .info-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        .info-section h3 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            color: #2c3e50;
-        }
-        .info-section ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            font-size: 13px;
-            color: #555;
-        }
-        .info-section li {
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-        }
-
     </style>
 </head>
 <body>
-    <canvas id="bg-canvas"></canvas>
-    <script>
-        // Show top-level JS errors to user (no app-clock used)
-        window.onerror = function(message, source, lineno, colno, error) {
-            try {
-                alert('Erro de script na página: ' + message);
-            } catch (e) { /* ignore */ }
-            return false;
-        };
-    </script>
-    
-    <script>
-        // Populate displayed app version on startup so footer doesn't show '?' until About is opened
-        (function(){
-            try {
-                const ipc = require('electron').ipcRenderer;
-                ipc.invoke('get-app-version').then(ver => {
-                    const v = ver || '?.?.?';
-                    const headVer = document.getElementById('app-version'); if (headVer) headVer.textContent = v;
-                    const envVer = document.getElementById('env-app-ver'); if (envVer) envVer.textContent = v;
-                }).catch(()=>{});
-            } catch(e) { /* ignore if not available */ }
-        })();
-    </script>
-    <div id="intro-overlay">
-        <div class="intro-content">
-            <div class="intro-logo">
-                <img src="assets/logo.png" alt="Intro Logo" style="width:100%; height:100%; object-fit: contain;">
-            </div>
-            <div class="intro-title">EXTRATJUD</div>
-            <div class="intro-bar">
-                <div class="intro-progress"></div>
-            </div>
-            <div class="intro-status">Inicializando sistema...</div>
-        </div>
-    </div>
 
-    <!-- Loader overlay shown while app loads -->
-    <div id="app-loader" role="status" aria-live="polite" style="display:none;">
-        <div class="loader-box">
-            <div class="spinner" aria-hidden="true"></div>
-            <div class="loader-text">Carregando aplicação...</div>
-        </div>
-    </div>
-
-    <div class="header">
+    <header class="header">
         <div class="brand">
-            <img src="assets/logo.png" alt="Logo" style="height: 80px; width: auto;">
-            EXTRATJUD
+            <!-- Brand Logo/Icon -->
+            <img src="assets/logo.png" alt="Logo" style="height: 60px; width: auto; margin-right: 12px;">
+            EXTRATJUD PRINCIPAL
         </div>
-        <div style="display:flex; align-items:center; gap:12px; position:relative;">
-            
-
-
-            <button id="btn-actions" class="btn-theme" title="Ações">Ações ▾</button>
-            <div id="actions-menu" class="actions-menu" role="menu" aria-hidden="true">
-                <div style="padding:10px; display:flex; flex-direction:column; gap:8px;">
-                        <!-- Theme button moved to navbar -->
-                        <button id="btn-request-service" class="btn-about" title="Solicitar Serviço">Solicitar Serviço</button>
-                    </div>
-            </div>
-        </div>
-    </div>
-    
+    </header>
 
     <div class="container">
-        <div class="welcome-text">
-            <h2>Bem-vindo ao Hub de Serviços</h2>
-            <p>Selecione uma ferramenta abaixo para iniciar sua automação.</p>
+        <div class="welcome-section">
+            <h1 class="intro-title">O que você deseja acessar?</h1>
+            <p class="intro-subtitle">Bem-vindo ao portal central de automação jurídica.</p>
         </div>
-
-        <div class="services-grid">
-            <!-- App 1: Extrator Projudi (Ativo) -->
-            <a href="extrator_projudi.html" class="service-card" data-service="PROJUDI">
-                <span class="platform-tag tag-projudi">PROJUDI</span>
-                <div class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                </div>
-                <div class="card-title">Extrator Citações e Intimações</div>
-                <div class="card-desc">
-                    Automação completa para extração de Citações e Intimações do Portal PROJUDI, com geração de tabelas e evidências em PDF.
-                </div>
-                <div class="estimated-time">Tempo estimado: <strong>00:01:38</strong> <small>(Aproximadamente)</small></div>
-                <div class="card-status status-active">Disponível</div>
-                
-                <div class="arrow-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                </div>
-            </a>
-
-            <!-- App 2: Processos Arquivados (Ativo) -->
-            <a href="arquivados_projudi.html" class="service-card" data-service="ARQUIVADOS">
-                <span class="platform-tag tag-projudi">PROJUDI</span>
-                <div class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                </div>
-                <div class="card-title">Processos Arquivados</div>
-                <div class="card-desc">
-                    Ferramenta de busca e extração em massa de processos já arquivados, permitindo auditoria de histórico.
-                </div>
-                <div class="estimated-time">Tempo estimado: <strong>Variável</strong> <small>(depende do volume; pode levar até horas)</small></div>
-                <div class="card-status status-active">Disponível</div>
-                
-                <div class="arrow-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                </div>
-            </a>
-
-            <!-- App 3: PJE Automação (Ativo) -->
-            <a href="pje_extrator.html" class="service-card" data-service="PJE">
-                <span class="platform-tag tag-pje">PJE</span>
-                <div class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" aria-hidden="true" focusable="false">
-                        <!-- Courthouse / Forum Icon -->
-                        <path d="M3 11l9-6 9 6" />
-                        <path d="M4 12v6" />
-                        <path d="M9 12v6" />
-                        <path d="M14 12v6" />
-                        <path d="M19 12v6" />
-                        <path d="M2 20h20" />
-                    </svg>
-                </div>
-                <div class="card-title">Automação PJE</div>
-                <div class="card-desc">
-                    Extração de Expedientes PJE 1º e 2º Grau (Pendentes de Ciência e Resposta).
-                </div>
-                <div class="estimated-time">Tempo estimado: <strong>Não estimado</strong> <small>(ainda não avaliado)</small></div>
-                <div class="card-status status-soon">Em desenvolvimento</div>
-
-                <div class="arrow-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                </div>
-            </a>
-
-            <!-- App 4: Espaider (Em Breve) -->
-            <div class="service-card disabled" data-service="ESPAIDER">
-                <span class="platform-tag tag-espaider">ESPAIDER</span>
-                <div class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                </div>
-                <div class="card-title">Integração Espaider</div>
-                <div class="card-desc">
-                    Conector futuro para sincronização de dados e gestão jurídica no sistema Espaider.
-                </div>
-                <div class="card-status status-soon">Em Breve</div>
-            </div>
-
-            <!-- Category: Serviços Específicos / Não Jurídico -->
-            <div style="grid-column: 1 / -1; margin-top: 12px; margin-bottom: 10px;">
-                <strong style="color:#374151; font-size:20px; display:block; line-height:1.1;">Serviços Específicos — Não Jurídico</strong>
-                <div style="font-size:15px; color:var(--text-secondary); margin-top:4px;">Ferramentas e tarefas pontuais destinadas a equipes ou demandas específicas.</div>
-            </div>
-
-            <!-- App 5: SharePoint - Criar Pastas OFÍCIOS -->
-            <a id="card-sharepoint-create" href="sharepoint_create.html" class="service-card" data-service="SHAREPOINT">
-                <span class="platform-tag" style="background:#e6f4ff;color:#0b5ed7">SHAREPOINT</span>
-                <div class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#0b5ed7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" aria-hidden="true" focusable="false">
-                        <path d="M3 7h5l1 2h8" />
-                        <path d="M3 21h18v-8H3z" />
-                        <path d="M8 3h8v4H8z" />
-                    </svg>
-                </div>
-                <div class="card-title">Criar Pastas - OFÍCIOS</div>
-                <div class="card-desc" title="https://iberdrola.sharepoint.com/sites/JUDCOELBA/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FJUDCOELBA%2FShared%20Documents%2FCria%C3%A7%C3%A3o%20de%20Pastas&viewid=b0389131%2Db788%2D4354%2D8edd%2Dcfe27a229f93&ct=1720187493260&or=Teams%2DHL&LOF=1&ovuser=031a09bc%2Da2bf%2D44df%2D888e%2D4e09355b7a24%2Cjoao%2Eaviana%40neoenergia%2Ecom&OR=Teams%2DHL&CT=1769606129626&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiIxNDE1LzI2MDEwNDAwOTIzIiwiSGFzRmVkZXJhdGVkVXNlciI6ZmFsc2V9">
-                    <strong>JUD COELBA - Documentos - OFÍCIOS (Ano Escolhido) - Todos os Documentos</strong><br>
-                    Este serviço sempre abre a página das pastas acima e permite pré-visualizar pastas existentes e criar novas pastas numeradas.
-                </div>
-                <div class="estimated-time">Tempo estimado: <strong>Rápido</strong> <small>(interação requerida)</small></div>
-                <div class="card-status status-active">Disponível</div>
-
-                <div class="arrow-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#0b5ed7" width="24" height="24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <script>
-        // Hide loader when page fully loads; fallback timeout to avoid stuck loader
-        (function(){
-            const loader = document.getElementById('app-loader');
-            if(!loader) return;
-            function hideLoader(){
-                if(!loader.classList.contains('hidden')){
-                    loader.classList.add('hidden');
-                    document.body.classList.add('loaded');
-                    setTimeout(()=>{ try{ loader.remove(); }catch(e){} }, 500);
-                }
-            }
-            window.addEventListener('load', hideLoader);
-            // Also hide after 8s as fallback
-            setTimeout(hideLoader, 8000);
-        })();
-    </script>
-
-    <div class="footer">
-        <div style="display:flex; align-items:center; justify-content:center;">
-            <button id="btn-about" class="btn-about">Sobre</button>
-        </div>
-        <div style="position:absolute; right:12px; bottom:6px; font-size:12px; color:var(--text-secondary);">Versão <span id="app-version">?</span></div>
-    </div>
-
-    <script>
-        // Utility: close all modals except the one to keep (pass null/undefined to close all)
-        function closeAllModals(keepEl) {
-            try {
-                document.querySelectorAll('.modal').forEach(m => {
-                    if (keepEl && m === keepEl) {
-                        m.style.display = 'block';
-                    } else {
-                        m.style.display = 'none';
-                    }
-                });
-            } catch (e) { /* ignore */ }
-        }
-    </script>
-
-    <!-- Modal Sobre -->
-    <div id="modal-about" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2 style="color: var(--primary-color);">EXTRATJUD</h2>
-            <p style="color: #666; margin-top: -10px;">Automação Jurídica Integrada</p>
+        
+        <div class="hub-grid">
             
-            <div class="info-section">
-                <h3>Sobre o Aplicativo</h3>
-                <p style="color:#555; margin-bottom:8px;">O <strong>EXTRATJUD</strong> é uma aplicação desktop construída em Electron para automatizar a extração de informações processuais de portais judiciais (como PROJUDI e PJE), gerar relatórios (Excel, Word) e capturar evidências em PDF para auditoria e controle.</p>
-                <p style="color:#555; margin-bottom:8px;">Principais funcionalidades: extração de citações e intimações, varredura de processos arquivados, geração de planilhas e relatórios, e um console de execução com logs detalhados. A automação usa o Microsoft Edge via Playwright para navegar e coletar os dados.</p>
-                <p style="color:#555; margin-bottom:8px;">Objetivo: facilitar atividades demoradas ou massivas do Setor Jurídico, automatizando a coleta, consolidação e geração de relatórios para reduzir o trabalho manual e acelerar a entrega de resultados.</p>
-                <p style="color:#555; margin-bottom:8px;">Observações de segurança: Por padrão não armazenamos senhas ou credenciais sensíveis sem consentimento explícito do usuário.</p>
-                <p class="contact-muted">Caso queira solicitar mais serviços, fale com <strong>João Guilherme Almeida Viana</strong> (Aprendiz Administrativo).</p>
+            <!-- SERVICES CARD -->
+            <div class="hub-card" onclick="window.location.href='hub_servicos.html'">
+                <div class="card-cover">
+                    <!-- Optional decorative circle -->
+                    <div class="circle-deco"></div>
+                </div>
+                <div class="card-icon">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Serviços de Automação</h3>
+                    <p class="card-description">Acesse o centralizador de robôs e extratores do PJE, Projudi e outras ferramentas.</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
             </div>
 
-            <div class="info-section">
-                <h3>Desenvolvimento</h3>
-                <p style="font-size: 14px; margin: 0;"><strong>João Guilherme Almeida Viana</strong></p>
-                <p style="font-size: 12px; color: #555; margin: 2px 0 0 0;">Aprendiz Administrativo</p>
-                <p style="font-size: 13px; color: #888; margin: 5px 0 0 0;">joao.aviana@neoenergia.com</p>
-            </div>
-    
-            <div class="info-section">
-                <h3>Informações Técnicas</h3>
-                <ul>
-                    <li><strong>Versão do App:</strong> <span id="env-app-ver">1.1.0</span></li>
-                    <li><strong>Node.js:</strong> <span id="env-node"></span></li>
-                    <li><strong>Electron:</strong> <span id="env-electron"></span></li>
-                    <li><strong>Chrome:</strong> <span id="env-chrome"></span></li>
-                    <li><strong>Platform:</strong> <span id="env-plat"></span></li>
-                </ul>
-            </div>
-            
-            <p style="margin-top: 30px; font-size: 12px; color: #aaa; text-align: center;">© 2026 Todos os direitos reservados.</p>
         </div>
     </div>
 
-    <!-- Modal SharePoint Create -->
-    <div id="modal-sharepoint-create" class="modal">
-        <div class="modal-content">
-            <span class="close close-sharepoint">&times;</span>
-            <h2 style="color: #0b5ed7;">Criar Pastas - OFÍCIOS</h2>
-            <p style="color:#666; margin-top:-8px;">Pré-visualização das pastas existentes e criação em sequência.</p>
-
-            <div id="sp-preview" style="margin-top:12px; max-height:240px; overflow:auto; border:1px solid var(--border-color); padding:10px; background:var(--card-bg);">
-                <em>Carregando preview...</em>
-            </div>
-
-            <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-                <label for="sp-count">Quantas novas pastas criar?</label>
-                <input id="sp-count" type="number" min="1" value="3" style="width:80px; padding:6px; border:1px solid var(--border-color); border-radius:6px;">
-                <button id="sp-create" class="btn-theme" style="background:var(--primary-color); color:#fff; border:none;">Criar</button>
-                <button class="btn-theme close-sharepoint" style="margin-left:auto;">Fechar</button>
-            </div>
-
-            <div id="sp-logs" style="margin-top:12px; max-height:160px; overflow:auto; font-family:monospace; font-size:12px; background:#fafafa; border:1px solid #eee; padding:8px; display:none;"></div>
-        </div>
-    </div>
-
-    <script>
-        const { ipcRenderer } = require('electron');
-        // Transição de Entrada
-        window.addEventListener('DOMContentLoaded', async () => {
-            document.body.classList.add('loaded');
-            // Restore scroll state
-            try {
-                const state = await ipcRenderer.invoke('load-app-state');
-                if (state && state.index && typeof state.index.scrollTop === 'number') {
-                    document.querySelector('.container').scrollTop = state.index.scrollTop;
-                }
-            } catch (e) { console.error('Error restoring index state', e); }
-
-            // Service metadata removed.
-        });
-
-        // Transição de Saída para Links
-        document.querySelectorAll('a.service-card').forEach(link => {
-            link.addEventListener('click', async function(e) {
-                e.preventDefault();
-                const target = this.href;
-                // Remember last clicked service
-                try {
-                    const cur = await ipcRenderer.invoke('load-app-state') || {};
-                    cur.index = cur.index || {};
-                    cur.index.lastService = target;
-                    ipcRenderer.send('save-app-state', cur);
-                } catch (e) { /* ignore */ }
-
-                // Show Intro Overlay as Loading Indicator
-                const overlay = document.getElementById('intro-overlay');
-                if (overlay) {
-                    overlay.classList.remove('fade-out');
-                    overlay.style.display = 'flex';
-                    overlay.style.opacity = '1';
-                    
-                    // Reset animations if possible to make it look like "loading"
-                    // Force restart of progress bar
-                    const bar = overlay.querySelector('.intro-progress');
-                    if(bar) {
-                        bar.style.animation = 'none';
-                        bar.offsetHeight; /* trigger reflow */
-                        bar.style.animation = 'progress-fill 2.5s ease-in-out forwards 0s';
-                    }
-                    const txt = overlay.querySelector('.intro-status');
-                    if(txt) {
-                        txt.style.animation = 'none';
-                        txt.textContent = 'Carregando Serviço...';
-                        txt.style.opacity = '1';
-                    }
-                }
-
-                setTimeout(() => {
-                    window.location.href = target;
-                }, 100); 
-            });
-        });
-
-        // SharePoint Create: open modal and fetch preview
-        const cardSP = document.getElementById('card-sharepoint-create');
-        const modalSP = document.getElementById('modal-sharepoint-create');
-        const spPreview = document.getElementById('sp-preview');
-        const spCount = document.getElementById('sp-count');
-        const spCreateBtn = document.getElementById('sp-create');
-        const spLogs = document.getElementById('sp-logs');
-
-        async function openSharepointModal() {
-            closeAllModals(modalSP);
-            modalSP.style.display = 'block';
-            spPreview.innerHTML = '<em>Carregando preview...</em>';
-            spLogs.style.display = 'none';
-            try {
-                const res = await ipcRenderer.invoke('sharepoint:get-preview', { url: null, selector: null });
-                if (!res || !res.ok) {
-                    // If res contains a raw error object, show it for debugging
-                    let errMsg = (res && res.error) ? res.error : 'erro desconhecido';
-                    try { if (res && res.raw) errMsg = JSON.stringify(res.raw); } catch(e){}
-                    spPreview.innerHTML = '<strong>Falha ao obter preview:</strong> ' + errMsg;
-                    console.warn('sharepoint:get-preview failed:', res);
-                    return;
-                }
-
-                const list = res.preview || {};
-
-                // Normalize list: prefer list.items, else fall back to list.folders or compact summary
-                let items = Array.isArray(list.items) ? list.items : (Array.isArray(list.folders) ? list.folders : []);
-                const total = items.length || (typeof list.totalItems === 'number' ? list.totalItems : items.length);
-                const folders = items.filter(i => i.isFolder || (/OF[IÍ]CIOS\s*\d{4}/i.test(i.name)) );
-
-                const html = [];
-                html.push(`<div><strong>Root:</strong> ${list.rootText || ''}</div>`);
-                html.push(`<div><strong>Total itens:</strong> ${total} (pastas detectadas: ${folders.length})</div>`);
-
-                if (folders.length > 0) {
-                    html.push('<ol style="margin-top:6px; padding-left:18px; max-height:180px; overflow:auto;">');
-                    folders.slice(0,50).forEach(f => html.push(`<li>${f.name} <small style="color:#777">${f.selector || ''}</small></li>`));
-                    html.push('</ol>');
-                } else if (items.length > 0) {
-                    html.push('<ol style="margin-top:6px; padding-left:18px; max-height:180px; overflow:auto;">');
-                    items.slice(0,50).forEach(f => html.push(`<li>${f.name || f} <small style="color:#777">${f.selector || ''}</small></li>`));
-                    html.push('</ol>');
-                } else {
-                    html.push('<div><em>Nenhum item detalhado disponível no preview.</em></div>');
-                }
-
-                spPreview.innerHTML = html.join('\n');
-
-                // set a sensible default count - prefer folders length if available
-                const suggested = (folders.length > 0) ? Math.min(5, Math.max(1, Math.floor(Math.max(3, 20 - folders.length)))) : Math.min(5, Math.max(1, Math.floor((list.totalItems || items.length) ? Math.max(3, 20 - (list.totalItems || items.length)) : 3)));
-                spCount.value = suggested;
-
-            } catch (e) {
-                spPreview.innerHTML = '<strong>Erro ao obter preview:</strong> ' + (e && e.message ? e.message : String(e));
-                console.error('Exception during preview:', e);
-            }
-        }
-
-        if (cardSP) {
-            // If the card is an anchor (navigates to the dedicated page), don't open the modal here.
-            if (cardSP.tagName && cardSP.tagName.toLowerCase() === 'a') {
-                // navigation will handle opening the dedicated page
-            } else {
-                cardSP.addEventListener('click', (e) => { openSharepointModal(); });
-            }
-        }
-
-        // Close handlers
-        document.querySelectorAll('.close-sharepoint').forEach(btn => btn.addEventListener('click', () => { modalSP.style.display = 'none'; }));
-
-        // Append logs from main
-        ipcRenderer.on('log-message', (ev, payload) => {
-            try {
-                const t = typeof payload === 'string' ? payload : (payload && payload.msg ? payload.msg : JSON.stringify(payload));
-                if (modalSP.style.display === 'block') {
-                    spLogs.style.display = 'block';
-                    const p = document.createElement('div'); p.textContent = `[${new Date().toLocaleTimeString()}] ${t}`; p.style.padding = '3px 0'; spLogs.appendChild(p); spLogs.scrollTop = spLogs.scrollHeight;
-                }
-            } catch (e) {}
-        });
-
-        spCreateBtn && spCreateBtn.addEventListener('click', async () => {
-            try {
-                const count = parseInt(spCount.value, 10);
-                if (!count || count <= 0) { alert('Digite um número válido de pastas para criar.'); return; }
-                spCreateBtn.disabled = true; spCreateBtn.textContent = 'Criando...';
-                spLogs.innerHTML = '';
-                spLogs.style.display = 'block';
-
-                const res = await ipcRenderer.invoke('sharepoint:create', { count: count, url: null, selector: null });
-                if (res && res.ok) {
-                    spLogs.appendChild(Object.assign(document.createElement('div'), { textContent: `✅ Criação concluída. Solicitado: ${res.requested}` }));
-                } else {
-                    spLogs.appendChild(Object.assign(document.createElement('div'), { textContent: `❌ Erro: ${res && res.error ? res.error : 'desconhecido'}` }));
-                }
-
-            } catch (e) {
-                spLogs.appendChild(Object.assign(document.createElement('div'), { textContent: `❌ Exceção: ${e && e.message ? e.message : String(e)}` }));
-            } finally {
-                spCreateBtn.disabled = false; spCreateBtn.textContent = 'Criar';
-            }
-        });
-
-        // Persist scroll with throttle
-        const container = document.querySelector('.container');
-        let saveIdxTimer = null;
-        function scheduleSaveIndex() {
-            if (saveIdxTimer) clearTimeout(saveIdxTimer);
-            saveIdxTimer = setTimeout(async () => {
-                try {
-                    const cur = await ipcRenderer.invoke('load-app-state') || {};
-                    cur.index = cur.index || {};
-                    cur.index.scrollTop = container.scrollTop;
-                    ipcRenderer.send('save-app-state', cur);
-                } catch (e) { console.error('scheduleSaveIndex error', e); }
-            }, 400);
-        }
-        container.addEventListener('scroll', scheduleSaveIndex);
-
-        const modal = document.getElementById("modal-about");
-        const btn = document.getElementById("btn-about");
-        const span = document.getElementsByClassName("close")[0];
-
-        btn.onclick = function() {
-            closeAllModals(modal);
-            // Populate versions
-            document.getElementById('env-node').textContent = process.versions.node;
-            document.getElementById('env-electron').textContent = process.versions.electron;
-            document.getElementById('env-chrome').textContent = process.versions.chrome;
-            document.getElementById('env-plat').textContent = process.platform + ' (' + process.arch + ')';
-            // Fill app version from main
-            try {
-                ipcRenderer.invoke('get-app-version').then(ver => {
-                    const el = document.getElementById('env-app-ver');
-                    if (el) el.textContent = ver || '?.?.?';
-                    const headVer = document.getElementById('app-version'); if (headVer) headVer.textContent = ver || '?.?.?';
-                });
-            } catch(e){}
-        }
-
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-
-        // App clock removed per user request
-    </script>
-    <script>
-        // Actions dropdown toggle
-        (function(){
-            const btn = document.getElementById('btn-actions');
-            const menu = document.getElementById('actions-menu');
-            if(!btn || !menu) return;
-            function open(){ menu.setAttribute('aria-hidden','false'); btn.classList.add('open'); }
-            function close(){ menu.setAttribute('aria-hidden','true'); btn.classList.remove('open'); }
-            btn.addEventListener('click', (e)=>{ e.stopPropagation(); const openState = menu.getAttribute('aria-hidden') === 'false'; if(openState) close(); else open(); });
-            // close when clicking outside
-            window.addEventListener('click', (ev)=>{ if(menu.getAttribute('aria-hidden') === 'false' && !menu.contains(ev.target) && ev.target !== btn) close(); });
-            // allow Esc to close
-            window.addEventListener('keydown', (ev)=>{ if(ev.key === 'Escape') close(); });
-        })();
-    </script>
-    <!-- Service Request Modal -->
-    <div id="modal-request" class="modal">
-        <div class="modal-content">
-            <span class="close" id="req-close">&times;</span>
-            <h3 style="margin-top:0;">Solicitar Serviço</h3>
-            <div style="margin-top:10px;">
-                <label style="display:block; font-weight:600; margin-bottom:6px;">Plataforma</label>
-                <select id="req-platform" style="width:100%; padding:8px; box-sizing:border-box;">
-                    <option value="PROJUDI">PROJUDI</option>
-                    <option value="PJE">PJE</option>
-                    <option value="ESPAIDER">ESPAIDER</option>
-                    <option value="OUTRO">Outro</option>
-                </select>
-            </div>
-            <div style="margin-top:12px;">
-                <label style="display:block; font-weight:600; margin-bottom:6px;">Descrição do serviço</label>
-                <textarea id="req-desc" rows="6" tabindex="0" style="width:100%; padding:10px; box-sizing:border-box; font-size:13px;" placeholder="Descreva o serviço que deseja solicitar..."></textarea>
-                <div id="req-error" style="color:#b91c1c; margin-top:8px; display:none; font-size:13px;"></div>
-            </div>
-            <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
-                <button id="req-cancel" class="btn-about">Cancelar</button>
-                <button id="req-send" class="btn-theme">Enviar</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        (function(){
-            const btnReq = document.getElementById('btn-request-service');
-            const modal = document.getElementById('modal-request');
-            const sel = document.getElementById('req-platform');
-            const desc = document.getElementById('req-desc');
-            const btnSend = document.getElementById('req-send');
-            const btnCancel = document.getElementById('req-cancel');
-            const btnClose = document.getElementById('req-close');
-            const errEl = document.getElementById('req-error');
-            if(!btnReq || !modal) return;
-
-            function openModal(){
-                closeAllModals(modal);
-                errEl.style.display = 'none';
-                desc.removeAttribute('disabled');
-                desc.removeAttribute('readonly');
-                desc.value = '';
-                // ensure modal-content is focusable so inputs receive keyboard events
-                const modalContent = modal.querySelector('.modal-content');
-                if(modalContent && !modalContent.hasAttribute('tabindex')) modalContent.setAttribute('tabindex','-1');
-                // small delay then focus the textarea
-                setTimeout(()=>{ try{ desc.focus(); desc.select(); }catch(e){} }, 150);
-            }
-
-            function closeModal(){ modal.style.display = 'none'; }
-
-            btnReq.addEventListener('click', openModal);
-            btnCancel.addEventListener('click', closeModal);
-            btnClose.addEventListener('click', closeModal);
-
-            // Close when clicking outside
-            window.addEventListener('click', (ev) => { if(ev.target === modal) closeModal(); });
-
-            btnSend.addEventListener('click', async () => {
-                const text = (desc.value || '').trim();
-                if(!text){ errEl.textContent = 'Por favor descreva o serviço desejado.'; errEl.style.display = 'block'; desc.focus(); return; }
-                try {
-                    let appVer = '?.?.?';
-                    try { appVer = await require('electron').ipcRenderer.invoke('get-app-version') || appVer; } catch(e){}
-                    const platform = sel.value || 'OUTRO';
-                    const plainSubject = `Solicitação de Serviço - ${platform} - EXTRATJUD`;
-                    const subject = encodeURIComponent(plainSubject);
-
-                    // Build an HTML body with light corporate styling. Attempt to embed local logo as data URL.
-                    function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-                    let logoImg = '';
-                    try{
-                        const fs = require('fs');
-                        const path = require('path');
-                        const logoPath = path.join(__dirname || '.', 'assets', 'logo.png');
-                        if(fs.existsSync(logoPath)){
-                            const bin = fs.readFileSync(logoPath);
-                            const b64 = bin.toString('base64');
-                            // Embeds the repo `assets/logo.png` (preferably a transparent PNG)
-                            logoImg = `<img src="data:image/png;base64,${b64}" alt="EXTRATJUD" height="500" style="height:500px; width:auto; max-width:800px; display:block; margin-bottom:12px; background:transparent;"/>`;
-                        }
-                    }catch(e){ /* ignore if not readable */ }
-
-                    const html = `<!doctype html><html><body style="font-family: 'Segoe UI', Tahoma, sans-serif; color:#1f2937;">
-                        ${logoImg}
-                        <h2 style="color:#10b981; margin:0 0 8px 0;">Solicitação de Serviço</h2>
-                        <p style="margin:0 0 8px 0; color:#374151;"><strong>Plataforma:</strong> ${escapeHtml(platform)}</p>
-                        <div style="margin-top:6px; color:#111; font-size:14px; line-height:1.4;">${escapeHtml(text).replace(/\n/g,'<br/>')}</div>
-                        <hr style="margin:12px 0; border:none; border-top:1px solid #e6eef2;" />
-                        <p style="color:#6b7280; font-size:12px; margin:0;">App Version: ${escapeHtml(appVer)} &nbsp;|&nbsp; Platform: ${escapeHtml(process.platform + ' ' + process.arch)}</p>
-                    </body></html>`;
-
-                    const body = encodeURIComponent(html);
-                    const recipients = 'jguivianna@gmail.com,joao.aviana@neoenergia.com';
-                    // On Windows try to open a formatted Outlook compose window using COM (PowerShell) first
-                    try {
-                        if (process.platform === 'win32') {
-                            try {
-                                const createRes = await require('electron').ipcRenderer.invoke('create-outlook-mail-html', { html: html, subject: plainSubject, to: recipients });
-                                if (createRes && createRes.ok) { try { alert('Aberto no Outlook com formatação.'); } catch(e){}; closeModal(); return; }
-                            } catch(e) { /* ignore and fallback */ }
-                        }
-                    } catch(e) { /* ignore */ }
-
-                    const mailto = `mailto:${recipients}?subject=${subject}&body=${body}`;
-                    try {
-                        const res = await require('electron').ipcRenderer.invoke('open-external', mailto);
-                        if (res && res.ok) {
-                            try { alert('Cliente de e-mail aberto.'); } catch(e){}
-                            closeModal();
-                            return;
-                        }
-                        // If failed, try a simplified plaintext mailto (shorter)
-                        const simpleBody = encodeURIComponent((text||'').slice(0,600) + '\n\n(Descrição truncada - cole o texto completo aqui se necessário)');
-                        const simpleMailto = `mailto:${recipients}?subject=${subject}&body=${simpleBody}`;
-                        const res2 = await require('electron').ipcRenderer.invoke('open-external', simpleMailto);
-                        if (res2 && res2.ok) {
-                            try { alert('Cliente de e-mail aberto com corpo simplificado (texto truncado).'); } catch(e){}
-                            closeModal();
-                            return;
-                        }
-                        try { alert('Falha ao abrir cliente de e-mail. Verifique o aplicativo padrão para mailto.'); } catch(e){}
-                    } catch(e) {
-                        try { alert('Erro ao tentar abrir cliente de e-mail. Verifique o console principal para detalhes.'); } catch(err){}
-                    }
-                    closeModal();
-                } catch(err){
-                    try { alert('Não foi possível abrir o cliente de e-mail.'); } catch(e){}
-                }
-            });
-        })();
-    </script>
-
-
-    <!-- Update / Changelog modal -->
-    <div id="modal-update" class="modal">
-        <div class="modal-content">
-            <h3>Atualizações</h3>
-            <div style="margin-top:8px; font-size:13px; color:#444;">
-                Este painel permite configurar um endpoint JSON (um arquivo <code>updates.json</code>) que descreve a versão mais recente do aplicativo.
-                Use sempre a URL direta para o arquivo JSON (por exemplo o link <em>raw</em> do GitHub). Exemplo de campos esperados no JSON: <code>version</code>, <code>url</code> (link para artefato), <code>raw</code>, <code>notes</code> e <code>published_at</code>.
-                Ao clicar em <strong>Verificar agora</strong> o app buscará esse JSON e comparará com a versão instalada; se houver atualização ela será exibida com changelog e link. Se <strong>Auto-Update</strong> estiver habilitado, o link de download será aberto automaticamente.
-                Atenção: se você apontar para uma página HTML (ex.: uma página de Release no GitHub) em vez do arquivo raw, a verificação falhará com uma mensagem de erro e — quando possível — o app sugerirá o link raw correto.
-                Para conveniência, você pode usar o arquivo de atualização hospedado neste repositório:
-                <div style="margin-top:6px; font-size:12px; color:#333;">
-                    <code>https://raw.githubusercontent.com/An0mi-dot/Extrajud/main/updates.json</code>
-                </div>
-            </div>
-            <div style="margin-top:10px;">
-                <label style="font-size:13px; color:#444; display:block;">Servidor de atualização (JSON):</label>
-                <input id="upd-server" type="text" style="width:100%; padding:8px; margin-top:6px; box-sizing:border-box;" placeholder="https://example.com/updates.json">
-                <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
-                    <input id="upd-auto" type="checkbox"><label for="upd-auto">Habilitar Auto-Update (abrir link automaticamente)</label>
-                </div>
-                <div id="upd-result" style="margin-top:12px; color:#333;"></div>
-            </div>
-            <div style="margin-top:14px; display:flex; gap:8px; justify-content:space-between;">
-                <div>
-                    <button id="upd-check" class="btn-theme">Verificar agora</button>
-                    <button id="upd-open" class="btn-about">Abrir link</button>
-                </div>
-                <div>
-                    <button id="upd-save" class="btn-theme">Salvar</button>
-                    <button id="upd-close" class="btn-about">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Update modal behaviour and IPC integration
-        (function(){
-            const btnCheck = document.getElementById('btn-check-updates');
-            const modalUpd = document.getElementById('modal-update');
-            const updClose = document.getElementById('upd-close');
-            const updCheck = document.getElementById('upd-check');
-            const updSave = document.getElementById('upd-save');
-            const updOpen = document.getElementById('upd-open');
-            const updServer = document.getElementById('upd-server');
-            const updAuto = document.getElementById('upd-auto');
-            const updResult = document.getElementById('upd-result');
-            let lastUrl = null;
-
-            function openModal(){ if(modalUpd) closeAllModals(modalUpd); }
-            function closeModal(){ if(modalUpd) modalUpd.style.display = 'none'; }
-
-            if(btnCheck) btnCheck.addEventListener('click', async ()=>{
-                // load current config and show modal
-                try{
-                    const cfg = await ipcRenderer.invoke('get-update-config');
-                    if(cfg && cfg.updateServer) updServer.value = cfg.updateServer;
-                    updAuto.checked = !!(cfg && cfg.autoUpdate);
-                }catch(e){}
-                openModal();
-            });
-
-            if(updClose) updClose.addEventListener('click', closeModal);
-
-            if(updSave) updSave.addEventListener('click', async ()=>{
-                try{
-                    await ipcRenderer.invoke('set-update-config', { updateServer: updServer.value || null, autoUpdate: !!updAuto.checked });
-                    updResult.textContent = 'Configurações salvas.';
-                }catch(e){ updResult.textContent = 'Erro salvando config.'; }
-            });
-
-            if(updCheck) updCheck.addEventListener('click', async ()=>{
-                updResult.textContent = 'Verificando...'; lastUrl = null; updOpen.style.display = 'none';
-                try{
-                    // if user changed server in input, use it temporarily
-                    if(updServer.value) await ipcRenderer.invoke('set-update-config', { updateServer: updServer.value });
-                    const res = await ipcRenderer.invoke('check-for-updates');
-                    if(res && res.updateAvailable){
-                        updResult.innerHTML = '<strong>Atualização disponível:</strong> ' + (res.latestVersion||'?') + '<br>' + (res.changelog||'Sem changelog');
-                        lastUrl = res.url || null; if(lastUrl) updOpen.style.display = 'inline-block';
-                    } else if(res && res.updateAvailable === false){
-                        updResult.textContent = 'Nenhuma atualização disponível.';
-                    } else if(res && res.error){
-                        updResult.textContent = 'Erro: ' + res.error;
-                    } else {
-                        updResult.textContent = 'Resposta inesperada.';
-                    }
-                }catch(e){ updResult.textContent = 'Erro na verificação.'; }
-            });
-
-            if(updOpen) updOpen.addEventListener('click', ()=>{
-                if(lastUrl) ipcRenderer.send('perform-update', lastUrl);
-            });
-
-            // close when clicking outside
-            window.addEventListener('click', (ev) => { if(ev.target === modalUpd) closeModal(); });
-
-            // --- Auto-Updater Listeners ---
-            ipcRenderer.on('updater:status', (ev, data) => {
-                if (!document.getElementById('upd-anim-style')) {
-                    const style = document.createElement('style');
-                    style.id = 'upd-anim-style';
-                    style.textContent = `@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
-                    document.head.appendChild(style);
-                }
-
-                if(data.status === 'available') {
-                    const banner = document.createElement('div');
-                    Object.assign(banner.style, {
-                        position: 'fixed', bottom: '20px', right: '20px',
-                        backgroundColor: '#10b981', color: '#fff',
-                        padding: '16px 24px', borderRadius: '8px',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                        zIndex: '99999', display: 'flex', alignItems: 'center', gap: '12px',
-                        fontFamily: "'Inter', sans-serif", fontSize: '14px',
-                        animation: 'slideIn 0.4s ease-out'
-                    });
-                    banner.innerHTML = `
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        <div>
-                            <div style="font-weight:600">Atualização v${data.info.version} encontrada</div>
-                            <div style="opacity:0.9">Baixando em segundo plano...</div>
-                        </div>
-                    `;
-                    document.body.appendChild(banner);
-                    setTimeout(() => { if(banner.parentNode) banner.remove(); }, 6000); 
-                }
-                if(data.status === 'ready') {
-                    const banner = document.createElement('div');
-                    Object.assign(banner.style, {
-                        position: 'fixed', bottom: '20px', right: '20px',
-                        backgroundColor: '#059669', color: '#fff', /* Darker green for action */
-                        padding: '16px 24px', borderRadius: '8px',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                        zIndex: '100000', cursor: 'pointer', display: 'flex', flexDirection: 'column',
-                        fontFamily: "'Inter', sans-serif", fontSize: '14px',
-                        animation: 'slideIn 0.4s ease-out'
-                    });
-                    banner.innerHTML = `
-                        <div style="font-weight:600; margin-bottom:4px; display:flex; align-items:center; gap:8px">
-                             <span>🚀 Atualização Pronta</span>
-                        </div>
-                        <div style="opacity:0.9">Clique para reiniciar e instalar v${data.info.version}</div>
-                    `;
-                    banner.onclick = () => ipcRenderer.send('perform-update', 'restart');
-                    document.body.appendChild(banner);
-                }
-            });
-
-            // --- Intro Animation Logic ---
-            const overlay = document.getElementById('intro-overlay');
-            const hasSeenIntro = sessionStorage.getItem('extjt-intro-seen');
-
-            if (overlay) {
-                if (hasSeenIntro) {
-                    // Skip animation instantly if already seen in this session
-                    overlay.style.display = 'none';
-                    // We keep the element in DOM for reuse as a loading screen
-                    document.body.classList.add('loaded');
-                } else {
-                    // Play animation if first time
-                    setTimeout(() => {
-                        overlay.classList.add('fade-out');
-                        setTimeout(() => { 
-                            overlay.style.display = 'none'; // Hide instead of remove
-                            overlay.classList.remove('fade-out'); // Reset class for next use (but keep hidden)
-                            document.body.classList.add('loaded'); 
-                            sessionStorage.setItem('extjt-intro-seen', 'true');
-                        }, 800);
-                    }, 3500); 
-                }
-            }
-        })();
-    </script>
-
-    <!-- Procedural Animation & Card Spotlight Logic -->
-    <script>
-        (function() {
-            // --- 1. Background Particles ---
-            const canvas = document.getElementById('bg-canvas');
-            if(canvas) {
-                const ctx = canvas.getContext('2d');
-                let width, height;
-                let particles = [];
-                const particleCount = 60;
-                const connectionDistance = 150;
-                
-                function resize() {
-                    width = window.innerWidth;
-                    height = window.innerHeight;
-                    canvas.width = width;
-                    canvas.height = height;
-                }
-                window.addEventListener('resize', resize);
-                resize();
-                
-                class Particle {
-                    constructor() {
-                        this.x = Math.random() * width;
-                        this.y = Math.random() * height;
-                        this.vx = (Math.random() - 0.5) * 0.4;
-                        this.vy = (Math.random() - 0.5) * 0.4;
-                        this.size = Math.random() * 2 + 1;
-                    }
-                    update() {
-                        this.x += this.vx;
-                        this.y += this.vy;
-                        if(this.x < 0 || this.x > width) this.vx *= -1;
-                        if(this.y < 0 || this.y > height) this.vy *= -1;
-                    }
-                    draw() {
-                        ctx.beginPath();
-                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(16, 185, 129, 0.4)'; // Increased opacity
-                        ctx.fill();
-                    }
-                }
-                
-                for(let i=0; i<particleCount; i++) particles.push(new Particle());
-                
-                function animate() {
-                    ctx.clearRect(0, 0, width, height);
-                    particles.forEach((p, i) => {
-                        p.update();
-                        p.draw();
-                        for(let j=i+1; j<particles.length; j++) {
-                            const p2 = particles[j];
-                            const dx = p.x - p2.x;
-                            const dy = p.y - p2.y;
-                            const dist = Math.sqrt(dx*dx + dy*dy);
-                            if(dist < connectionDistance) {
-                                ctx.beginPath();
-                                ctx.moveTo(p.x, p.y);
-                                ctx.lineTo(p2.x, p2.y);
-                                ctx.strokeStyle = `rgba(16, 185, 129, ${0.12 * (1 - dist/connectionDistance)})`;
-                                ctx.lineWidth = 1;
-                                ctx.stroke();
-                            }
-                        }
-                    });
-                    requestAnimationFrame(animate);
-                }
-                animate();
-            }
-            
-            // --- 2. Card Spotlight ---
-            const cards = document.querySelectorAll('.service-card');
-            if(cards.length > 0) {
-                // Throttle for performance? Not strictly needed for modern engines if calc is simple.
-                document.body.addEventListener('mousemove', (e) => {
-                    const { clientX, clientY } = e;
-                    cards.forEach(card => {
-                        const rect = card.getBoundingClientRect();
-                        const x = clientX - rect.left;
-                        const y = clientY - rect.top;
-                        card.style.setProperty('--mouse-x', `${x}px`);
-                        card.style.setProperty('--mouse-y', `${y}px`);
-                    });
-                });
-            }
-        })();
-    </script>
 </body>
 </html>
