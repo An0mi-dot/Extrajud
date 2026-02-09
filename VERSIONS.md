@@ -99,3 +99,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 4cb051a
 - Notes: feat: add subtle entry animations to hubs
+## v1.2.4 - 2026-02-09
+
+- Commit: 6431021
+- Notes: feat: implement PJE auto-login, background selenium mode, and standalone folder tool
