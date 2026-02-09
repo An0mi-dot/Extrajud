@@ -246,6 +246,12 @@
         </button>
 
         <div class="control-group">
+            <div class="label-section">Credenciais</div>
+            <input type="text" id="inp-login" placeholder="Login (CPF)" value="05997307573" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:13px; color:#555; background:#fff; font-family:'Inter',sans-serif; margin-bottom: 5px; box-sizing: border-box;">
+            <input type="password" id="inp-password" placeholder="Senha" value="neocoelba@10" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:13px; color:#555; background:#fff; font-family:'Inter',sans-serif; box-sizing: border-box;">
+        </div>
+
+        <div class="control-group">
             <div class="label-section">Automação</div>
             <button id="btnStart" class="btn-action" onclick="startAutomation()">
                 <i class="fas fa-play"></i> INICIAR SERVIÇO
@@ -450,7 +456,9 @@
             addLog('>>> Iniciando Serviço PJE...', 'log-info');
             scheduleSave();
             const outputDir = document.getElementById('inp-output-dir').value || '';
-            ipcRenderer.send('run-pje-script', { outputDir });
+            const login = document.getElementById('inp-login').value || '';
+            const password = document.getElementById('inp-password').value || '';
+            ipcRenderer.send('run-pje-script', { outputDir, login, password });
         }
 
         function stopAutomation() {

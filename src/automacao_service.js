@@ -259,6 +259,58 @@ async function runAutomation(eventSender, inputReceiver, args) {
         }
         if (isStopping) return;
 
+        // --- MUDANÇA PARA MODO BACKGROUND (HEADLESS) ---
+        // O usuário pediu para "esconder" o navegador após a fase manual (Login/Captcha)
+        try {
+            log(eventSender, "Login confirmado. Migrando para modo OCULTO (Background)...", "Switching to Headless", 'info');
+            
+            // 1. Salvar estado da sessão (Cookies, LocalStorage)
+            const statePath = path.join(app.getPath('userData'), 'projudi_session.json');
+            await context.storageState({ path: statePath });
+            log(eventSender, "Sessão salva. Reiniciando engine...", null, 'info');
+
+            // 2. Fechar navegador visível
+            await browser.close();
+
+            // 3. Reabrir em modo HEADLESS
+            const edgePaths = [
+                "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+                "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
+            ];
+            const edgeExe = edgePaths.find(p => fs.existsSync(p));
+
+            browser = await chromium.launch({
+                executablePath: edgeExe,
+                headless: true, // AGORA É TRUE
+                args: ["--disable-blink-features=AutomationControlled"] // Sem start-maximized pois é headless
+            });
+
+            // 4. Carregar contexto com a sessão salva
+            context = await browser.newContext({
+                userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+                storageState: statePath
+            });
+            
+            // Anti-detecção novamente
+            await context.addInitScript(() => { Object.defineProperty(navigator, 'webdriver', { get: () => undefined }); });
+
+            page = await context.newPage();
+            page.setDefaultTimeout(60000);
+
+            // 5. Navegar novamente para o Dashboard (Sessão deve ser restaurada pelos cookies)
+            log(eventSender, "Restaurando sessão em background...", `Navigating: ${PROJUDI_URL}`);
+            await page.goto(PROJUDI_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await delay(3000); // Aguarda estabilização
+
+            log(eventSender, "Navegador oculto operante. Iniciando extração...", null, 'success');
+
+        } catch (headlessErr) {
+            log(eventSender, `Falha ao migrar para headless: ${headlessErr.message}. Continuando (talvez visível)...`, null, 'error');
+            // Se falhar o relaunch, tenta continuar se o browser antigo ainda existir (provavelmente não, então falha critica)
+            if (!browser.isConnected()) throw new Error("Falha crítica ao reiniciar navegador em background.");
+        }
+
+
         // --- FASE 1: CITAÇÕES ---
         const dfCita = await processCategoryRoutine(page, "Citações", 'cita', eventSender, inputReceiver, args);
         if (isStopping) return;
@@ -1915,16 +1967,90 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                 log(eventSender, "Sessão PJE 1º Grau válida detectada! (Reutilizando storage)", 'PJE Session', 'success');
                 // Salvar novamente para renovar timestamp do arquivo se desejar, mas não estritamente necessário
             } else {
-                log(eventSender, "Sessão não detectada. Solicitando login manual...", 'PJE Session', 'warn');
-                const login1 = await waitForInput(eventSender, ipcReceiver, 'confirm', {
-                    title: 'Login Necessário - PJE 1º Grau',
-                    message: '1. Realize o login no PJE 1º Grau.\n2. **SELECIONE O PERFIL DE PROCURADORIA** no topo da tela.\n3. Aguarde o painel inicial carregar.\n\nClique em Continuar APÓS selecionar o perfil correto.\n\n(Para testes: Clique em Continuar mesmo sem login para tentar contornar)',
-                    confirmText: 'Continuar / Testar'
-                });
+                let proceeding = false;
 
-                if (login1 === false || login1 === 'cancel') { 
-                    log(eventSender, 'Login PJE 1 cancelado/recusado. Pulando etapa.', null, 'warn'); 
-                    return; 
+                // --- LOGIN AUTOMÁTICO SE CREDENCIAIS OK ---
+                // Debug log para confirmar recebimento
+                if (args.login) log(eventSender, `Automação de Login Ativa (CPF: ${args.login})`, 'PJE Login', 'info');
+                
+                if (args.login && args.password) {
+                     let loginSuccess = false;
+                     try {
+                         log(eventSender, "Aguardando carregamento do formulário de login...", 'PJE Login', 'info');
+                         
+                         // Espera explícita pelo carregamento da página + Estado visível do input
+                         await page.waitForLoadState('domcontentloaded');
+                         
+                         // Tenta localizar o campo username com timeout generoso (20s)
+                         // Se falhar, lança erro específico para o log
+                         try {
+                            await page.waitForSelector('#username', { state: 'visible', timeout: 20000 });
+                         } catch (timErr) {
+                            throw new Error(`Campo '#username' não encontrado após 20s. (URL: ${page.url()})`);
+                         }
+
+                         await delay(500);
+                         await page.fill('#username', args.login);
+                         await delay(500);
+                         
+                         // Senha
+                         await page.fill('#password', args.password);
+                         await delay(500);
+                         
+                         log(eventSender, "Submetendo formulário...", 'PJE Login', 'info');
+                         
+                         // Tentativa agressiva de encontrar o botão de ação
+                         const successClick = await safeEvaluate(async () => {
+                             const btn = document.querySelector('#btnEntrar') || 
+                                         document.querySelector('[name="btnEntrar"]') || 
+                                         document.querySelector('input[type="submit"]') ||
+                                         document.querySelector('button[type="submit"]');
+                             if(btn) { 
+                                 btn.click(); 
+                                 return true; 
+                             }
+                             return false;
+                         });
+
+                         if (!successClick) {
+                             log(eventSender, "Botão não localizado via JS. Tentando ENTER...", null, 'warn');
+                             await page.press('#password', 'Enter');
+                         }
+                         
+                         loginSuccess = true;
+
+                         // *** CHECKPOINT DE CONFIRMAÇÃO DO USUÁRIO ***
+                         log(eventSender, "Credenciais enviadas. Aguardando sua confirmação de 2FA...", 'PJE Login', 'success');
+                         const confirm2fa = await waitForInput(eventSender, ipcReceiver, 'confirm', {
+                            title: 'Confirmação de Login (2FA)',
+                            message: 'As credenciais foram inseridas e o login solicitado.\n\n1. Verifique se o PJE pediu o Token/2FA.\n2. Complete o acesso no navegador.\n3. Quando estiver na "Mesa de Trabalho", clique em CONFIRMAR abaixo.',
+                            confirmText: '>> CONFIRMAR LOGIN (Estou na Mesa de Trabalho) <<'
+                         });
+                         
+                         if (!confirm2fa) {
+                             log(eventSender, 'Login cancelado pelo usuário.', null, 'error');
+                             return; // Aborta função
+                         }
+                         proceeding = true; // Marca como sucesso para pular o prompt manual
+                         
+                     } catch(e) {
+                         log(eventSender, `Falha no Login Automático: ${e.message}`, 'PJE Login', 'error');
+                         log(eventSender, "Passando para modo manual...", null, 'warn');
+                     }
+                }
+
+                if (!proceeding) {
+                    log(eventSender, "Sessão não detectada. Solicitando login manual...", 'PJE Session', 'warn');
+                    const login1 = await waitForInput(eventSender, ipcReceiver, 'confirm', {
+                        title: 'Login Necessário - PJE 1º Grau',
+                        message: '1. Realize o login no PJE 1º Grau.\n2. **SELECIONE O PERFIL DE PROCURADORIA** no topo da tela.\n3. Aguarde o painel inicial carregar.\n\nClique em Continuar APÓS selecionar o perfil correto.\n\n(Para testes: Clique em Continuar mesmo sem login para tentar contornar)',
+                        confirmText: 'Continuar / Testar'
+                    });
+
+                    if (login1 === false || login1 === 'cancel') { 
+                        log(eventSender, 'Login PJE 1 cancelado/recusado. Pulando etapa.', null, 'warn'); 
+                        return; 
+                    }
                 }
 
                 // Verifica novamente se o login foi bem sucedido antes de salvar, 
