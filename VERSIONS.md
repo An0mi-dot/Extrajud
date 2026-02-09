@@ -95,3 +95,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: c1ecdcc
 - Notes: fix: update home page title and welcome text
+## v1.2.3 - 2026-02-09
+
+- Commit: 4cb051a
+- Notes: feat: add subtle entry animations to hubs
