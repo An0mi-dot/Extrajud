@@ -1,1 +1,32 @@
-/* Theme system disabled - styles removed. */
+/* Global Theme Variables - Modern Balanced Slate */
+:root {
+    --primary-color: #10b981;
+    --primary-hover: #059669;
+    --primary-light: #ecfdf5;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-color: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Base Dark Mode Support (System level or fallback) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --text-color: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --primary-light: rgba(16, 185, 129, 0.1);
+    }
+}
+
+/* Ensure no transparency on critical elements */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
