@@ -8,16 +8,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
-            --primary-color: #10b981;
-            --primary-hover: #059669;
+            /* Local specific colors */
             --success-color: #198754;
             --danger-color: #dc3545;
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --border-color: #dfe1e5;
             --log-bg: #1e1e1e;
             --log-text: #00ff9d;
         }
@@ -144,6 +140,17 @@
             padding: 20px;
             gap: 15px;
             min-width: 0;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                width: 220px;
+                padding: 15px;
+            }
         }
 
         .info-card {

@@ -7,21 +7,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
     <style>
+        /* Specific overrides */
         :root {
-            --primary-color: #10b981;
-            --primary-hover: #059669;
             --success-color: #198754;
             --danger-color: #dc3545;
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --border-color: #dfe1e5;
             --log-bg: #1e1e1e;
             --log-text: #00ff9d;
         }
-
-        body {
             font-family: 'Inter', 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -181,15 +175,29 @@
             flex-direction: column;
             padding: 20px;
             gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* Stats Cards (Static for now, can be hooked up later) */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
         
+        @media (max-width: 900px) {
+            .sidebar {
+                width: 200px;
+                padding: 15px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .card {
             background: var(--card-bg);
             padding: 15px 20px;

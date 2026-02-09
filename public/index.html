@@ -7,40 +7,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script>
-        // Apply saved theme early to avoid flash
-        try {
-            const t = localStorage.getItem('extjt-theme');
-            if (t === 'dark') document.documentElement.classList.add('dark');
-        } catch (e) { /* ignore */ }
-    </script>
+    
+    <!-- Theme selection disabled -->
+
     <style>
+        /* Specific page overrides only */
         :root {
-            --primary-color: #10b981;
-            --primary-hover: #059669;
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --text-secondary: #666666;
-            --border-color: #dfe1e5;
-            /* card icon colors */
+            /* Keep layout specific vars here if needed, colors are now in theme.css */
             --card-icon-bg: #ecfdf5;
             --card-icon-color: var(--primary-color);
             --card-icon-disabled-bg: #e9ecef;
             --card-icon-disabled-color: #adb5bd;
         }
 
-        /* Dark theme overrides when 'dark' class is on html: soft gray tones, keep green */
         html.dark {
-            --bg-color: #1f2428; /* soft dark gray */
-            --card-bg: #24282c;
-            --text-color: #e6edf0;
-            --text-secondary: #a8b0b5;
-            --border-color: #313639;
-            --primary-color: #10b981; /* keep original green */
-            --primary-hover: #059669;
+            /* Re-map specific components that depend on base variables */
             --card-icon-bg: #22282a;
-            --card-icon-color: var(--primary-color);
             --card-icon-disabled-bg: #2b2f31;
             --card-icon-disabled-color: #6b7280;
         }
@@ -315,10 +297,22 @@
             flex: 1;
             padding: 40px;
             overflow-y: auto;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            .header {
+                padding: 14px 20px;
+            }
+            .brand {
+                font-size: 20px;
+            }
         }
 
         .btn-theme {
@@ -363,8 +357,18 @@
 
         .services-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 25px;
+            width: 100%;
+        }
+
+        @media (min-width: 1600px) {
+            .services-grid {
+                grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            }
+            .container {
+                max-width: 1600px;
+            }
         }
 
         .service-card {
@@ -730,10 +734,13 @@
             EXTRATJUD
         </div>
         <div style="display:flex; align-items:center; gap:12px; position:relative;">
+            
+
+
             <button id="btn-actions" class="btn-theme" title="Ações">Ações ▾</button>
             <div id="actions-menu" class="actions-menu" role="menu" aria-hidden="true">
                 <div style="padding:10px; display:flex; flex-direction:column; gap:8px;">
-                        <button id="btn-theme" class="btn-theme" title="Alternar tema">Tema</button>
+                        <!-- Theme button moved to navbar -->
                         <button id="btn-request-service" class="btn-about" title="Solicitar Serviço">Solicitar Serviço</button>
                     </div>
             </div>
@@ -1328,61 +1335,7 @@
             });
         })();
     </script>
-    <!-- Theme selector modal -->
-    <div id="modal-theme" class="modal">
-        <div class="modal-content">
-            <h3>Escolha o tema</h3>
-            <div style="margin-top:12px; display:flex; gap:10px;">
-                <button id="theme-light" class="btn-theme">Claro</button>
-                <button id="theme-dark" class="btn-theme">Escuro (Cinza)</button>
-                <button id="theme-default" class="btn-theme">Padrão do sistema</button>
-            </div>
-            <div style="margin-top:14px; text-align:right;">
-                <button id="theme-close" class="btn-about">Fechar</button>
-            </div>
-        </div>
-    </div>
 
-    <script>
-        // Theme selector handling: show modal and persist choice
-        (function(){
-            const btnTheme = document.getElementById('btn-theme');
-            const modal = document.getElementById('modal-theme');
-            const btnLight = document.getElementById('theme-light');
-            const btnDark = document.getElementById('theme-dark');
-            const btnDefault = document.getElementById('theme-default');
-            const btnClose = document.getElementById('theme-close');
-
-            function openModal(){ if(modal) closeAllModals(modal); }
-            function closeModal(){ if(modal) modal.style.display = 'none'; }
-
-            if(btnTheme) btnTheme.addEventListener('click', openModal);
-            if(btnClose) btnClose.addEventListener('click', closeModal);
-
-            if(btnLight) btnLight.addEventListener('click', () => {
-                document.documentElement.classList.remove('dark');
-                try{ localStorage.setItem('extjt-theme', 'light'); }catch(e){}
-                closeModal();
-            });
-
-            if(btnDark) btnDark.addEventListener('click', () => {
-                document.documentElement.classList.add('dark');
-                try{ localStorage.setItem('extjt-theme', 'dark'); }catch(e){}
-                closeModal();
-            });
-
-            if(btnDefault) btnDefault.addEventListener('click', () => {
-                try{ localStorage.removeItem('extjt-theme'); }catch(e){}
-                // attempt to follow system preference
-                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if(prefersDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark');
-                closeModal();
-            });
-
-            // close when clicking outside
-            window.addEventListener('click', (ev) => { if(ev.target === modal) closeModal(); });
-        })();
-    </script>
 
     <!-- Update / Changelog modal -->
     <div id="modal-update" class="modal">
