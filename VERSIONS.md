@@ -83,3 +83,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: f4968ec
 - Notes: chore: remove theme selection UI and disable theme assets
+## v1.2.0 - 2026-02-09
+
+- Commit: dc911e6
+- Notes: fix: restore solid UI styles and fix transparency after theme removal
