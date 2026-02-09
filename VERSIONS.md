@@ -79,3 +79,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: ecf9f2d
 - Notes: feat: use persistent browser profile for PJE and allow login bypass
+## v1.1.9 - 2026-02-09
+
+- Commit: f4968ec
+- Notes: chore: remove theme selection UI and disable theme assets
