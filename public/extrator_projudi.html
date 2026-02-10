@@ -7,16 +7,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="assets/theme.css">
+
     <style>
+        /* Specific overrides */
         :root {
-            --primary-color: #10b981;
-            --primary-hover: #059669;
             --success-color: #198754;
             --danger-color: #dc3545;
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --border-color: #dfe1e5;
             --log-bg: #1e1e1e;
             --log-text: #00ff9d;
         }
@@ -30,8 +28,6 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
-            opacity: 0; /* Fade in start */
-            transition: opacity 0.4s ease-in-out;
         }
 
         /* Typography Updates */
@@ -181,15 +177,29 @@
             flex-direction: column;
             padding: 20px;
             gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* Stats Cards (Static for now, can be hooked up later) */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
         
+        @media (max-width: 900px) {
+            .sidebar {
+                width: 200px;
+                padding: 15px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .card {
             background: var(--card-bg);
             padding: 15px 20px;
@@ -448,7 +458,18 @@
                 <span class="terminal-dot yellow"></span>
                 <span class="terminal-dot green"></span>
                 <div style="flex:1"></div>
-                <button id="btn-clear-log" title="Limpar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-size:12px;padding:6px 8px;">Limpar</button>
+                <!-- Log Actions Toolbar -->
+                <div style="display:flex; gap:8px;">
+                    <button id="btn-copy-log" title="Copiar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-regular fa-copy"></i> Copiar
+                    </button>
+                    <button id="btn-download-log" title="Baixar Logs (TXT)" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-solid fa-download"></i> Baixar
+                    </button>
+                    <button id="btn-clear-log" title="Limpar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-solid fa-trash-can"></i> Limpar
+                    </button>
+                </div>
             </div>
             <div id="logs"></div>
         </div>
@@ -488,7 +509,7 @@
             e.preventDefault();
             document.body.style.opacity = '0';
             setTimeout(() => {
-                window.location.href = 'index.html';
+                window.location.href = 'hub_servicos.html';
             }, 400);
         };
 
@@ -682,6 +703,36 @@
             const btnStartEl = document.getElementById('btn-start');
             const btnStopEl = document.getElementById('btn-stop');
             const btnClearLog = document.getElementById('btn-clear-log');
+            const btnCopyLog = document.getElementById('btn-copy-log');
+            const btnDownloadLog = document.getElementById('btn-download-log');
+
+            // --- LOG ACTIONS ---
+            if(btnCopyLog) {
+                btnCopyLog.addEventListener('click', () => {
+                    const textToCopy = fullLogs.map(l => `[${l.timestamp}] [${l.type.toUpperCase()}] ${l.msg} ${l.tech ? `| DEV: ${l.tech}` : ''}`).join('\n');
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        // Feedback visual temporário
+                        const originalText = btnCopyLog.innerHTML;
+                        btnCopyLog.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+                        setTimeout(() => { btnCopyLog.innerHTML = originalText; }, 2000);
+                    }).catch(err => console.error('Erro ao copiar', err));
+                });
+            }
+
+            if(btnDownloadLog) {
+                btnDownloadLog.addEventListener('click', () => {
+                    const textContent = fullLogs.map(l => `[${l.timestamp}] [${l.type.toUpperCase()}] ${l.msg} ${l.tech ? `| DEV: ${l.tech}` : ''}`).join('\n');
+                    const blob = new Blob([textContent], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `extratju_log_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                });
+            }
 
             if (btnStartEl) {
                 btnStartEl.addEventListener('click', () => {

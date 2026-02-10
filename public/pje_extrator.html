@@ -8,16 +8,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="assets/theme.css">
+
     <style>
         :root {
-            --primary-color: #10b981;
-            --primary-hover: #059669;
+            /* Local specific colors */
             --success-color: #198754;
             --danger-color: #dc3545;
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --border-color: #dfe1e5;
             --log-bg: #1e1e1e;
             --log-text: #00ff9d;
         }
@@ -31,8 +29,6 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
-            opacity: 0;
-            transition: opacity 0.4s ease-in-out;
         }
 
         body.loaded { opacity: 1; }
@@ -144,6 +140,17 @@
             padding: 20px;
             gap: 15px;
             min-width: 0;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                width: 220px;
+                padding: 15px;
+            }
         }
 
         .info-card {
@@ -239,6 +246,12 @@
         </button>
 
         <div class="control-group">
+            <div class="label-section">Credenciais</div>
+            <input type="text" id="inp-login" placeholder="Login (CPF)" value="05997307573" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:13px; color:#555; background:#fff; font-family:'Inter',sans-serif; margin-bottom: 5px; box-sizing: border-box;">
+            <input type="password" id="inp-password" placeholder="Senha" value="neocoelba@10" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-size:13px; color:#555; background:#fff; font-family:'Inter',sans-serif; box-sizing: border-box;">
+        </div>
+
+        <div class="control-group">
             <div class="label-section">Automação</div>
             <button id="btnStart" class="btn-action" onclick="startAutomation()">
                 <i class="fas fa-play"></i> INICIAR SERVIÇO
@@ -280,9 +293,17 @@
                     <div class="dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
                     <span class="log-title-text">TERMINAL DE EXECUÇÃO</span>
                 </div>
-                <button onclick="copyLog()" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Copiar Log">
-                    <i class="fas fa-copy"></i>
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button id="btn-copy-log" title="Copiar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-regular fa-copy"></i> Copiar
+                    </button>
+                    <button id="btn-download-log" title="Baixar Logs (TXT)" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-solid fa-download"></i> Baixar
+                    </button>
+                    <button id="btn-clear-log" title="Limpar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-solid fa-trash-can"></i> Limpar
+                    </button>
+                </div>
             </div>
             <div id="logs"></div>
         </div>
@@ -320,7 +341,7 @@
         document.querySelector('.btn-back').addEventListener('click', (e) => {
             e.preventDefault();
             document.body.classList.remove('loaded');
-            setTimeout(() => { window.location.href = 'index.html'; }, 400); 
+            setTimeout(() => { window.location.href = 'hub_servicos.html'; }, 400); 
         });
 
         // --- State & Logs Persistence ---
@@ -443,7 +464,9 @@
             addLog('>>> Iniciando Serviço PJE...', 'log-info');
             scheduleSave();
             const outputDir = document.getElementById('inp-output-dir').value || '';
-            ipcRenderer.send('run-pje-script', { outputDir });
+            const login = document.getElementById('inp-login').value || '';
+            const password = document.getElementById('inp-password').value || '';
+            ipcRenderer.send('run-pje-script', { outputDir, login, password });
         }
 
         function stopAutomation() {
@@ -459,10 +482,37 @@
             addLog('>> Pulando etapa atual...', 'log-warning');
         }
 
-        function copyLog() {
-            navigator.clipboard.writeText(logArea.innerText);
-            // alert('Log copiado!');
+        function initLogTools() {
+            const btnCopy = document.getElementById('btn-copy-log');
+            const btnDown = document.getElementById('btn-download-log');
+            const btnClear = document.getElementById('btn-clear-log');
+
+            if(btnCopy) btnCopy.addEventListener('click', () => {
+                const textToCopy = fullLogs.map(l => `[${l.timestamp}] [${l.type ? l.type.toUpperCase() : 'INFO'}] ${l.msg}`).join('\n');
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const original = btnCopy.innerHTML;
+                    btnCopy.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+                    setTimeout(() => btnCopy.innerHTML = original, 2000);
+                });
+            });
+
+            if(btnDown) btnDown.addEventListener('click', () => {
+                const textContent = fullLogs.map(l => `[${l.timestamp}] [${l.type ? l.type.toUpperCase() : 'INFO'}] ${l.msg}`).join('\n');
+                const blob = new Blob([textContent], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url;
+                a.download = `pje_log_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a); window.URL.revokeObjectURL(url);
+            });
+
+            if(btnClear) btnClear.addEventListener('click', () => {
+                logArea.innerHTML = '';
+                fullLogs = [];
+                addLog('Logs limpos pelo usuário.', 'log-info');
+            });
         }
+        initLogTools();
 
         // Modal Logic Refactored
         function showModal(data) {

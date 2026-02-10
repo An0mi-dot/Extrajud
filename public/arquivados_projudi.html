@@ -278,7 +278,7 @@
             <div style="font-size:16px;">Arquivados PROJUDI</div>
         </div>
 
-        <button class="btn-back" onclick="window.location.href='index.html'">
+        <button class="btn-back" onclick="window.location.href='hub_servicos.html'">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -348,7 +348,12 @@
                 <span class="terminal-dot yellow"></span>
                 <span class="terminal-dot green"></span>
                 <span style="margin-left: 10px;">Console de Execução (Arquivados)</span>
-                <button id="btn-copy-log" style="margin-left:auto;background:transparent;border:1px solid #666;color:#ccc;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;transition:all 0.2s;">Copiar Log</button>
+                <!-- Updated Toolbar -->
+                <div style="margin-left:auto; display:flex; gap:8px;">
+                     <button id="btn-copy-log" title="Copiar Logs" style="background:transparent;border:1px solid #555;color:#ccc;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;">Copiar</button>
+                     <button id="btn-download-log" title="Baixar Logs (TXT)" style="background:transparent;border:1px solid #555;color:#ccc;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;">Baixar</button>
+                     <button id="btn-clear-log" title="Limpar Logs" style="background:transparent;border:1px solid #555;color:#ccc;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;">Limpar</button>
+                </div>
             </div>
             <div id="logs">
                 <div class="log-entry log-type-info"><div class="log-main"><span>[i]</span> Sistema pronto.</div></div>
@@ -535,6 +540,36 @@
             else if (status === false) { btnStart.disabled = false; btnStop.disabled = true; updateStatus('waiting','Pronto para iniciar'); }
             else if (status === 'stopping') { btnStop.disabled = true; updateStatus('stopped','Cancelando...'); }
             scheduleSaveArch();
+        });
+
+        // --- Toolbar Logic ---
+        const btnCopy = document.getElementById('btn-copy-log');
+        const btnDown = document.getElementById('btn-download-log');
+        const btnClear = document.getElementById('btn-clear-log');
+
+        if(btnCopy) btnCopy.addEventListener('click', () => {
+             const text = fullLogs.map(l => `[${l.timestamp}] [${l.type.toUpperCase()}] ${l.msg} ${l.tech ? '| ' + l.tech : ''}`).join('\n');
+             navigator.clipboard.writeText(text).then(() => {
+                 const old = btnCopy.textContent;
+                 btnCopy.textContent = 'Copiado!';
+                 setTimeout(() => btnCopy.textContent = old, 2000);
+             });
+        });
+
+        if(btnDown) btnDown.addEventListener('click', () => {
+             const text = fullLogs.map(l => `[${l.timestamp}] [${l.type.toUpperCase()}] ${l.msg} ${l.tech ? '| ' + l.tech : ''}`).join('\n');
+             const blob = new Blob([text], {type: 'text/plain'});
+             const url = window.URL.createObjectURL(blob);
+             const a = document.createElement('a'); a.href = url;
+             a.download = `arquivados_log_${new Date().toISOString().replace(/[:.]/g,'-')}.txt`;
+             document.body.appendChild(a); a.click();
+             document.body.removeChild(a); window.URL.revokeObjectURL(url);
+        });
+
+        if(btnClear) btnClear.addEventListener('click', () => {
+            logsDiv.innerHTML = '';
+            fullLogs = [];
+            addLog('Logs limpos.', 'info');
         });
 
         // App clock removed per user request

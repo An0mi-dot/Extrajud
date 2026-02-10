@@ -15,6 +15,30 @@ let context = null;
 let page = null;
 let isStopping = false;
 let isSkipping = false;
+let currentLogFile = null;
+
+// Configura Log File
+function setupLogFile(args, serviceName) {
+    currentLogFile = null;
+    if (args && args.globalLogDir) {
+        try {
+            if (!fs.existsSync(args.globalLogDir)) fs.mkdirSync(args.globalLogDir, { recursive: true });
+            
+            const folderName = serviceName.replace(/[^a-z0-9]/gi, '_');
+            const targetDir = path.join(args.globalLogDir, folderName);
+            if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
+            const now = dayjs();
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayName = days[now.day()];
+            const fileName = `${now.format('YYYY-MM-DD_HH-mm')}_${dayName}.txt`;
+            currentLogFile = path.join(targetDir, fileName);
+
+            const header = `LOG START\nDate: ${now.format('DD/MM/YYYY')}\nTime: ${now.format('HH:mm:ss')}\nDay: ${dayName}\nService: ${serviceName}\n==================================================\n\n`;
+            fs.writeFileSync(currentLogFile, header, 'utf8');
+        } catch(e) { console.error('Log setup failed', e); }
+    }
+}
 
 // Função para parar
 function stopAutomation(eventSender) {
@@ -43,6 +67,17 @@ const log = (eventSender, msg, tech = null, type = 'info') => {
             type: type
         });
     }
+
+    // Para Arquivo
+    if (currentLogFile) {
+        try {
+            const ts = dayjs().format('HH:mm:ss');
+            let line = `[${ts}] [${type.toUpperCase()}] ${msg}`;
+            if (tech && tech !== 'Function execution trace...') line += ` | DEV_CONTEXT: ${tech}`;
+            line += '\n';
+            fs.appendFileSync(currentLogFile, line, 'utf8');
+        } catch(e) {/* quiet failure */}
+    }
 };
 
 // Delay inteligente que permite interrupção (Check a cada 100ms)
@@ -57,6 +92,7 @@ const delay = async (ms) => {
 // Função Principal
 async function runAutomation(eventSender, inputReceiver, args) {
     isStopping = false;
+    setupLogFile(args, 'PROJUDI_Iniciais');
     // Indica ao processo principal que uma automação está em execução
     global.isAutomationRunning = true;
     if (eventSender) eventSender.send('automation-status', true);
@@ -70,22 +106,6 @@ async function runAutomation(eventSender, inputReceiver, args) {
             try { clearInterval(heartbeatInterval); } catch(_) {}
         }
     }, 8000);
-
-    // Bring main window to front once so the automation window (Edge) won't be hidden by other apps
-    try {
-        const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
-        if (win) {
-            log(eventSender, 'Trazendo a janela do app para frente (uma vez) para priorizar a automação', 'Window Focus', 'info');
-            // Temporarily set always on top to ensure visibility, then restore
-            win.setAlwaysOnTop(true, 'screen');
-            // small delay to ensure stacking
-            await delay(300);
-            win.setAlwaysOnTop(false);
-            try { win.focus(); } catch (e) { /* ignore */ }
-        }
-    } catch (e) {
-        log(eventSender, `Não foi possível focar a janela: ${e && e.message ? e.message : String(e)}`, 'Window Focus', 'warn');
-    }
 
     log(eventSender, "Iniciando Robô de Automação", "Thread Start | Loading Playwright Engine", 'info');
     log(eventSender, "Carregando configurações...", "Edge Browser | Mode: Scanner | Lib: ExcelJS", 'info');
@@ -126,6 +146,23 @@ async function runAutomation(eventSender, inputReceiver, args) {
         // Aumenta timeout de navegação padrão
         page.setDefaultTimeout(60000); 
         page.setDefaultNavigationTimeout(60000);
+
+        // Bring main window to front once so the automation window (Edge) won't be hidden by other apps
+        try {
+            // Find main Electron window
+            const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed()); 
+            if (win) {
+                log(eventSender, 'Trazendo a janela do app para frente (uma vez) para garantir visibilidade sobre o navegador...', 'Window Focus', 'info');
+                // Temporarily set always on top to ensure visibility, then restore
+                win.setAlwaysOnTop(true, 'screen');
+                // increased delay to ensure it overrides browser focus initialization
+                await delay(500); 
+                win.setAlwaysOnTop(false);
+                try { win.focus(); } catch (e) { /* ignore */ }
+            }
+        } catch (e) {
+            log(eventSender, `Não foi possível focar a janela: ${e && e.message ? e.message : String(e)}`, 'Window Focus', 'warn');
+        }
 
         // 2. Acesso e Login
         log(eventSender, "Acessando Portal PROJUDI...", `Navigation: ${PROJUDI_URL}`, 'info');
@@ -258,6 +295,95 @@ async function runAutomation(eventSender, inputReceiver, args) {
         }
         if (isStopping) return;
 
+        // --- MUDANÇA PARA MODO BACKGROUND (HEADLESS) ---
+        // O usuário pediu para "esconder" o navegador após a fase manual (Login/Captcha)
+        try {
+            log(eventSender, "Login confirmado. Migrando para modo OCULTO (Background)...", "Switching to Headless", 'info');
+            
+            // 1. Salvar estado da sessão (Cookies, LocalStorage)
+            const statePath = path.join(app.getPath('userData'), 'projudi_session.json');
+            await context.storageState({ path: statePath });
+            log(eventSender, "Sessão salva. Reiniciando engine...", null, 'info');
+
+            // 2. Fechar navegador visível
+            await browser.close();
+
+            // 3. Reabrir em modo HEADLESS
+            const edgePaths = [
+                "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+                "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
+            ];
+            const edgeExe = edgePaths.find(p => fs.existsSync(p));
+
+            browser = await chromium.launch({
+                executablePath: edgeExe,
+                headless: true, // AGORA É TRUE
+                args: ["--disable-blink-features=AutomationControlled"] // Sem start-maximized pois é headless
+            });
+
+            // 4. Carregar contexto com a sessão salva
+            context = await browser.newContext({
+                userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+                viewport: { width: 1920, height: 1080 }, // Força resolução Full HD para garantir que elementos sidebar não escondam conteúdo
+                storageState: statePath
+            });
+            
+            // Anti-detecção novamente
+            await context.addInitScript(() => { Object.defineProperty(navigator, 'webdriver', { get: () => undefined }); });
+
+            page = await context.newPage();
+            page.setDefaultTimeout(60000);
+
+            // 5. Navegar novamente para o Dashboard (Sessão deve ser restaurada pelos cookies)
+            log(eventSender, "Restaurando sessão em background...", `Navigating: ${PROJUDI_URL}`);
+            await page.goto(PROJUDI_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await delay(3000); // Aguarda estabilização
+
+            log(eventSender, "Navegador oculto operante. Iniciando extração...", null, 'success');
+
+            // VALIDAÇÃO DE SESSÃO PÓS-MIGRAÇÃO
+            // Verifica se realmente estamos no dashboard para evitar erros de elemento não encontrado
+            try {
+                // Procura frames carregados
+                const framesCount = page.frames().length;
+                log(eventSender, `[DEBUG] Frames carregados: ${framesCount}`);
+                
+                // Tenta achar um indicador de sucesso (Mesa de Trabalho ou similar) em qualquer frame
+                let sessionConfirmed = false;
+                for (let i = 0; i < 5; i++) { // 5 tentativas
+                    for (const f of page.frames()) {
+                        if (await f.locator('text=Mesa de Trabalho').count() > 0 || await f.locator('text=Aguardando Leitura').count() > 0) {
+                            sessionConfirmed = true;
+                            break;
+                        }
+                    }
+                    if (sessionConfirmed) break;
+                    await delay(1000);
+                }
+
+                if (!sessionConfirmed) {
+                    const title = await page.title();
+                    log(eventSender, `[ALERTA] Sessão parece inválida. Título: ${title}. URL: ${page.url()}`, null, 'warn');
+                    // Tira um print de debug
+                    const debugPath = path.join(app.getPath('userData'), 'debug_headless_fail.jpg');
+                    await page.screenshot({ path: debugPath, fullPage: true });
+                    log(eventSender, `[DEBUG] Print salvo em: ${debugPath}`, null, 'warn');
+                    
+                    throw new Error("Sessão perdida (Cookie inválido ou Login expirado).");
+                } else {
+                    log(eventSender, "Sessão validada com sucesso no modo oculto.", null, 'success');
+                }
+            } catch (sessionErr) {
+                 throw sessionErr; 
+            }
+
+        } catch (headlessErr) {
+            log(eventSender, `Falha ao migrar para headless: ${headlessErr.message}. Continuando (talvez visível)...`, null, 'error');
+            // Se falhar o relaunch, tenta continuar se o browser antigo ainda existir (provavelmente não, então falha critica)
+            if (!browser.isConnected()) throw new Error("Falha crítica ao reiniciar navegador em background.");
+        }
+
+
         // --- FASE 1: CITAÇÕES ---
         const dfCita = await processCategoryRoutine(page, "Citações", 'cita', eventSender, inputReceiver, args);
         if (isStopping) return;
@@ -330,11 +456,22 @@ async function returnToDashboard(page, eventSender) {
             log(eventSender, "Frame 'userMainFrame' não achado. Tentando maior frame disponível.");
             
             // Geralmente o maior frame é o de conteúdo
-            const biggestFrame = frames.sort((a,b) => {
-                const sA = a.viewportSize() ? a.viewportSize().width * a.viewportSize().height : 0;
-                const sB = b.viewportSize() ? b.viewportSize().width * b.viewportSize().height : 0;
-                return sB - sA;
-            })[0];
+            // CORRIGIDO: Frames não possuem viewportSize(). Usamos area do body.
+            let biggestFrame = null;
+            let maxArea = 0;
+
+            for (const f of frames) {
+                try {
+                    // Avalia tamanho do documento dentro do frame
+                    const area = await f.evaluate(() => {
+                        return document.body ? (document.body.scrollHeight * document.body.scrollWidth) : 0;
+                    });
+                    if (area > maxArea) {
+                        maxArea = area;
+                        biggestFrame = f;
+                    }
+                } catch (e) { /* Frame pode estar bloqueado (cross-origin) ou vazio */ }
+            }
 
             if (biggestFrame) {
                 await biggestFrame.goto(dashboardUrl);
@@ -415,11 +552,22 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
                 log(eventSender, `Navegação forçada para: ${targetUrl}`);
                 targetClicked = true;
             } else {
-                 // Fallback: Tenta achar frame maior ou vai na page toda
-                 // Mas page.goto pode dar logout se for top level. 
-                 // Vamos tentar achar qualquer frame grande.
-                 const biggestFrame = page.frames().sort((a,b) => (b.page() ? 1 : 0) - (a.page() ? 1 : 0))[0]; // simplificado
-                 if(biggestFrame) await biggestFrame.goto(targetUrl);
+                 // Fallback: Tenta achar frame maior (Area Body)
+                 log(eventSender, "Tentando achar frame de conteúdo (Fallback)...");
+                 let biggestFrame = null;
+                 let maxArea = 0;
+                 for (const f of page.frames()) {
+                     try {
+                         const area = await f.evaluate(() => document.body ? (document.body.scrollHeight * document.body.scrollWidth) : 0);
+                         if (area > maxArea) { maxArea = area; biggestFrame = f; }
+                     } catch(e){}
+                 }
+                 
+                 if(biggestFrame) {
+                     await biggestFrame.goto(targetUrl);
+                     targetClicked = true; // Marca como sucesso se navegou
+                     log(eventSender, `Navegação forçada (Fallback) para: ${targetUrl}`);
+                 }
             }
         } catch(e) {
             log(eventSender, `Falha na navegação direta: ${e.message}`);
@@ -1262,6 +1410,7 @@ async function saveEvidencePDF(screenshots, categoryName, args, eventSender) {
 
 async function runArchivedAutomation(eventSender, inputReceiver, args) {
     isStopping = false;
+    setupLogFile(args, 'PROJUDI_Arquivados');
     log(eventSender, "Iniciando Robô de Arquivados", "Thread Start | Mode: Archived", 'info');
     
     try {
@@ -1693,6 +1842,7 @@ function waitForInput(eventSender, ipcReceiver, type, data) {
 
 async function runPjeAutomation(eventSender, ipcReceiver, args) {
     isStopping = false;
+    setupLogFile(args, 'PJE_Extrator');
     log(eventSender, "Iniciando Extrator PJE (1º e 2º Grau)...", "Start PJE Service", 'info');
     
     // Configurações e URLs
@@ -1727,8 +1877,8 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
     }
 
     try {
-        // 1. Inicializar Browser
-        log(eventSender, "Abrindo navegador na direita...", "Edge Chromium", 'info');
+        // 1. Inicializar Browser (MODO PERSISTENTE)
+        log(eventSender, "Abrindo navegador AUTOMÁTICO (Perfil Persistente)...", "Edge Chromium", 'info');
         const edgePaths = [
             "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
             "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
@@ -1742,40 +1892,50 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
         const browserX = x + appWidth;
         const browserWidth = width - appWidth;
         
-        browser = await chromium.launch({
+        // DEFINIR DIRETÓRIO DE PERFIL PERSISTENTE
+        // Isso garante que cookies, cache e sessão sejam salvos no DISCO real, sobrevivendo a reboots.
+        const userDataDir = path.join(app.getPath('userData'), 'pje-profile-data');
+        if (!fs.existsSync(userDataDir)) {
+             try { fs.mkdirSync(userDataDir, { recursive: true }); } catch(e){}
+        }
+
+        // Tenta usar PJE Session antiga como "boot" se existir
+        const pjeStorage = path.join(app.getPath('userData'), 'playwright-storage', 'pje.json');
+        
+        // Lança Contexto Persistente (Substitui launch + newContext)
+        // Nota: browser agora será o próprio contexto envelopado
+        context = await chromium.launchPersistentContext(userDataDir, {
             executablePath: edgeExe,
             headless: false,
+            channel: "msedge", // Força uso do canal estável
+            viewport: null,
             args: [
                 `--window-position=${browserX},${y}`,
                 `--window-size=${browserWidth},${height}`,
-                "--disable-blink-features=AutomationControlled"
+                "--disable-blink-features=AutomationControlled",
+                "--no-first-run",
+                "--no-default-browser-check"
             ]
         });
+        
+        // Em contexto persistente, a página já vem aberta ou abrimos uma se não houver
+        page = context.pages().length > 0 ? context.pages()[0] : await context.newPage();
+        
+        // Referência para fechamento posterior (o context age como browser em persistent mode)
+        browser = context; 
 
-        // If the user previously imported a PJE storageState, reuse it to avoid repeated 2FA/logins
+        // Tenta injetar cookies/storage antigos apenas se o perfil estiver vazio/novo
+        // (Para tentar migrar seu login atual para o novo sistema persistente)
         try {
-            const pjeStorage = path.join(app.getPath('userData'), 'playwright-storage', 'pje.json');
-            const localPjeStorage = path.join(__dirname, 'playwright-storage', 'pje.json');
-            const contextOptions = { viewport: null };
-
             if (fs.existsSync(pjeStorage)) {
-                log(eventSender, `PJE session storage found in userData. Reusing storageState: ${pjeStorage}`, 'PJE Session', 'info');
-                contextOptions.storageState = pjeStorage;
-            } else if (fs.existsSync(localPjeStorage)) {
-                log(eventSender, `PJE session storage found in project. Reusing storageState: ${localPjeStorage}`, 'PJE Session', 'info');
-                contextOptions.storageState = localPjeStorage;
-            } else {
-                log(eventSender, 'No PJE session storage found. Will require manual login.', 'PJE Session', 'info');
+                 const data = JSON.parse(fs.readFileSync(pjeStorage, 'utf8'));
+                 if (data.cookies) await context.addCookies(data.cookies);
+                 // Origins/LocalStorage é mais complexo injetar em persistent context iniciado, 
+                 // mas o próprio 'userDataDir' vai assumir esse papel daqui pra frente.
+                 log(eventSender, 'Cookies legados injetados no perfil persistente.', 'Migration', 'info');
             }
+        } catch(e) { /* ignore */ }
 
-            context = await browser.newContext(contextOptions);
-            page = await context.newPage();
-        } catch (e) {
-            // Fallback to default newContext if anything goes wrong
-            log(eventSender, `Aviso: não foi possível carregar storageState: ${e && e.message ? e.message : String(e)}. Abrindo contexto limpo.`, 'PJE Session', 'warn');
-            context = await browser.newContext({ viewport: null });
-            page = await context.newPage();
-        }
         
         // Helper to expose control signals to the browser context
         const exposeControls = async () => {
@@ -1904,24 +2064,109 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
                 log(eventSender, "Sessão PJE 1º Grau válida detectada! (Reutilizando storage)", 'PJE Session', 'success');
                 // Salvar novamente para renovar timestamp do arquivo se desejar, mas não estritamente necessário
             } else {
-                log(eventSender, "Sessão não detectada. Solicitando login manual...", 'PJE Session', 'warn');
-                const login1 = await waitForInput(eventSender, ipcReceiver, 'confirm', {
-                    title: 'Login Necessário - PJE 1º Grau',
-                    message: '1. Realize o login no PJE 1º Grau.\n2. **SELECIONE O PERFIL DE PROCURADORIA** no topo da tela.\n3. Aguarde o painel inicial carregar.\n\nClique em Continuar APÓS selecionar o perfil correto.',
-                    confirmText: 'Continuar'
-                });
+                let proceeding = false;
 
-                if (login1 === false || login1 === 'cancel') { 
-                    log(eventSender, 'Login PJE 1 cancelado/recusado. Pulando etapa.', null, 'warn'); 
-                    return; 
+                // --- LOGIN AUTOMÁTICO SE CREDENCIAIS OK ---
+                // Debug log para confirmar recebimento
+                if (args.login) log(eventSender, `Automação de Login Ativa (CPF: ${args.login})`, 'PJE Login', 'info');
+                
+                if (args.login && args.password) {
+                     let loginSuccess = false;
+                     try {
+                         log(eventSender, "Aguardando carregamento do formulário de login...", 'PJE Login', 'info');
+                         
+                         // Espera explícita pelo carregamento da página + Estado visível do input
+                         await page.waitForLoadState('domcontentloaded');
+                         
+                         // Tenta localizar o campo username com timeout generoso (20s)
+                         // Se falhar, lança erro específico para o log
+                         try {
+                            await page.waitForSelector('#username', { state: 'visible', timeout: 20000 });
+                         } catch (timErr) {
+                            throw new Error(`Campo '#username' não encontrado após 20s. (URL: ${page.url()})`);
+                         }
+
+                         await delay(500);
+                         await page.fill('#username', args.login);
+                         await delay(500);
+                         
+                         // Senha
+                         await page.fill('#password', args.password);
+                         await delay(500);
+                         
+                         log(eventSender, "Submetendo formulário...", 'PJE Login', 'info');
+                         
+                         // Tentativa agressiva de encontrar o botão de ação
+                         const successClick = await safeEvaluate(async () => {
+                             const btn = document.querySelector('#btnEntrar') || 
+                                         document.querySelector('[name="btnEntrar"]') || 
+                                         document.querySelector('input[type="submit"]') ||
+                                         document.querySelector('button[type="submit"]');
+                             if(btn) { 
+                                 btn.click(); 
+                                 return true; 
+                             }
+                             return false;
+                         });
+
+                         if (!successClick) {
+                             log(eventSender, "Botão não localizado via JS. Tentando ENTER...", null, 'warn');
+                             await page.press('#password', 'Enter');
+                         }
+                         
+                         loginSuccess = true;
+
+                         // *** CHECKPOINT DE CONFIRMAÇÃO DO USUÁRIO ***
+                         log(eventSender, "Credenciais enviadas. Aguardando sua confirmação de 2FA...", 'PJE Login', 'success');
+                         const confirm2fa = await waitForInput(eventSender, ipcReceiver, 'confirm', {
+                            title: 'Confirmação de Login (2FA)',
+                            message: 'As credenciais foram inseridas e o login solicitado.\n\n1. Verifique se o PJE pediu o Token/2FA.\n2. Complete o acesso no navegador.\n3. Quando estiver na "Mesa de Trabalho", clique em CONFIRMAR abaixo.',
+                            confirmText: '>> CONFIRMAR LOGIN (Estou na Mesa de Trabalho) <<'
+                         });
+                         
+                         if (!confirm2fa) {
+                             log(eventSender, 'Login cancelado pelo usuário.', null, 'error');
+                             return; // Aborta função
+                         }
+                         proceeding = true; // Marca como sucesso para pular o prompt manual
+                         
+                     } catch(e) {
+                         log(eventSender, `Falha no Login Automático: ${e.message}`, 'PJE Login', 'error');
+                         log(eventSender, "Passando para modo manual...", null, 'warn');
+                     }
                 }
 
-                // Se o usuário confirmou, assumimos que logou. Salvamos o estado novo.
-                try {
-                    await context.storageState({ path: PJE_STORAGE });
-                    log(eventSender, `Login novo detectado. Sessão salva em: ${PJE_STORAGE}`, 'PJE Session', 'success');
-                } catch (e) {
-                    log(eventSender, `Erro salvando sessão PJE (1): ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+                if (!proceeding) {
+                    log(eventSender, "Sessão não detectada. Solicitando login manual...", 'PJE Session', 'warn');
+                    const login1 = await waitForInput(eventSender, ipcReceiver, 'confirm', {
+                        title: 'Login Necessário - PJE 1º Grau',
+                        message: '1. Realize o login no PJE 1º Grau.\n2. **SELECIONE O PERFIL DE PROCURADORIA** no topo da tela.\n3. Aguarde o painel inicial carregar.\n\nClique em Continuar APÓS selecionar o perfil correto.\n\n(Para testes: Clique em Continuar mesmo sem login para tentar contornar)',
+                        confirmText: 'Continuar / Testar'
+                    });
+
+                    if (login1 === false || login1 === 'cancel') { 
+                        log(eventSender, 'Login PJE 1 cancelado/recusado. Pulando etapa.', null, 'warn'); 
+                        return; 
+                    }
+                }
+
+                // Verifica novamente se o login foi bem sucedido antes de salvar, 
+                // para evitar sobrescrever um storage válido com estado de "não logado".
+                const checkLoginAgain = await safeEvaluate(() => {
+                    const bodyText = document.body ? document.body.innerText : '';
+                    return bodyText.includes('Mesa de Trabalho') || bodyText.includes('Painel do advogado') || bodyText.includes('Aguardando Leitura') || !!document.querySelector('a[href*="logout"]');
+                }).catch(() => false);
+
+                if (checkLoginAgain) {
+                    try {
+                        await context.storageState({ path: PJE_STORAGE });
+                        log(eventSender, `Login novo CONFIRMADO. Sessão salva em: ${PJE_STORAGE}`, 'PJE Session', 'success');
+                    } catch (e) {
+                        log(eventSender, `Erro salvando sessão PJE (1): ${e && e.message ? e.message : String(e)}`, 'PJE Session', 'warn');
+                    }
+                } else {
+                    log(eventSender, "Aviso: Login não detectado automaticamente. AVANÇANDO EM MODO DE TESTE (Sem salvar sessão).", 'PJE Session', 'warn');
+                    // Não retorna, permitindo o fluxo seguir (Bypass)
                 }
             }
 
