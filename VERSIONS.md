@@ -103,3 +103,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 6431021
 - Notes: feat: implement PJE auto-login, background selenium mode, and standalone folder tool
+## v1.2.5 - 2026-02-10
+
+- Commit: a3a5749
+- Notes: Feat: Add centralized log settings, log toolbars, and fix background automation flow
