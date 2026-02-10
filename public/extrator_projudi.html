@@ -458,7 +458,18 @@
                 <span class="terminal-dot yellow"></span>
                 <span class="terminal-dot green"></span>
                 <div style="flex:1"></div>
-                <button id="btn-clear-log" title="Limpar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-size:12px;padding:6px 8px;">Limpar</button>
+                <!-- Log Actions Toolbar -->
+                <div style="display:flex; gap:8px;">
+                    <button id="btn-copy-log" title="Copiar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-regular fa-copy"></i> Copiar
+                    </button>
+                    <button id="btn-download-log" title="Baixar Logs (TXT)" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-solid fa-download"></i> Baixar
+                    </button>
+                    <button id="btn-clear-log" title="Limpar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-solid fa-trash-can"></i> Limpar
+                    </button>
+                </div>
             </div>
             <div id="logs"></div>
         </div>
@@ -692,6 +703,36 @@
             const btnStartEl = document.getElementById('btn-start');
             const btnStopEl = document.getElementById('btn-stop');
             const btnClearLog = document.getElementById('btn-clear-log');
+            const btnCopyLog = document.getElementById('btn-copy-log');
+            const btnDownloadLog = document.getElementById('btn-download-log');
+
+            // --- LOG ACTIONS ---
+            if(btnCopyLog) {
+                btnCopyLog.addEventListener('click', () => {
+                    const textToCopy = fullLogs.map(l => `[${l.timestamp}] [${l.type.toUpperCase()}] ${l.msg} ${l.tech ? `| DEV: ${l.tech}` : ''}`).join('\n');
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        // Feedback visual temporário
+                        const originalText = btnCopyLog.innerHTML;
+                        btnCopyLog.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+                        setTimeout(() => { btnCopyLog.innerHTML = originalText; }, 2000);
+                    }).catch(err => console.error('Erro ao copiar', err));
+                });
+            }
+
+            if(btnDownloadLog) {
+                btnDownloadLog.addEventListener('click', () => {
+                    const textContent = fullLogs.map(l => `[${l.timestamp}] [${l.type.toUpperCase()}] ${l.msg} ${l.tech ? `| DEV: ${l.tech}` : ''}`).join('\n');
+                    const blob = new Blob([textContent], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `extratju_log_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                });
+            }
 
             if (btnStartEl) {
                 btnStartEl.addEventListener('click', () => {

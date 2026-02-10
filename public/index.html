@@ -214,6 +214,9 @@
             <img src="assets/logo.png" alt="Logo" style="height: 60px; width: auto; margin-right: 12px;">
             EXTRATJUD
         </div>
+        <button id="btn-settings" title="Configurações" style="background:none; border:none; color:var(--text-color); font-size:20px; cursor:pointer; opacity: 0.6; transition: opacity 0.2s;">
+            <i class="fa-solid fa-gear"></i>
+        </button>
     </header>
 
     <div class="container">
@@ -245,5 +248,74 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="modal-settings" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:var(--card-bg); padding:30px; border-radius:12px; width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.2); position:relative;">
+            <button id="btn-close-settings" style="position:absolute; top:15px; right:15px; background:none; border:none;  font-size:18px; color:var(--text-secondary); cursor:pointer;">&times;</button>
+            <h2 style="margin-top:0; color:var(--primary-color); font-size:22px; margin-bottom: 20px;">Configurações</h2>
+            
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-weight:600; margin-bottom:8px; font-size:14px; color:var(--text-color);">Local de Salvamento de Logs</label>
+                <p style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Defina uma pasta central onde todos os logs brutos (.txt) serão salvos automaticamente.</p>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="inp-global-log" readonly placeholder="Nenhuma pasta selecionada" style="flex:1; padding:10px; border:1px solid var(--border-color); border-radius:6px; background:#f5f5f5; color:var(--text-color);">
+                    <button id="btn-sel-log-dir" style="padding:0 15px; background:var(--card-icon-bg); color:var(--card-icon-color); border:none; border-radius:6px; cursor:pointer;">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button id="btn-save-settings" style="background:var(--primary-color); color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:600;">Salvar e Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        // --- Settings Logic ---
+        const modalSettings = document.getElementById('modal-settings');
+        const inpGlobalLog = document.getElementById('inp-global-log');
+        
+        document.getElementById('btn-settings').addEventListener('click', async () => {
+            // Load current state
+            try {
+                const state = await ipcRenderer.invoke('load-app-state');
+                if (state && state.globalLogDir) {
+                    inpGlobalLog.value = state.globalLogDir;
+                }
+            } catch(e) { console.error(e); }
+            modalSettings.style.display = 'flex';
+        });
+
+        document.getElementById('btn-close-settings').addEventListener('click', () => {
+            modalSettings.style.display = 'none';
+        });
+
+        document.getElementById('btn-sel-log-dir').addEventListener('click', async () => {
+             const dir = await ipcRenderer.invoke('dialog:openDirectory');
+             if (dir) {
+                 inpGlobalLog.value = dir;
+             }
+        });
+
+        document.getElementById('btn-save-settings').addEventListener('click', async () => {
+             try {
+                const state = await ipcRenderer.invoke('load-app-state') || {};
+                state.globalLogDir = inpGlobalLog.value;
+                ipcRenderer.send('save-app-state', state);
+                modalSettings.style.display = 'none';
+             } catch(e) {
+                 alert('Erro ao salvar: ' + e.message);
+             }
+        });
+
+        // Close on outside click
+        modalSettings.addEventListener('click', (e) => {
+            if (e.target === modalSettings) modalSettings.style.display = 'none';
+        });
+
+    </script>
 </body>
 </html>

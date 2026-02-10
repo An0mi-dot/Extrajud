@@ -293,9 +293,17 @@
                     <div class="dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
                     <span class="log-title-text">TERMINAL DE EXECUÇÃO</span>
                 </div>
-                <button onclick="copyLog()" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Copiar Log">
-                    <i class="fas fa-copy"></i>
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button id="btn-copy-log" title="Copiar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-regular fa-copy"></i> Copiar
+                    </button>
+                    <button id="btn-download-log" title="Baixar Logs (TXT)" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-solid fa-download"></i> Baixar
+                    </button>
+                    <button id="btn-clear-log" title="Limpar Logs" style="background:none;border:0;color:#aaa;cursor:pointer;font-family:'Inter', sans-serif;font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px;border-radius:4px;">
+                        <i class="fa-solid fa-trash-can"></i> Limpar
+                    </button>
+                </div>
             </div>
             <div id="logs"></div>
         </div>
@@ -474,10 +482,37 @@
             addLog('>> Pulando etapa atual...', 'log-warning');
         }
 
-        function copyLog() {
-            navigator.clipboard.writeText(logArea.innerText);
-            // alert('Log copiado!');
+        function initLogTools() {
+            const btnCopy = document.getElementById('btn-copy-log');
+            const btnDown = document.getElementById('btn-download-log');
+            const btnClear = document.getElementById('btn-clear-log');
+
+            if(btnCopy) btnCopy.addEventListener('click', () => {
+                const textToCopy = fullLogs.map(l => `[${l.timestamp}] [${l.type ? l.type.toUpperCase() : 'INFO'}] ${l.msg}`).join('\n');
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const original = btnCopy.innerHTML;
+                    btnCopy.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+                    setTimeout(() => btnCopy.innerHTML = original, 2000);
+                });
+            });
+
+            if(btnDown) btnDown.addEventListener('click', () => {
+                const textContent = fullLogs.map(l => `[${l.timestamp}] [${l.type ? l.type.toUpperCase() : 'INFO'}] ${l.msg}`).join('\n');
+                const blob = new Blob([textContent], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url;
+                a.download = `pje_log_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a); window.URL.revokeObjectURL(url);
+            });
+
+            if(btnClear) btnClear.addEventListener('click', () => {
+                logArea.innerHTML = '';
+                fullLogs = [];
+                addLog('Logs limpos pelo usuário.', 'log-info');
+            });
         }
+        initLogTools();
 
         // Modal Logic Refactored
         function showModal(data) {

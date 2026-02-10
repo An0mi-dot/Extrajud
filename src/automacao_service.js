@@ -15,6 +15,30 @@ let context = null;
 let page = null;
 let isStopping = false;
 let isSkipping = false;
+let currentLogFile = null;
+
+// Configura Log File
+function setupLogFile(args, serviceName) {
+    currentLogFile = null;
+    if (args && args.globalLogDir) {
+        try {
+            if (!fs.existsSync(args.globalLogDir)) fs.mkdirSync(args.globalLogDir, { recursive: true });
+            
+            const folderName = serviceName.replace(/[^a-z0-9]/gi, '_');
+            const targetDir = path.join(args.globalLogDir, folderName);
+            if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
+            const now = dayjs();
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayName = days[now.day()];
+            const fileName = `${now.format('YYYY-MM-DD_HH-mm')}_${dayName}.txt`;
+            currentLogFile = path.join(targetDir, fileName);
+
+            const header = `LOG START\nDate: ${now.format('DD/MM/YYYY')}\nTime: ${now.format('HH:mm:ss')}\nDay: ${dayName}\nService: ${serviceName}\n==================================================\n\n`;
+            fs.writeFileSync(currentLogFile, header, 'utf8');
+        } catch(e) { console.error('Log setup failed', e); }
+    }
+}
 
 // Função para parar
 function stopAutomation(eventSender) {
@@ -43,6 +67,17 @@ const log = (eventSender, msg, tech = null, type = 'info') => {
             type: type
         });
     }
+
+    // Para Arquivo
+    if (currentLogFile) {
+        try {
+            const ts = dayjs().format('HH:mm:ss');
+            let line = `[${ts}] [${type.toUpperCase()}] ${msg}`;
+            if (tech && tech !== 'Function execution trace...') line += ` | DEV_CONTEXT: ${tech}`;
+            line += '\n';
+            fs.appendFileSync(currentLogFile, line, 'utf8');
+        } catch(e) {/* quiet failure */}
+    }
 };
 
 // Delay inteligente que permite interrupção (Check a cada 100ms)
@@ -57,6 +92,7 @@ const delay = async (ms) => {
 // Função Principal
 async function runAutomation(eventSender, inputReceiver, args) {
     isStopping = false;
+    setupLogFile(args, 'PROJUDI_Iniciais');
     // Indica ao processo principal que uma automação está em execução
     global.isAutomationRunning = true;
     if (eventSender) eventSender.send('automation-status', true);
@@ -288,6 +324,7 @@ async function runAutomation(eventSender, inputReceiver, args) {
             // 4. Carregar contexto com a sessão salva
             context = await browser.newContext({
                 userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+                viewport: { width: 1920, height: 1080 }, // Força resolução Full HD para garantir que elementos sidebar não escondam conteúdo
                 storageState: statePath
             });
             
@@ -303,6 +340,42 @@ async function runAutomation(eventSender, inputReceiver, args) {
             await delay(3000); // Aguarda estabilização
 
             log(eventSender, "Navegador oculto operante. Iniciando extração...", null, 'success');
+
+            // VALIDAÇÃO DE SESSÃO PÓS-MIGRAÇÃO
+            // Verifica se realmente estamos no dashboard para evitar erros de elemento não encontrado
+            try {
+                // Procura frames carregados
+                const framesCount = page.frames().length;
+                log(eventSender, `[DEBUG] Frames carregados: ${framesCount}`);
+                
+                // Tenta achar um indicador de sucesso (Mesa de Trabalho ou similar) em qualquer frame
+                let sessionConfirmed = false;
+                for (let i = 0; i < 5; i++) { // 5 tentativas
+                    for (const f of page.frames()) {
+                        if (await f.locator('text=Mesa de Trabalho').count() > 0 || await f.locator('text=Aguardando Leitura').count() > 0) {
+                            sessionConfirmed = true;
+                            break;
+                        }
+                    }
+                    if (sessionConfirmed) break;
+                    await delay(1000);
+                }
+
+                if (!sessionConfirmed) {
+                    const title = await page.title();
+                    log(eventSender, `[ALERTA] Sessão parece inválida. Título: ${title}. URL: ${page.url()}`, null, 'warn');
+                    // Tira um print de debug
+                    const debugPath = path.join(app.getPath('userData'), 'debug_headless_fail.jpg');
+                    await page.screenshot({ path: debugPath, fullPage: true });
+                    log(eventSender, `[DEBUG] Print salvo em: ${debugPath}`, null, 'warn');
+                    
+                    throw new Error("Sessão perdida (Cookie inválido ou Login expirado).");
+                } else {
+                    log(eventSender, "Sessão validada com sucesso no modo oculto.", null, 'success');
+                }
+            } catch (sessionErr) {
+                 throw sessionErr; 
+            }
 
         } catch (headlessErr) {
             log(eventSender, `Falha ao migrar para headless: ${headlessErr.message}. Continuando (talvez visível)...`, null, 'error');
@@ -383,11 +456,22 @@ async function returnToDashboard(page, eventSender) {
             log(eventSender, "Frame 'userMainFrame' não achado. Tentando maior frame disponível.");
             
             // Geralmente o maior frame é o de conteúdo
-            const biggestFrame = frames.sort((a,b) => {
-                const sA = a.viewportSize() ? a.viewportSize().width * a.viewportSize().height : 0;
-                const sB = b.viewportSize() ? b.viewportSize().width * b.viewportSize().height : 0;
-                return sB - sA;
-            })[0];
+            // CORRIGIDO: Frames não possuem viewportSize(). Usamos area do body.
+            let biggestFrame = null;
+            let maxArea = 0;
+
+            for (const f of frames) {
+                try {
+                    // Avalia tamanho do documento dentro do frame
+                    const area = await f.evaluate(() => {
+                        return document.body ? (document.body.scrollHeight * document.body.scrollWidth) : 0;
+                    });
+                    if (area > maxArea) {
+                        maxArea = area;
+                        biggestFrame = f;
+                    }
+                } catch (e) { /* Frame pode estar bloqueado (cross-origin) ou vazio */ }
+            }
 
             if (biggestFrame) {
                 await biggestFrame.goto(dashboardUrl);
@@ -468,11 +552,22 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
                 log(eventSender, `Navegação forçada para: ${targetUrl}`);
                 targetClicked = true;
             } else {
-                 // Fallback: Tenta achar frame maior ou vai na page toda
-                 // Mas page.goto pode dar logout se for top level. 
-                 // Vamos tentar achar qualquer frame grande.
-                 const biggestFrame = page.frames().sort((a,b) => (b.page() ? 1 : 0) - (a.page() ? 1 : 0))[0]; // simplificado
-                 if(biggestFrame) await biggestFrame.goto(targetUrl);
+                 // Fallback: Tenta achar frame maior (Area Body)
+                 log(eventSender, "Tentando achar frame de conteúdo (Fallback)...");
+                 let biggestFrame = null;
+                 let maxArea = 0;
+                 for (const f of page.frames()) {
+                     try {
+                         const area = await f.evaluate(() => document.body ? (document.body.scrollHeight * document.body.scrollWidth) : 0);
+                         if (area > maxArea) { maxArea = area; biggestFrame = f; }
+                     } catch(e){}
+                 }
+                 
+                 if(biggestFrame) {
+                     await biggestFrame.goto(targetUrl);
+                     targetClicked = true; // Marca como sucesso se navegou
+                     log(eventSender, `Navegação forçada (Fallback) para: ${targetUrl}`);
+                 }
             }
         } catch(e) {
             log(eventSender, `Falha na navegação direta: ${e.message}`);
@@ -1315,6 +1410,7 @@ async function saveEvidencePDF(screenshots, categoryName, args, eventSender) {
 
 async function runArchivedAutomation(eventSender, inputReceiver, args) {
     isStopping = false;
+    setupLogFile(args, 'PROJUDI_Arquivados');
     log(eventSender, "Iniciando Robô de Arquivados", "Thread Start | Mode: Archived", 'info');
     
     try {
@@ -1746,6 +1842,7 @@ function waitForInput(eventSender, ipcReceiver, type, data) {
 
 async function runPjeAutomation(eventSender, ipcReceiver, args) {
     isStopping = false;
+    setupLogFile(args, 'PJE_Extrator');
     log(eventSender, "Iniciando Extrator PJE (1º e 2º Grau)...", "Start PJE Service", 'info');
     
     // Configurações e URLs

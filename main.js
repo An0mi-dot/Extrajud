@@ -559,16 +559,26 @@ app.on('window-all-closed', () => {
 
 // --- IPC Handler ---
 ipcMain.on('run-script', (event, args) => {
+  // Inject global settings
+  const state = readStateFile();
+  if (state.globalLogDir) args.globalLogDir = state.globalLogDir;
+  
   // Executa a automação nativa (Node.js) -> Citações/Intimações
   automacaoService.runAutomation(event.sender, ipcMain, args);
 });
 
 ipcMain.on('run-archived-script', (event, args) => {
+  const state = readStateFile();
+  if (state.globalLogDir) args.globalLogDir = state.globalLogDir;
+
   // Executa a automação nativa (Node.js) -> Arquivados
   automacaoService.runArchivedAutomation(event.sender, ipcMain, args);
 });
 
 ipcMain.on('run-pje-script', (event, args) => {
+    const state = readStateFile();
+    if (state.globalLogDir) args.globalLogDir = state.globalLogDir;
+    
     // Executa a automação nativa (Node.js) -> PJE
     automacaoService.runPjeAutomation(event.sender, ipcMain, args);
 });
