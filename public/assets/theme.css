@@ -31,24 +31,56 @@ body {
     color: var(--text-color);
 }
 
-/* --- ANIMATIONS & TRANSITIONS --- */
+/* --- ANIMATIONS & TRANSITIONS (ENHANCED) --- */
 
-/* Base settings for all animations */
-.animate {
-    animation-duration: 0.6s;
-    animation-fill-mode: both;
-    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1); /* Ease out quad */
+/* 1. Page Entrance: Smoother & Staggered */
+@keyframes fadeInUpElastic {
+    0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+    60% { opacity: 1; transform: translateY(-5px) scale(1.01); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.animate {
+    animation-duration: 0.8s;
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); /* Springy */
+}
+
+/* Override standard fade-in for a punchier entrance */
+.fade-in-up { animation-name: fadeInUpElastic; }
+
+/* Delays for staggered effect */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+
+/* --- SETTINGS GEAR ANIMATIONS --- */
+@keyframes gear-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(180deg); }
+}
+
+/* Apply to any fa-gear icon inside a hovered element or hovering itself */
+.fa-gear {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* Elastic bounce effect */
+}
+
+/* Rotate 90deg on hover */
+button:hover .fa-gear, 
+a:hover .fa-gear,
+.fa-gear:hover {
+    transform: rotate(90deg);
+}
+
+/* Full spin on click */
+button:active .fa-gear, 
+a:active .fa-gear,
+.fa-gear:active {
+    transform: rotate(180deg);
+    transition: transform 0.2s ease-out;
 }
 
 @keyframes fadeIn {
@@ -56,35 +88,12 @@ body {
     to { opacity: 1; }
 }
 
-@keyframes scaleIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+@keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
-.fade-in-up {
-    animation-name: fadeInUp;
-}
-
-.fade-in {
-    animation-name: fadeIn;
-}
-
-.scale-in {
-    animation-name: scaleIn;
-}
-
-/* Stagger delays */
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
-.delay-500 { animation-delay: 500ms; }
+.fade-in { animation-name: fadeIn; }
 
 /* Page Transition Wrapper */
 body {
@@ -92,11 +101,39 @@ body {
     animation: fadeIn 0.4s ease-out forwards;
 }
 
-/* Hover effects for interactive elements */
-button, .btn-theme, .btn-back, a.service-card {
+/* Global Button Styles to match Hub */
+.btn-theme, .btn-back {
     transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
-button:active, .btn-theme:active {
-    transform: scale(0.98);
+.btn-theme:hover, .btn-back:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.btn-theme:active, .btn-back:active { transform: translateY(0); }
+
+/* --- Checkbox Styling --- */
+.checkbox-container input[type="checkbox"] {
+    /* Use the app's primary green instead of default blue */
+    accent-color: var(--primary-color);
+    width: 18px; /* Slightly larger for better clickability */
+    height: 18px;
+    cursor: pointer;
+    transition: transform 0.1s ease-in-out;
+}
+
+/* Click reaction: press down effect */
+.checkbox-container input[type="checkbox"]:active {
+    transform: scale(0.8);
+}
+
+/* Pop animation when checked */
+.checkbox-container input[type="checkbox"]:checked {
+    animation: checkbox-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes checkbox-pop {
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
 }

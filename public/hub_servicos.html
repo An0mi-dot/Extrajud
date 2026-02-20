@@ -201,6 +201,11 @@
         }
         /* -------------------------------- */
 
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         .header {
             background-color: var(--card-bg);
             padding: 14px 40px;
@@ -212,7 +217,7 @@
             top: 0;
             z-index: 100;
             box-shadow: var(--shadow-sm);
-            transition: all 0.3s ease;
+            animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; /* Smooth entrance */
         }
 
         .brand {
@@ -280,6 +285,40 @@
             }
         }
 
+        /* --- ANIMATIONS & TRANSITIONS (ENHANCED) --- */
+        
+        /* 1. Page Entrance: Smoother & Staggered */
+        @keyframes fadeInUpElastic {
+            0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+            60% { opacity: 1; transform: translateY(-5px) scale(1.01); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .animate {
+            animation-duration: 0.8s;
+            animation-fill-mode: both;
+            animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); /* Springy */
+        }
+        
+        /* Override standard fade-in for a punchier entrance */
+        .fade-in-up { animation-name: fadeInUpElastic; }
+        
+        /* Delays for staggered effect */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+
+
+        /* 2. Interactive Element Transitions */
+        .btn-theme, .btn-about, .btn-primary, .close-btn, .settings-tab,
+        .service-card, .card-icon, .arrow-icon {
+            transition-property: transform, box-shadow, background-color, color, opacity, border-color;
+            transition-duration: 0.3s;
+            transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Quad-out smooth */
+        }
+
+
         .btn-theme {
             background: transparent;
             border: 1px solid var(--border-color);
@@ -288,17 +327,21 @@
             border-radius: 10px;
             font-size: 14px;
             cursor: pointer;
-            transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
             box-shadow: none;
+            position: relative;
+            overflow: hidden;
         }
+        
+        /* Visual ripple hint / lift on hover */
         .btn-theme:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(2,6,23,0.06);
-            background: linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02));
+            box-shadow: 0 8px 20px -4px rgba(16,185,129,0.15); /* Colored shadow */
+            background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(240,253,248,0.8));
+            border-color: rgba(16,185,129,0.3);
             color: var(--primary-color);
         }
-        .btn-theme:active { transform: translateY(0); }
-        .btn-theme:focus { outline: none; box-shadow: 0 0 0 4px rgba(16,185,129,0.10); color: var(--primary-color); }
+        .btn-theme:active { transform: translateY(0) scale(0.98); }
+        .btn-theme:focus { outline: none; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); color: var(--primary-color); }
 
         /* Prevent overflow issues on dev reload */
         .service-card { word-break: break-word; }
@@ -338,10 +381,10 @@
 
         .service-card {
             background-color: var(--card-bg);
-            border-radius: 12px;
+            border-radius: 16px; /* slightly more rounded */
             border: 1px solid var(--border-color);
-            padding: 25px;
-            transition: all 0.3s ease;
+            padding: 28px 25px; /* more breathing room */
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1); /* expo out - very smooth */
             position: relative;
             overflow: hidden;
             display: flex;
@@ -349,18 +392,46 @@
             cursor: pointer;
             text-decoration: none;
             color: inherit;
+            will-change: transform, box-shadow;
         }
 
+        /* Enhanced Card Hover */
         .service-card:hover:not(.disabled) {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transform: translateY(-8px) scale(1.005);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.08), 0 0 0 1px rgba(16,185,129,0.2) inset;
+            border-color: rgba(16,185,129,0.3);
+            background-color: #fff; /* Ensure it stays bright */
+            z-index: 10;
+        }
+
+        /* Icon Animation inside Card */
+        .service-card .card-icon {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s;
+            width: 48px; height: 48px; /* Slightly larger touch target */
+            display:flex; align-items:center; justify-content:center;
+            background: var(--card-icon-bg); color: var(--card-icon-color); border-radius: 12px; margin-bottom: 15px;
+        }
+
+        .service-card:hover:not(.disabled) .card-icon {
+            transform: scale(1.1) rotate(5deg);
+            background-color: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        }
+
+        .service-card:active:not(.disabled) {
+            transform: scale(0.98);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .service-card.disabled {
-            cursor: default;
-            opacity: 0.7;
-            background-color: #f8f9fa;
+            cursor: not-allowed;
+            opacity: 0.6;
+            filter: grayscale(100%);
+            background-color: #f9fafb;
+            transform: none !important;
         }
+
 
         .platform-tag {
             font-size: 10px;
@@ -374,26 +445,31 @@
             white-space: nowrap;
         }
 
-        .service-card.disabled .card-icon {
-            background-color: var(--card-icon-disabled-bg);
-            color: var(--card-icon-disabled-color);
-        }
-
-        .card-icon svg { width: 24px; height: 24px; color: inherit; }
+        .service-card .card-icon svg { width: 28px; height: 28px; color: inherit; transition: stroke-width 0.3s; }
+        .service-card:hover .card-icon svg { stroke-width: 2.5px; }
 
         .card-title {
-            font-size: 18px;
+            font-size: 19px; /* slightly bigger */
             font-weight: 700;
-            margin-bottom: 10px;
-            color: #2c3e50;
+            margin-bottom: 8px;
+            color: #1e293b;
+            transition: color 0.3s ease;
+        }
+        
+        .service-card:hover .card-title {
+            color: var(--primary-color);
         }
 
         .card-desc {
             font-size: 14px;
             color: var(--text-secondary);
-            line-height: 1.5;
+            line-height: 1.6;
             flex: 1;
+            transition: color 0.3s;
         }
+        
+        /* On hover, slightly darken desc for contrast against white bg */
+        .service-card:hover .card-desc { color: #475569; }
 
         /* Service metadata removed (versão/ambiente/empresa) */
         
@@ -401,46 +477,66 @@
 
         .card-status {
             margin-top: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
             padding: 4px 10px;
-            border-radius: 20px;
+            border-radius: 6px;
             align-self: flex-start;
-            display: inline-block; /* don't stretch full width, behave like a badge */
+            display: inline-block; 
         }
 
         /* Estimated time label inside service cards */
         .estimated-time {
-            margin-top: 8px;
+            margin-top: 12px;
             font-size: 12px;
-            color: #374151; /* gray-700 */
-            font-weight: 600;
+            color: #64748b;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .estimated-time small { color: #6b7280; font-weight: 500; display:block; margin-top:2px; font-size:11px; }
+        .estimated-time::before {
+            content: "\f017"; /* fa-clock */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 400;
+            opacity: 0.5;
+        }
+        .estimated-time small { display:none; } /* Simplify layout */
 
         .status-active {
-            background-color: #d1e7dd;
-            color: #0f5132;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
         .status-soon {
-            background-color: #ffecb5;
-            color: #664d03;
+            background-color: #fffbeb;
+            color: #b45309;
+            border: 1px solid #fcd34d;
         }
 
         .arrow-icon {
             position: absolute;
             bottom: 25px;
             right: 25px;
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--primary-light);
             color: var(--primary-color);
+            border-radius: 50%;
             opacity: 0;
-            transform: translateX(-10px);
-            transition: all 0.3s ease;
+            transform: translateX(-15px) scale(0.8);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 10px rgba(16,185,129,0.15);
         }
+        
+        .arrow-icon svg { width: 18px; height: 18px; stroke-width: 2.5; }
 
         .service-card:hover:not(.disabled) .arrow-icon {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateX(0) scale(1);
         }
         
         .tag-projudi { background-color: #fce7f3; color: #9d174d; }
@@ -707,13 +803,9 @@
             
 
 
-            <button id="btn-actions" class="btn-theme" title="Ações">Ações ▾</button>
-            <div id="actions-menu" class="actions-menu" role="menu" aria-hidden="true">
-                <div style="padding:10px; display:flex; flex-direction:column; gap:8px;">
-                        <!-- Theme button moved to navbar -->
-                        <button id="btn-request-service" class="btn-about" title="Solicitar Serviço">Solicitar Serviço</button>
-                    </div>
-            </div>
+            <button id="btn-settings" class="btn-theme" title="Configurações">
+                <i class="fa-solid fa-gear"></i>
+            </button>
         </div>
     </div>
     
@@ -849,11 +941,9 @@
     </script>
 
     <div class="footer">
-        <div style="display:flex; align-items:center; justify-content:center;">
-            <button id="btn-about" class="btn-about">Sobre</button>
-        </div>
         <div style="position:absolute; right:12px; bottom:6px; font-size:12px; color:var(--text-secondary);">Versão <span id="app-version">?</span></div>
     </div>
+
 
     <script>
         // Utility: close all modals except the one to keep (pass null/undefined to close all)
@@ -870,43 +960,7 @@
         }
     </script>
 
-    <!-- Modal Sobre -->
-    <div id="modal-about" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2 style="color: var(--primary-color);">EXTRATJUD</h2>
-            <p style="color: #666; margin-top: -10px;">Automação Jurídica Integrada</p>
-            
-            <div class="info-section">
-                <h3>Sobre o Aplicativo</h3>
-                <p style="color:#555; margin-bottom:8px;">O <strong>EXTRATJUD</strong> é uma aplicação desktop construída em Electron para automatizar a extração de informações processuais de portais judiciais (como PROJUDI e PJE), gerar relatórios (Excel, Word) e capturar evidências em PDF para auditoria e controle.</p>
-                <p style="color:#555; margin-bottom:8px;">Principais funcionalidades: extração de citações e intimações, varredura de processos arquivados, geração de planilhas e relatórios, e um console de execução com logs detalhados. A automação usa o Microsoft Edge via Playwright para navegar e coletar os dados.</p>
-                <p style="color:#555; margin-bottom:8px;">Objetivo: facilitar atividades demoradas ou massivas do Setor Jurídico, automatizando a coleta, consolidação e geração de relatórios para reduzir o trabalho manual e acelerar a entrega de resultados.</p>
-                <p style="color:#555; margin-bottom:8px;">Observações de segurança: Por padrão não armazenamos senhas ou credenciais sensíveis sem consentimento explícito do usuário.</p>
-                <p class="contact-muted">Caso queira solicitar mais serviços, fale com <strong>João Guilherme Almeida Viana</strong> (Aprendiz Administrativo).</p>
-            </div>
 
-            <div class="info-section">
-                <h3>Desenvolvimento</h3>
-                <p style="font-size: 14px; margin: 0;"><strong>João Guilherme Almeida Viana</strong></p>
-                <p style="font-size: 12px; color: #555; margin: 2px 0 0 0;">Aprendiz Administrativo</p>
-                <p style="font-size: 13px; color: #888; margin: 5px 0 0 0;">joao.aviana@neoenergia.com</p>
-            </div>
-    
-            <div class="info-section">
-                <h3>Informações Técnicas</h3>
-                <ul>
-                    <li><strong>Versão do App:</strong> <span id="env-app-ver">1.1.0</span></li>
-                    <li><strong>Node.js:</strong> <span id="env-node"></span></li>
-                    <li><strong>Electron:</strong> <span id="env-electron"></span></li>
-                    <li><strong>Chrome:</strong> <span id="env-chrome"></span></li>
-                    <li><strong>Platform:</strong> <span id="env-plat"></span></li>
-                </ul>
-            </div>
-            
-            <p style="margin-top: 30px; font-size: 12px; color: #aaa; text-align: center;">© 2026 Todos os direitos reservados.</p>
-        </div>
-    </div>
 
     <!-- Modal SharePoint Create -->
     <div id="modal-sharepoint-create" class="modal">
@@ -1108,36 +1162,7 @@
         }
         container.addEventListener('scroll', scheduleSaveIndex);
 
-        const modal = document.getElementById("modal-about");
-        const btn = document.getElementById("btn-about");
-        const span = document.getElementsByClassName("close")[0];
 
-        btn.onclick = function() {
-            closeAllModals(modal);
-            // Populate versions
-            document.getElementById('env-node').textContent = process.versions.node;
-            document.getElementById('env-electron').textContent = process.versions.electron;
-            document.getElementById('env-chrome').textContent = process.versions.chrome;
-            document.getElementById('env-plat').textContent = process.platform + ' (' + process.arch + ')';
-            // Fill app version from main
-            try {
-                ipcRenderer.invoke('get-app-version').then(ver => {
-                    const el = document.getElementById('env-app-ver');
-                    if (el) el.textContent = ver || '?.?.?';
-                    const headVer = document.getElementById('app-version'); if (headVer) headVer.textContent = ver || '?.?.?';
-                });
-            } catch(e){}
-        }
-
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
 
         // App clock removed per user request
     </script>
@@ -1550,6 +1575,391 @@
                         card.style.setProperty('--mouse-x', `${x}px`);
                         card.style.setProperty('--mouse-y', `${y}px`);
                     });
+                });
+            }
+        })();
+    </script>
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="settings-modal-overlay">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h2><i class="fa-solid fa-sliders"></i> Configurações</h2>
+                <button id="btn-close-settings" class="settings-close-btn">&times;</button>
+            </div>
+            
+            <div class="settings-modal-body">
+                <div class="settings-sidebar">
+                    <button class="settings-tab active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
+                    <button class="settings-tab" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
+                    <button class="settings-tab" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
+                </div>
+                
+                <div class="settings-content-area">
+                    
+                    <!-- ABAS DE CONTEÚDO -->
+                    <div id="tab-geral" class="settings-tab-pane active">
+                        <h3 class="settings-section-title">Comportamento da Janela</h3>
+                        <p class="settings-section-desc">Personalize como o Extratjud interage com seu desktop.</p>
+
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-minimize-tray" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Minimizar para a bandeja ao fechar</span>
+                            </label>
+                            
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-always-top" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Manter janela sempre no topo</span>
+                            </label>
+                        </div>
+
+                        <h3 class="settings-section-title" style="margin-top: 25px;">Notificações</h3>
+                        <p class="settings-section-desc">Alertas sobre o status das automações.</p>
+
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-sound-finish" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Emitir som ao finalizar</span>
+                            </label>
+                            
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-notification-finish" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Notificação do Windows</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="tab-logs" class="settings-tab-pane">
+                         <h3 class="settings-section-title">Gerenciamento de Logs</h3>
+                         <p class="settings-section-desc">Centralize os arquivos de registro para facilitar o suporte.</p>
+
+                        <div class="settings-item">
+                            <label class="settings-label">Diretório Global de Logs</label>
+                            <div class="settings-input-group">
+                                <input type="text" id="inp-global-log" readonly placeholder="Selecione uma pasta..." class="settings-input">
+                                <button id="btn-sel-log-dir" class="settings-btn-icon"><i class="fa-solid fa-folder-open"></i></button>
+                            </div>
+                            <small style="display:block; margin-top:5px; color:var(--text-secondary);">Todos os robôs salvarão seus relatórios de execução nesta pasta.</small>
+                        </div>
+                    </div>
+
+                    <div id="tab-sobre" class="settings-tab-pane">
+                        <div style="text-align:center; padding:10px 20px;">
+                            <img src="assets/logo.png" style="height:80px; margin-bottom:15px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                            <h3 style="margin:0; color:var(--primary-color); font-size: 24px;">EXTRATJUD</h3>
+                            <p style="margin:5px 0; color:var(--text-secondary); font-family: 'JetBrains Mono', monospace;">v<span id="settings-app-ver">?.?.?</span></p>
+                            
+                            <hr style="margin:25px 0; border:0; border-top:1px solid var(--border-color);">
+                            
+                            <div style="text-align:left; font-size:14px; color:var(--text-color); margin-bottom:25px; line-height: 1.6;">
+                                <h4 style="margin:0 0 12px 0; font-size:16px; color: var(--primary-color);">Sobre a Ferramenta</h4>
+                                <p style="margin-bottom:12px;">
+                                    O <strong>EXTRATJUD</strong> é uma solução corporativa de automação robótica de processos (RPA) desenvolvida para otimizar as operações do setor jurídico da Neoenergia Coelba.
+                                </p>
+                                <p style="margin-bottom:12px;">
+                                    <strong>Nota Técnica:</strong> O aplicativo não utiliza APIs oficiais dos tribunais, devido à indisponibilidade de acesso público a esses recursos. Em vez disso, a ferramenta automatiza processos manuais, utilizando Inteligência Artificial para executar a navegação e as tarefas repetitivas da forma mais rápida possível.
+                                </p>
+                                <p style="margin-bottom:12px;">
+                                    A ferramenta emprega tecnologias de navegação headless para interagir com portais judiciais de forma segura e eficiente, permitindo a extração massiva de dados, geração de relatórios gerenciais e auditoria com evidências documentais.
+                                </p>
+                            </div>
+
+                            <div style="background: rgba(var(--primary-rgb, 16, 185, 129), 0.05); border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 25px; border: 1px solid rgba(var(--primary-rgb, 16, 185, 129), 0.1);">
+                                <h4 style="margin:0 0 10px 0; font-size:14px; display:flex; align-items:center; gap:8px;">
+                                    <i class="fa-solid fa-code" style="color:var(--primary-color)"></i> Ficha Técnica
+                                </h4>
+                                <ul style="margin:0; padding-left:20px; font-size:13px; color:var(--text-secondary);">
+                                    <li><strong>Engine:</strong> Electron & Node.js</li>
+                                    <li><strong>Automação:</strong> Microsoft Playwright</li>
+                                    <li><strong>Interface:</strong> HTML5 / CSS3 (Custom Theme)</li>
+                                </ul>
+                            </div>
+
+                            <div style="text-align:left; font-size:13px; color:var(--text-secondary); margin-bottom:20px;">
+                                <p>
+                                    Desenvolvido por <strong>João Guilherme Almeida Viana</strong><br>
+                                    <span style="opacity:0.8; font-size:12px;">Aprendiz Administrativo | Jurídico Contencioso Cível</span><br>
+                                    <a href="mailto:joao.aviana@neoenergia.com" style="color:var(--primary-color); text-decoration:none;">joao.aviana@neoenergia.com</a>
+                                </p>
+                            </div>
+
+                            <div style="margin-top:20px; font-size:11px; color:#9ca3af; text-align:left; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                                <p style="font-weight:600; margin-bottom:5px;">Ambiente de Execução:</p>
+                                <ul style="columns: 2; list-style: none; padding: 0; margin: 0;">
+                                    <li>Electron: <span id="env-electron">...</span></li>
+                                    <li>Node: <span id="env-node">...</span></li>
+                                    <li>Chrome: <span id="env-chrome">...</span></li>
+                                    <li>OS: <span id="env-plat">...</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div style="margin-top:25px; font-size: 11px; color: #aaa; text-align: center;">
+                                &copy; 2026 Neoenergia Coelba. Todos os direitos reservados.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="settings-modal-footer">
+                <button id="btn-save-settings" class="settings-btn-primary"><i class="fa-solid fa-check"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Modal Styles Refined (Scoped for Settings) */
+        .settings-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            animation: settingsFadeIn 0.2s ease-out;
+        }
+
+        .settings-modal-content {
+            background: var(--card-bg);
+            width: 700px;
+            height: 500px;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: settingsSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .settings-modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-color);
+        }
+        .settings-modal-header h2 { margin: 0; font-size: 20px; color: var(--text-color); display:flex; gap:10px; align-items:center; }
+        .settings-close-btn { background: none; border: none; font-size: 24px; color: var(--text-secondary); cursor: pointer; transition: color 0.2s; }
+        .settings-close-btn:hover { color: var(--error-color, #ef4444); }
+
+        .settings-modal-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .settings-sidebar {
+            width: 200px;
+            background: var(--bg-color);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+        }
+
+        .settings-tab {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 12px 25px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .settings-tab:hover { background: rgba(0,0,0,0.03); color: var(--primary-color); }
+        .settings-tab.active {
+            background: rgba(var(--primary-rgb, 16, 185, 129), 0.1);
+            color: var(--primary-color);
+            border-left-color: var(--primary-color);
+            font-weight: 600;
+        }
+        .settings-tab i { margin-right: 10px; width: 20px; text-align: center; }
+
+        .settings-content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .settings-tab-pane { display: none; animation: settingsFadeIn 0.3s ease; }
+        .settings-tab-pane.active { display: block; }
+
+        .settings-section-title { margin-top: 0; font-size: 18px; color: var(--text-color); margin-bottom: 5px; }
+        .settings-section-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 25px; }
+
+        .settings-item { margin-bottom: 25px; }
+        .settings-label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: var(--text-color); }
+        .settings-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: inherit;
+        }
+        .settings-input-group { display: flex; gap: 8px; }
+        .settings-btn-icon {
+            padding: 0 15px;
+            background: var(--card-icon-bg);
+            color: var(--card-icon-color);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .settings-btn-icon:hover { background: var(--primary-color); color: white; }
+
+        .settings-modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-color);
+            display: flex;
+            justify-content: flex-end;
+        }
+        .settings-btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .settings-btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .settings-btn-primary:active { transform: translateY(0); }
+
+        @keyframes settingsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes settingsSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+
+    <script>
+        (function() {
+            const { ipcRenderer } = require('electron');
+            
+            // --- Settings Logic ---
+            const modalSettings = document.getElementById('modal-settings');
+            const inpGlobalLog = document.getElementById('inp-global-log');
+            const chkMinimize = document.getElementById('chk-minimize-tray');
+            const chkAlwaysTop = document.getElementById('chk-always-top');
+            const chkSoundFinish = document.getElementById('chk-sound-finish');
+            const chkNotificationFinish = document.getElementById('chk-notification-finish');
+
+            const tabs = document.querySelectorAll('.settings-tab');
+            const panes = document.querySelectorAll('.settings-tab-pane'); // Updated class name
+
+            // Tab Switching
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panes.forEach(p => p.classList.remove('active'));
+                    // Add active class
+                    tab.classList.add('active');
+                    const targetId = 'tab-' + tab.getAttribute('data-tab');
+                    const targetPane = document.getElementById(targetId);
+                    if(targetPane) targetPane.classList.add('active');
+                });
+            });
+
+            const btnSettings = document.getElementById('btn-settings');
+            if (btnSettings) {
+                btnSettings.addEventListener('click', async () => {
+                    // Load current state
+                    try {
+                        const state = await ipcRenderer.invoke('load-app-state');
+                        if (state && state.globalLogDir) {
+                            inpGlobalLog.value = state.globalLogDir;
+                        }
+
+                        // Load General Config
+                        const genConfig = await ipcRenderer.invoke('get-general-config');
+                        if (chkMinimize) chkMinimize.checked = genConfig.minimizeToTray || false;
+                        if (chkAlwaysTop) chkAlwaysTop.checked = genConfig.alwaysOnTop || false;
+                        if (chkSoundFinish) chkSoundFinish.checked = genConfig.soundFinish || false;
+                        if (chkNotificationFinish) chkNotificationFinish.checked = genConfig.notificationFinish || false;
+                        
+                        // Populate version info in 'Sobre' tab
+                        const ipc = require('electron').ipcRenderer;
+                        const ver = await ipc.invoke('get-app-version') || '1.0.0';
+                        // Update version text elements
+                        const verEls = document.querySelectorAll('#settings-app-ver, .settings-ver-text'); 
+                        verEls.forEach(el => el.textContent = ver);
+                        
+                        // If we have detailed environment info placeholders (from index.html copy)
+                        const envNode = document.getElementById('env-node');
+                        if(envNode) envNode.textContent = process.versions.node;
+                        const envElec = document.getElementById('env-electron');
+                        if(envElec) envElec.textContent = process.versions.electron;
+                        const envChrome = document.getElementById('env-chrome');
+                        if(envChrome) envChrome.textContent = process.versions.chrome;
+                        const envPlat = document.getElementById('env-plat');
+                        if(envPlat) envPlat.textContent = process.platform + ' (' + process.arch + ')';
+
+                    } catch(e) { console.error(e); }
+                    modalSettings.style.display = 'flex';
+                });
+            }
+
+            const btnCloseSettings = document.getElementById('btn-close-settings');
+            if (btnCloseSettings) {
+                btnCloseSettings.addEventListener('click', () => {
+                     modalSettings.style.display = 'none';
+                });
+            }
+
+            const btnSelLogDir = document.getElementById('btn-sel-log-dir');
+             if (btnSelLogDir) {
+                btnSelLogDir.addEventListener('click', async () => {
+                     const dir = await ipcRenderer.invoke('dialog:openDirectory');
+                     if (dir) {
+                         inpGlobalLog.value = dir;
+                     }
+                });
+             }
+
+            const btnSaveSettings = document.getElementById('btn-save-settings');
+            if (btnSaveSettings) {
+                btnSaveSettings.addEventListener('click', async () => {
+                     try {
+                        // Save Path
+                        const state = await ipcRenderer.invoke('load-app-state') || {};
+                        state.globalLogDir = inpGlobalLog.value;
+                        ipcRenderer.send('save-app-state', state);
+
+                        // Save General Config
+                        await ipcRenderer.invoke('set-general-config', {
+                            minimizeToTray: chkMinimize ? chkMinimize.checked : false,
+                            alwaysOnTop: chkAlwaysTop ? chkAlwaysTop.checked : false,
+                            soundFinish: chkSoundFinish ? chkSoundFinish.checked : false,
+                            notificationFinish: chkNotificationFinish ? chkNotificationFinish.checked : false
+                        });
+
+                        modalSettings.style.display = 'none';
+                     } catch(e) {
+                         alert('Erro ao salvar: ' + e.message);
+                     }
+                });
+            }
+
+            // Close on outside click
+            if (modalSettings) {
+                modalSettings.addEventListener('click', (e) => {
+                    if (e.target === modalSettings) modalSettings.style.display = 'none';
                 });
             }
         })();

@@ -19,24 +19,51 @@ let currentLogFile = null;
 
 // Configura Log File
 function setupLogFile(args, serviceName) {
+    console.log(`[SETUP_LOG] Iniciando configuração de log para: ${serviceName}`);
+    // Omit sensitive data if any
+    const safeArgs = { ...args };
+    delete safeArgs.pass; 
+    console.log(`[SETUP_LOG] Args recebidos:`, JSON.stringify(safeArgs, null, 2));
+
     currentLogFile = null;
-    if (args && args.globalLogDir) {
+    
+    // Prioridade: 1. Diretório Global (Configurações) -> 2. Diretório de Saída (Tela do Robô)
+    const logDir = args.globalLogDir || args.outputDir;
+
+    if (logDir) {
         try {
-            if (!fs.existsSync(args.globalLogDir)) fs.mkdirSync(args.globalLogDir, { recursive: true });
+            if (!fs.existsSync(logDir)) {
+                 console.log(`[SETUP_LOG] Criando diretório alvo: ${logDir}`);
+                 fs.mkdirSync(logDir, { recursive: true });
+            }
             
+            // Subpasta com nome do serviço para organizar
             const folderName = serviceName.replace(/[^a-z0-9]/gi, '_');
-            const targetDir = path.join(args.globalLogDir, folderName);
-            if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+            const targetDir = path.join(logDir, folderName);
+            
+            if (!fs.existsSync(targetDir)) {
+                console.log(`[SETUP_LOG] Criando subdiretório: ${targetDir}`);
+                fs.mkdirSync(targetDir, { recursive: true });
+            }
 
             const now = dayjs();
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
             const dayName = days[now.day()];
-            const fileName = `${now.format('YYYY-MM-DD_HH-mm')}_${dayName}.txt`;
+            
+            // Format: DD-MM-YYYY_HH-mm_DayName.txt
+            const fileName = `${now.format('DD-MM-YYYY_HH-mm')}_${dayName}.txt`;
             currentLogFile = path.join(targetDir, fileName);
+            
+            console.log(`[SETUP_LOG] Arquivo de log definido: ${currentLogFile}`);
 
-            const header = `LOG START\nDate: ${now.format('DD/MM/YYYY')}\nTime: ${now.format('HH:mm:ss')}\nDay: ${dayName}\nService: ${serviceName}\n==================================================\n\n`;
+            const header = `INICIO DO LOG\nData: ${now.format('DD/MM/YYYY')}\nHora: ${now.format('HH:mm:ss')}\nDia: ${dayName}\nServiço: ${serviceName}\nDiretório Alvo: ${logDir}\n==================================================\n\n`;
             fs.writeFileSync(currentLogFile, header, 'utf8');
-        } catch(e) { console.error('Log setup failed', e); }
+            console.log(`[SETUP_LOG] Header escrito com sucesso.`);
+        } catch(e) { 
+            console.error('[SETUP_LOG] FALHA CRÍTICA:', e); 
+        }
+    } else {
+        console.warn(`[SETUP_LOG] AVISO: Nem globalLogDir nem outputDir fornecidos. Log em arquivo DESATIVADO.`);
     }
 }
 
@@ -101,18 +128,18 @@ async function runAutomation(eventSender, inputReceiver, args) {
     let _heartbeatLogged = false;
     let heartbeatInterval = setInterval(() => {
         if (global.isAutomationRunning && !_heartbeatLogged) {
-            log(eventSender, 'Automação ativa: aguardando próximo passo...', 'heartbeat', 'info');
+            log(eventSender, '[HEARTBEAT] Processo ativo: aguardando ciclo de execução ou I/O...', 'System.Monitoring.Heartbeat', 'info');
             _heartbeatLogged = true;
             try { clearInterval(heartbeatInterval); } catch(_) {}
         }
     }, 8000);
 
-    log(eventSender, "Iniciando Robô de Automação", "Thread Start | Loading Playwright Engine", 'info');
-    log(eventSender, "Carregando configurações...", "Edge Browser | Mode: Scanner | Lib: ExcelJS", 'info');
+    log(eventSender, "[THREAD_MAIN] Inicializando worker de automação (RPA Core).", "Process Control Block | Playwright Engine", 'info');
+    log(eventSender, "[CONFIG_LOAD] Carregando parâmetros de execução e drivers (ExcelJS, Cheerio).", "Memory Allocation | Drivers Init", 'info');
 
     try {
         // 1. Configurar Navegador
-        log(eventSender, "Inicializando Navegador Microsoft Edge...", "child_process.spawn(msedge.exe)", 'info');
+        log(eventSender, "[BROWSER_SPAWN] Invocando processo child: msedge.exe (Chromium Engine). Buscando executável no path...", "ChildProcess::Spawn", 'info');
         
         // Tenta achar o executável do Edge no Windows
         const edgePaths = [
@@ -122,7 +149,7 @@ async function runAutomation(eventSender, inputReceiver, args) {
         const edgeExe = edgePaths.find(p => fs.existsSync(p));
         
         if (!edgeExe) {
-            throw new Error("Executável do Microsoft Edge não encontrado nos locais padrão.");
+            throw new Error("[FATAL_ERROR] Binário 'msedge.exe' não localizado nos diretórios padrão do Windows.");
         }
 
         browser = await chromium.launch({
@@ -152,7 +179,7 @@ async function runAutomation(eventSender, inputReceiver, args) {
             // Find main Electron window
             const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed()); 
             if (win) {
-                log(eventSender, 'Trazendo a janela do app para frente (uma vez) para garantir visibilidade sobre o navegador...', 'Window Focus', 'info');
+                log(eventSender, '[WINDOW_MANAGER] Solicitando foco para Main Window (Electron) para sobreposição inicial...', 'IPC::WindowFocus', 'info');
                 // Temporarily set always on top to ensure visibility, then restore
                 win.setAlwaysOnTop(true, 'screen');
                 // increased delay to ensure it overrides browser focus initialization
@@ -161,16 +188,16 @@ async function runAutomation(eventSender, inputReceiver, args) {
                 try { win.focus(); } catch (e) { /* ignore */ }
             }
         } catch (e) {
-            log(eventSender, `Não foi possível focar a janela: ${e && e.message ? e.message : String(e)}`, 'Window Focus', 'warn');
+            log(eventSender, `[DEBUG_WARN] Falha ao manipular foco da janela: ${e && e.message ? e.message : String(e)}`, 'IPC::WindowFocus_Error', 'warn');
         }
 
         // 2. Acesso e Login
-        log(eventSender, "Acessando Portal PROJUDI...", `Navigation: ${PROJUDI_URL}`, 'info');
+        log(eventSender, `[NAV_REQUEST] Enviando requisição HTTP GET para endpoint: ${PROJUDI_URL}`, `Page::Goto | Timeout: 60s`, 'info');
         
         try {
             await page.goto(PROJUDI_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
         } catch (navError) {
-             log(eventSender, "Erro inicial de conexão. Tentando reconexão...", `Error: ${navError.message}`, 'error');
+             log(eventSender, `[NET_ERROR] Falha na negociação de conexão inicial: ${navError.message}. Tentando retry...`, `Network Error Log`, 'error');
              await delay(5000);
              try {
                  await page.goto(PROJUDI_URL, { waitUntil: 'domcontentloaded', timeout: 90000 });
@@ -621,37 +648,37 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
 
         if (filterFrame) {
             try {
-                log(eventSender, `Campos encontrados no frame: ${filterFrame.url()}`);
-                log(eventSender, "Preenchendo datas...");
+                log(eventSender, `[FRAME_MATCH] Frame alvo identificado para injeção de filtros: ${filterFrame.url()}`, 'DOM::FrameLocator', 'info');
+                log(eventSender, `[INPUT_FILL] Populando campos de data (Start: ${fmtStart}, End: ${fmtEnd})...`, 'DOM::ElementHandle::fill', 'info');
                 await filterFrame.locator('#horarioInicio').fill(fmtStart);
                 await filterFrame.locator('#horarioFim').fill(fmtEnd);
                 
-                log(eventSender, "Enviando comando de pesquisa...");
+                log(eventSender, "[FORM_SUBMIT] Disparando evento 'Enter' para submissão do formulário...", 'DOM::Keyboard::press(Enter)', 'info');
                 
                 // Detecta navegação do frame automagicamente
                 // Captura a promessa ANTES do Enter para não perder o evento
                 const navigationPromise = filterFrame.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 })
-                    .catch(() => log(eventSender, "Nota: Navegação não detectada ou página carregou instantaneamente (AJAX)."));
+                    .catch(() => log(eventSender, "[NAV_WARN] Evento de navegação não capturado ou resposta síncrona/rápida demais (Race Condition). Ignorando wait.", 'Playwright::waitForNavigation', 'warn'));
 
                 await filterFrame.locator('#horarioFim').press('Enter');
                 
-                log(eventSender, "Aguardando resposta do servidor (carregamento)...");
+                log(eventSender, "[ASYNC_WAIT] Aguardando renderização do DOM pós-submissão...", 'Playwright::WAITING', 'info');
                 await navigationPromise;
 
             } catch (e) {
-                log(eventSender, `[ERRO] Falha ao aplicar filtro: ${e.message}`);
+                log(eventSender, `[FILTER_ERROR] Exceção crítica ao aplicar filtros: ${e.message}`, 'Exception::FilterRoutine', 'error');
             }
         } else {
-            log(eventSender, "[ALERTA] Campos de filtro não localizados. A automação tentará extrair o que estiver na tela.");
+            log(eventSender, "[SELECTOR_FAIL] Seletores dos campos de filtro (#horarioInicio, #horarioFim) não retornaram elementos visíveis.", 'DOM::QuerySelector', 'warn');
         }
 
     } else {
         // Fallback para modo manual (sem data selecionada)
         const yesterday = dayjs().subtract(1, 'day').format('DD/MM/YYYY');
-        log(eventSender, `\nFILTRO NECESSÁRIO! Data Sugerida: ${yesterday}`);
-        log(eventSender, "1. Preencha a Data.");
-        log(eventSender, "2. Clique em Pesquisar.");
-        log(eventSender, "3. CLIQUE NO BOTÃO 'CONFIRMAR (ENTER)' NO APP QUANDO A TABELA APARECER.");
+        log(eventSender, `\n[MANUAL_INTERACTION_REQUIRED] Parâmetros de data ausentes. Solicitando intervenção humana. Sugestão: ${yesterday}`, 'UserPrompt', 'warn');
+        log(eventSender, "1. Preencha a Data manualmente no formulário renderizado.", 'UserInstruction', 'info');
+        log(eventSender, "2. Execute a pesquisa clicando no botâo 'Pesquisar'.", 'UserInstruction', 'info');
+        log(eventSender, "3. [IMPORTANT] Pressione 'CONFIRMAR (ENTER)' nesta janela de controle APÓS a tabela carregar.", 'UserInstruction', 'info');
         
         // Esperar input do usuário via IPC
         await waitForUserConfirm(inputReceiver);
@@ -663,7 +690,7 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
     let pageNum = 1;
 
     while (true && !isStopping) {
-        log(eventSender, `Extraindo Página ${pageNum}...`);
+        log(eventSender, `[DATA_SCRAPING] Iniciando extração de estruturas de dados da Página ${pageNum}.`, 'Routine::ScrapingLoop', 'info');
         
         // 1. Encontrar o frame correto (que contenha a tabela de dados)
         let contentFrame = null;
@@ -673,20 +700,20 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
                 const locator = frame.locator("th").filter({ hasText: /N. do processo/i });
                 if (await locator.count() > 0) {
                     contentFrame = frame;
-                    log(eventSender, `Frame de dados localizado: ${frame.url()}`);
+                    log(eventSender, `[FRAME_DETECT] Frame de conteúdo de dados localizado e isolado: ${frame.url()}`, 'DOM::FrameLocator', 'info');
                     break;
                 }
             } catch (e) {}
         }
 
         if (!contentFrame) {
-             log(eventSender, "AVISO: Frame de tabela não encontrado via seletor 'th'. Tentando procurar por linhas 'tCinza'...");
+             log(eventSender, "[FRAME_WARN] Frame contendo 'th' com texto 'N. do processo' não encontrado. Tentando heurística secundária (tr.tCinza)...", 'Heuristic::FrameSearch', 'warn');
              // Fallback 2: Procura onde existem linhas de tabela
              for (const frame of page.frames()) {
                  try {
                      if (await frame.locator('tr.tCinza').count() > 0) {
                          contentFrame = frame;
-                         log(eventSender, `Frame localizado por tr.tCinza: ${frame.url()}`);
+                         log(eventSender, `[FRAME_MATCH_SECONDARY] Frame localizado via classe CSS 'tr.tCinza': ${frame.url()}`, 'Heuristic::CSSClass', 'info');
                          break;
                      }
                  } catch(e){}
@@ -694,7 +721,7 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
         }
         
         if (!contentFrame) {
-             log(eventSender, "ALERTA: Não foi possível determinar o frame da tabela. Usando frame padrão.");
+             log(eventSender, "[FRAME_CRITICAL] Falha total na identificação do frame de dados. Defaulting to Main Frame.", 'Error::FrameNotFound', 'error');
              contentFrame = page; 
         }
         
@@ -710,16 +737,16 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
             records = extractTableCustom(html, mode);
             if (records.length > 0) break;
             if (attempt < 3) {
-                log(eventSender, `(Tentativa ${attempt+1}) Nenhum processo achado. Pode ser carregamento ou fim.`);
+                log(eventSender, `[RETRY_LOGIC] Tentativa ${attempt+1}/4: DOM snapshot retornou 0 registros. Aguardando 3000ms antes de novo parse...`, 'Async::Delay', 'warn');
                 await delay(3000);
             }
         }
 
         if (records.length > 0) {
             allRecords.push(...records);
-            log(eventSender, `Capturados ${records.length} processos.`);
+            log(eventSender, `[DATA_EXTRACTED] Sucesso: ${records.length} objetos recuperados do DOM.`, 'Parser::Success', 'info');
         } else {
-            log(eventSender, `Nenhum processo capturado na página ${pageNum}.`);
+            log(eventSender, `[DATA_EMPTY] Parser retornou lista vazia na página ${pageNum}. (Fim da lista ou erro de carga).`, 'Parser::EmptyResult', 'warn');
         }
 
         // --- CAPTURA DE EVIDÊNCIA (SCREENSHOT) ---
@@ -931,7 +958,7 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
         }
 
         if (hasNext && clickTarget) {
-            log(eventSender, "Avançando próxima página...");
+            log(eventSender, "[PAGINATION_NEXT] Elemento de navegação (NextButton) detectado e visível. Triggering click event + waitForNavigation...", 'Pagination::Next', 'info');
             
             // --- LÓGICA DE REFILTRO (INTIMAÇÕES) ---
             if (mode === 'inti' && (args.dateStart || args.filterDate)) {
@@ -953,13 +980,13 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
                          let fmtE = `${partsE[2]}/${partsE[1]}/${partsE[0]}`;
 
                          if (val !== fmtS) { // Se o inicio perdeu o valor ou mudou
-                             log(eventSender, `Reaplicando filtro para página ${pageNum + 1}...`);
+                             log(eventSender, `[STATE_RESTORE] Detectada perda de estado dos inputs de filtro (ViewState Reset) na transição de página. Re-injecting filter values (Start: ${fmtS})...`, 'DOM::InputRestore', 'warn');
                              await fInicio.fill(fmtS);
                              await fFim.fill(fmtE);
                          }
                      }
                  } catch (e) {
-                     log(eventSender, `Aviso: Falha ao reaplicar filtro (pg ${pageNum}): ${e.message}`);
+                     log(eventSender, `[FILTER_PERSIST_FAIL] Falha não bloqueante ao tentar reaplicar filtros: ${e.message}`, 'Exception::FilterRestore', 'warn');
                  }
             }
             
@@ -970,11 +997,11 @@ async function processCategoryRoutine(page, categoryName, mode, eventSender, inp
                 pageNum++;
                 await delay(1000);
             } catch (e) {
-                log(eventSender, "Erro/Fim da paginação ao clicar.");
+                log(eventSender, "[PAGINATION_END] Catch block acionado no fluxo de navegação ou elemento não interativo. Encerrando loop de paginação.", 'Pagination::Break', 'warn');
                 break;
             }
         } else {
-            log(eventSender, "Fim da paginação.");
+            log(eventSender, "[PAGINATION_STOP] Nenhum elemento de 'Próxima Página' visível ou disponível. Fim do dataset.", 'Pagination::Complete', 'info');
             break;
         }
     }
@@ -993,33 +1020,59 @@ function extractTableCustom(html, mode) {
     
     // 1. Descobrir índices das colunas dinamicamente com base no cabeçalho
     // Isso evita erros se a ordem das colunas mudar
+    log(null, "[DOM_PARSER] Iniciando iteração sobre coleção de elementos 'th' (Table Headers) para mapeamento dinâmico de índices.", null, 'info');
     const headers = [];
     $('tr.subTituloTabela th').each((i, el) => {
-        headers.push($(el).text().trim().toUpperCase());
+        const headerText = $(el).text().trim().toUpperCase();
+        headers.push(headerText);
+        log(null, `[HEADER_MAP] Index[${i}] => InnerText: "${headerText}"`);
     });
 
+    if (headers.length === 0) {
+        log(null, "[HEADER_MISSING] Nenhum cabeçalho encontrado via seletor 'tr.subTituloTabela th'. Ativando fallback para índices hardcoded.", null, 'warn');
+    }
 
     // Mapeamento PADRÃO (Fallback caso não ache cabeçalho)
-    let idxPost = mode === 'cita' ? 4 : 3; // Intimações: Postagem é col 3 (0-based) na tabela, mas vamos confiar no header scan
+    let idxPost = mode === 'cita' ? 4 : 3;
     let idxCiencia = mode === 'cita' ? 7 : -1;
     let idxEntrada = mode === 'cita' ? 8 : -1;
     let idxIntimacao = mode === 'inti' ? 6 : -1;
 
+    log(null, "[COLUMN_MAPPING] Iniciando análise heurística de correspondência (Header String Matching)...", null, 'info');
+
     // Tenta achar pelos nomes
     headers.forEach((h, i) => {
-        if (h.includes("POSTAGEM")) idxPost = i;
-        if (h.includes("CIÊNCIA") || h.includes("CIENCIA")) idxCiencia = i;
-        if (mode === 'cita' && (h.includes("ENTRADA") || h.includes("RECEBIMENTO") || h.includes("MOVIMENTACAO"))) {
-             if (h.includes("ENTRADA")) idxEntrada = i;
+        if (h.includes("POSTAGEM")) {
+            idxPost = i;
+            log(null, `[COLUMN_MATCH] 'POSTAGEM' identificada no índice ${i}.`);
         }
-        if (mode === 'inti' && (h.includes("INTIMAÇÃO") || h.includes("INTIMACAO"))) idxIntimacao = i;
+        if (h.includes("CIÊNCIA") || h.includes("CIENCIA")) {
+            idxCiencia = i;
+            log(null, `[COLUMN_MATCH] 'CIÊNCIA' identificada no índice ${i}.`);
+        }
+        if (mode === 'cita' && (h.includes("ENTRADA") || h.includes("RECEBIMENTO") || h.includes("MOVIMENTACAO"))) {
+             if (h.includes("ENTRADA")) {
+                idxEntrada = i;
+                log(null, `[COLUMN_MATCH] 'ENTRADA' identificada no índice ${i}.`);
+             }
+        }
+        if (mode === 'inti' && (h.includes("INTIMAÇÃO") || h.includes("INTIMACAO"))) {
+            idxIntimacao = i;
+            log(null, `[COLUMN_MATCH] 'INTIMAÇÃO' identificada no índice ${i}.`);
+        }
     });
     
     // Fallback manual forçado para Intimações (baseado no HTML fornecido)
-    if (mode === 'inti' && idxIntimacao === -1) idxIntimacao = 6;
-    if (mode === 'inti' && idxPost === -1) idxPost = 3;
+    if (mode === 'inti' && idxIntimacao === -1) {
+        log(null, "[FALLBACK_APPLIED] Coluna 'INTIMAÇÃO' não encontrada por nome. Forçando índice 6.");
+        idxIntimacao = 6;
+    }
+    if (mode === 'inti' && idxPost === -1) {
+        log(null, "[FALLBACK_APPLIED] Coluna 'POSTAGEM' não encontrada por nome. Forçando índice 3.");
+        idxPost = 3;
+    }
 
-    log(null, `[DEBUG] Indices identificados - Post: ${idxPost}, Ciencia: ${idxCiencia}, Entrada: ${idxEntrada}, Intimacao: ${idxIntimacao}`);
+    log(null, `[MAPPING_RESULT] Definição final de colunas (0-based) - Postagem: ${idxPost} | Ciência: ${idxCiencia} | Entrada: ${idxEntrada} | Intimação: ${idxIntimacao}`, null, 'info');
 
     let dataRows;
 
@@ -1062,18 +1115,19 @@ function extractTableCustom(html, mode) {
         // Regex para NPU (formato XXXXXXX-XX.XXXX.X.XX.XXXX)
         const procMatch = text.match(/\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}/);
         
-        // DEBUG ESPÉCIFICO PARA PRIMEIRA LINHA
-        if (i === 0) {
-             const preview = text.substring(0, 70);
-             log(null, `[DEBUG ROW 0 - ${mode.toUpperCase()}] Text: "${preview}..." | Match: ${procMatch ? 'SIM' : 'NÃO'} | Cols: ${cols.length}`);
-             if (!procMatch) {
-                 const linkD = el.find('a[href*="DadosProcesso"]').text().trim();
-                 log(null, `[DEBUG ROW 0] Tentativa Link: "${linkD}"`);
-             }
-        }
+    // DEBUG ESPÉCIFICO PARA PRIMEIRA LINHA
+    // if (i === 0) {
+    //      const preview = text.substring(0, 70);
+    //      log(null, `[DEBUG ROW 0 - ${mode.toUpperCase()}] Text: "${preview}..." | Match: ${procMatch ? 'SIM' : 'NÃO'} | Cols: ${cols.length}`);
+    //      if (!procMatch) {
+    //          const linkD = el.find('a[href*="DadosProcesso"]').text().trim();
+    //          log(null, `[DEBUG ROW 0] Tentativa Link: "${linkD}"`);
+    //      }
+    // }
         
-        let npu = "";
-        if (procMatch) {
+    let npu = "";
+    if (procMatch) {
+
             npu = procMatch[0];
         } else {
             // Tenta pegar de dentro do link se houver (caso o texto da linha falhe)
@@ -1119,11 +1173,6 @@ function extractTableCustom(html, mode) {
             let dtCiencia = getColDate(idxCiencia); // Citações
             let dtEntrada = getColDate(idxEntrada); // Citações
             let dtIntimacao = getColDate(idxIntimacao); // Intimações
-            
-            // Log de depuração para entender o que está sendo lido
-            if (mode === 'inti') {
-                log(null, `[DEBUG] Processo ${npu} | Intimação Raw: "${$(cols[idxIntimacao]).text().trim()}" -> Parsed: ${dtIntimacao}`);
-            }
 
             records.push({
                 npu: npu,
@@ -1918,6 +1967,11 @@ async function runPjeAutomation(eventSender, ipcReceiver, args) {
             ]
         });
         
+        // *** FIX: Anti-detecção para evitar bloqueios de Captcha (Tencent/Recaptcha) ***
+        await context.addInitScript(() => {
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+        });
+
         // Em contexto persistente, a página já vem aberta ou abrimos uma se não houver
         page = context.pages().length > 0 ? context.pages()[0] : await context.newPage();
         

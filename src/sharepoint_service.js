@@ -136,7 +136,7 @@ async function scanDocumentFolders(page, eventSender = null) {
     // Mark those that start with OFÍCIOS
     uniq.forEach(u => u.isOficios = /^of[ií]cios\s*\d{4}/i.test(u.name));
 
-    if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Scan completo: ${uniq.length} candidatos encontrados (${uniq.filter(u=>u.isOficios).length} OFÍCIOS).`, tech: 'scanDocumentFolders' });
+    if (eventSender) eventSender.send('log-message', { type: 'info', msg: `[SCAN_RESULT] Varredura completa. ${uniq.length} candidatos indexados (${uniq.filter(u=>u.isOficios).length} correspondem ao padrão 'OFÍCIOS').`, tech: 'FileSystem::ScanDocumentFolders' });
 
     return uniq;
 }
@@ -150,21 +150,21 @@ function attachPopupFocusHandler(page, eventSender = null) {
         page.on('dialog', async dialog => {
             if (eventSender) eventSender.send('bring-window-front', { reason: 'dialog' });
             // Do not auto-dismiss - let caller handle the dialog. We will log.
-            console.log('[SharePoint Service] Dialog opened:', dialog.message());
+            console.log('[SharePoint Service] [DIALOG_DETECT] Janela de diálogo nativa interceptada:', dialog.message());
         });
 
         page.on('popup', popup => {
             if (eventSender) eventSender.send('bring-window-front', { reason: 'popup' });
-            console.log('[SharePoint Service] Popup opened:', popup.url());
+            console.log('[SharePoint Service] [POPUP_DETECT] Nova janela de popup detectada:', popup.url());
         });
 
         page.on('filechooser', fc => {
             if (eventSender) eventSender.send('bring-window-front', { reason: 'filechooser' });
-            console.log('[SharePoint Service] File chooser requested');
+            console.log('[SharePoint Service] [FILE_CHOOSER] Solicitação de upload de arquivo detectada.');
         });
 
     } catch (e) {
-        console.warn('[SharePoint Service] Falha ao anexar handlers de popup:', e && e.message);
+        console.warn('[SharePoint Service] [HANDLER_ERROR] Falha ao anexar listeners de eventos de UI:', e && e.message);
     }
 }
 
@@ -184,7 +184,7 @@ async function openOficiosRoot(page, url, eventSender = null) {
         for (const k of allowed) if (u.searchParams.has(k)) qp.set(k, u.searchParams.get(k));
         const clean = `${u.origin}${u.pathname}${qp.toString() ? ('?' + qp.toString()) : ''}`;
         if (clean !== target) {
-            if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Sanitizando URL SharePoint. Navegando para: ${clean}`, tech: 'openOficiosRoot' });
+            if (eventSender) eventSender.send('log-message', { type: 'info', msg: `[URL_SANITIZE] Limpando tokens efêmeros da URL alvo. Target final: ${clean}`, tech: 'URL::Sanitization' });
             target = clean;
         }
     } catch (e) {
@@ -192,14 +192,14 @@ async function openOficiosRoot(page, url, eventSender = null) {
     }
 
     try {
-        if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Navegando para SharePoint: ${target}`, tech: 'openOficiosRoot' });
+        if (eventSender) eventSender.send('log-message', { type: 'info', msg: `[NAV_START] Iniciando navegação para raiz do SharePoint: ${target}`, tech: 'Page::Goto' });
         await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 90000 });
         // Pequeno delay para que frames e scripts carreguem
         await page.waitForTimeout(2500);
-        if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Navegação concluída: ${target}`, tech: 'openOficiosRoot' });
+        if (eventSender) eventSender.send('log-message', { type: 'info', msg: `[NAV_COMPLETE] Carga da página raiz concluída com sucesso.`, tech: 'Page::LoadEvent' });
         return true;
     } catch (e) {
-        if (eventSender) eventSender.send('log-message', { type: 'error', msg: `Falha ao navegar para SharePoint: ${e && e.message}`, tech: 'openOficiosRoot' });
+        if (eventSender) eventSender.send('log-message', { type: 'error', msg: `[NAV_FAIL] Falha crítica de navegação: ${e && e.message}`, tech: 'Exception::Navigation' });
         return false;
     }
 }
@@ -239,7 +239,7 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
         }
 
         if (!baseElHandle && baseFolderNameOrSelector) {
-            throw new Error('Base folder not found on page. Use the DevTools extractor to get selectors.');
+            throw new Error('[SELECTOR_ERROR] Pasta base não encontrada na árvore de elementos. Verifique seletores no DevTools.');
         }
 
         // If we have a base element handle, click to open base folder. Otherwise assume current folder is already active.
@@ -249,7 +249,7 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
             await page.waitForTimeout(DEFAULT_WAIT);
         } else {
             // no-op: operate on current view
-            if (eventSender) eventSender.send('log-message', { type: 'info', msg: 'Nenhuma base selecionada; operando na pasta atual', tech: 'createFolders' });
+            if (eventSender) eventSender.send('log-message', { type: 'info', msg: '[BASE_FOLDER] Nenhuma seleção explícita fornecida; operando no diretório ativo do navegador.', tech: 'FileSystem::Context' });
             await page.waitForTimeout(800);
         }
 
@@ -292,7 +292,7 @@ async function createFolders(page, baseFolderNameOrSelector, names = [], eventSe
                 ];
                 let nameInput = null;
                 for (const s of nameInputSelectors) {
-                    try { nameInput = await page.$(s); if (nameInput) { if (eventSender) eventSender.send('log-message', { type: 'info', msg: `Found name input via selector: ${s}`, tech: 'createFolders' }); break; } } catch(e){}
+                    try { nameInput = await page.$(s); if (nameInput) { if (eventSender) eventSender.send('log-message', { type: 'info', msg: `[DOM_QUERY] Campo de input de nome localizado via seletor: ${s}`, tech: 'Selector::Match' }); break; } } catch(e){}
                 }
 
                 if (!nameInput) {
