@@ -107,3 +107,8 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: b2dd0d7
 - Notes: feat: Adiciona notificações de sistema, sons de alerta e opções de janela (Tray, Top)
+
+## v1.2.7 - 2026-02-20
+
+- Commit: 272d1f5
+- Notes: chore(release): bump to v1.2.7 due to existing tag
