@@ -1,0 +1,47 @@
+{
+    // Reduce CPU/RAM usage by excluding generated folders from file watchers and search
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/*/**": true,
+        "**/dist/**": true,
+        "**/build/**": true,
+        "**/playwright-storage/**": true,
+        "**/Relatorios_PJE/**": true,
+        "**/screenshots/**": true,
+        "**/videos/**": true,
+        "**/test-results/**": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/*.code-search": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/playwright-storage": true,
+        "**/Relatorios_PJE": true,
+        "**/screenshots": true,
+        "**/videos": true,
+        "**/test-results": true
+    },
+    // Reduce unnecessary animations and smooth scrolling
+    "editor.cursorBlinking": "solid",
+    "editor.smoothScrolling": false,
+    "workbench.list.smoothScrolling": false,
+    "window.autoDetectColorScheme": false,
+    "window.restoreWindows": "none",
+    
+    // Disable intensive extension features if needed (e.g., heavy linting on save)
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "never",
+        "source.organizeImports": "never"
+    },
+    
+    // Python/Pylance specific optimizations
+    "python.analysis.indexing": false,
+    "python.analysis.diagnosticMode": "openFilesOnly",
+    "python.analysis.typeCheckingMode": "off",
+    
+    // Limit IntelliSense if it's slow
+    "editor.suggest.maxVisibleSuggestions": 8
+}

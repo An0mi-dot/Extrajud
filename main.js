@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
@@ -8,6 +8,7 @@ const https = require('https');
 const automacaoService = require('./src/automacao_service');
 
 let mainWindow;
+let appTray = null;
 
 // --- Dev Live-Reload (only in development) ---
 if (process.env.NODE_ENV !== 'production') {
@@ -64,11 +65,23 @@ ipcMain.handle('load-app-state', async () => {
   return {};
 });
 
-ipcMain.on('save-app-state', (event, state) => {
+ipcMain.on('save-app-state', (event, incomingState) => {
   try {
     // Defensive: some renderers call save-app-state without a payload; ignore to avoid overwriting with undefined
-    if (typeof state === 'undefined' || state === null) return;
-    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
+    if (typeof incomingState === 'undefined' || incomingState === null) return;
+    
+    // Read existing state to merge instead of overwrite
+    let existingState = {};
+    if (fs.existsSync(STATE_FILE)) {
+        try {
+            existingState = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+        } catch(e) { /* ignore parse error, start fresh */ }
+    }
+    
+    // Merge: incoming overrides existing, but preserves keys not present in incoming
+    const newState = { ...existingState, ...incomingState };
+    
+    fs.writeFileSync(STATE_FILE, JSON.stringify(newState, null, 2), 'utf8');
   } catch (e) {
     console.error('save-app-state error', e);
   }
@@ -485,6 +498,9 @@ ${html}
 });
 
 function createWindow() {
+  const state = readStateFile();
+  const config = state.general || {};
+
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 750,
@@ -496,8 +512,31 @@ function createWindow() {
     }
   });
 
+  if (config.alwaysOnTop) {
+      mainWindow.setAlwaysOnTop(true);
+  }
+
   mainWindow.setMenu(null); // Remove o menu completamente
   mainWindow.loadFile(path.join('public', 'index.html'));
+
+  // Close behavior: Minimize to Tray if enabled
+  mainWindow.on('close', (event) => {
+      // Re-read strictly for closing logic
+      const currentState = readStateFile();
+      const currentConfig = currentState.general || {};
+
+      if (currentConfig.minimizeToTray && !app.isQuitting) {
+          event.preventDefault();
+          mainWindow.hide();
+          if (appTray) {
+              appTray.displayBalloon({
+                  title: 'Extratjud',
+                  content: 'O aplicativo continua rodando em segundo plano.'
+              });
+          }
+      }
+      return false;
+  });
 
   // Send initial automation status to renderer after load
   mainWindow.webContents.on('did-finish-load', () => {
@@ -505,7 +544,51 @@ function createWindow() {
   });
 }
 
+// Handler for frontend setting changes
+ipcMain.handle('set-general-config', (event, newConfig) => {
+    try {
+        const state = readStateFile();
+        state.general = { ...state.general, ...newConfig };
+        
+        if (mainWindow) {
+            if (typeof newConfig.alwaysOnTop === 'boolean') {
+                mainWindow.setAlwaysOnTop(newConfig.alwaysOnTop);
+            }
+        }
+        
+        writeStateFile(state);
+        return { ok: true };
+    } catch(e) {
+        console.error('set-general-config error', e); 
+        return { ok: false };
+    }
+});
+
+ipcMain.handle('get-general-config', () => {
+    const s = readStateFile();
+    return s.general || { minimizeToTray: false, alwaysOnTop: false };
+});
+
 app.whenReady().then(() => {
+  try {
+      // Tray Setup
+      const iconPath = path.join(__dirname, 'public', 'assets', 'logo2.png');
+      appTray = new Tray(iconPath);
+      appTray.setToolTip('Extratjud');
+      
+      const contextMenu = Menu.buildFromTemplate([
+          { label: 'Abrir App', click: () => { if(mainWindow) mainWindow.show(); } },
+          { type: 'separator' },
+          { label: 'Sair', click: () => { app.isQuitting = true; app.quit(); } }
+      ]);
+      
+      appTray.setContextMenu(contextMenu);
+      
+      appTray.on('double-click', () => {
+          if(mainWindow) mainWindow.show();
+      });
+  } catch(e) { console.error('Tray Init Error', e); }
+
   createWindow();
 
   // If we have a project-local PJE storage (for testing), seed the user's appData on first run so automation can reuse it immediately
@@ -559,25 +642,68 @@ app.on('window-all-closed', () => {
 
 // --- IPC Handler ---
 ipcMain.on('run-script', (event, args) => {
-  // Inject global settings
-  const state = readStateFile();
-  if (state.globalLogDir) args.globalLogDir = state.globalLogDir;
+  // Inject global settings: RE-READ state to ensure fresh config
+  let state = {};
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    }
+  } catch (e) { console.error('Error reading state file:', e); }
+
+  // Ensure args is an object
+  if (!args || typeof args !== 'object') {
+      args = {};
+  }
+  
+  // Merge globalLogDir into args
+  if (state && state.globalLogDir) {
+      args.globalLogDir = state.globalLogDir;
+      console.log('Using Global Log Dir:', state.globalLogDir);
+  } else {
+      console.warn('No Global Log Dir found in state.');
+  }
   
   // Executa a automação nativa (Node.js) -> Citações/Intimações
   automacaoService.runAutomation(event.sender, ipcMain, args);
 });
 
 ipcMain.on('run-archived-script', (event, args) => {
-  const state = readStateFile();
-  if (state.globalLogDir) args.globalLogDir = state.globalLogDir;
+  let state = {};
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    }
+  } catch (e) { console.error('Error reading state file:', e); }
+
+  if (!args || typeof args !== 'object') {
+      args = {};
+  }
+
+  if (state && state.globalLogDir) {
+       args.globalLogDir = state.globalLogDir;
+       console.log('Using Global Log Dir (Archived):', state.globalLogDir);
+  }
 
   // Executa a automação nativa (Node.js) -> Arquivados
   automacaoService.runArchivedAutomation(event.sender, ipcMain, args);
 });
 
 ipcMain.on('run-pje-script', (event, args) => {
-    const state = readStateFile();
-    if (state.globalLogDir) args.globalLogDir = state.globalLogDir;
+    let state = {};
+    try {
+      if (fs.existsSync(STATE_FILE)) {
+        state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+      }
+    } catch (e) { console.error('Error reading state file:', e); }
+
+    if (!args || typeof args !== 'object') {
+        args = {};
+    }
+
+    if (state && state.globalLogDir) {
+        args.globalLogDir = state.globalLogDir;
+        console.log('Using Global Log Dir (PJE):', state.globalLogDir);
+    }
     
     // Executa a automação nativa (Node.js) -> PJE
     automacaoService.runPjeAutomation(event.sender, ipcMain, args);

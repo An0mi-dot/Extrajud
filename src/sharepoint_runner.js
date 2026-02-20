@@ -136,15 +136,15 @@ async function startSession(args = {}, webContents) {
         let autoFilled = false;
         if (args && args.email) {
             autoFillAttempted = true;
-            sender.send('log-message', { type: 'info', msg: `Tentando preencher email de login: ${args.email}`, tech: 'sharepoint.startSession' });
+            sender.send('log-message', { type: 'info', msg: `[AUTH_FLOW] Iniciando tentativa de preenchimento automático de credenciais (Target: ${args.email}).`, tech: 'sharepoint.startSession::tryFillEmail' });
             try {
                 const ok = await tryFillEmail(page, args.email, sender, typeof args.loginTimeoutMs === 'number' ? Math.min(args.loginTimeoutMs, 20000) : 15000);
                 if (ok) {
                     autoFilled = true;
-                    sender.send('log-message', { type: 'info', msg: `Preenchimento automático do email concluído (campo detectado e preenchido).`, tech: 'sharepoint.startSession' });
+                    sender.send('log-message', { type: 'info', msg: `[AUTH_SUCCESS] Input de e-mail identificado e populado via injeção de evento/preenchimento direto.`, tech: 'sharepoint.startSession::autofill' });
                 }
             } catch (err) {
-                sender.send('log-message', { type: 'warn', msg: `Preenchimento automático do email falhou ou não encontrado: ${err && err.message ? err.message : String(err)}`, tech: 'sharepoint.startSession' });
+                sender.send('log-message', { type: 'warn', msg: `[AUTH_FAIL] Exceção ao tentar preencher credenciais automaticamente: ${err && err.message ? err.message : String(err)}`, tech: 'sharepoint.startSession::autofill_exception' });
             }
         }
 
@@ -221,7 +221,7 @@ async function startSession(args = {}, webContents) {
                             }
                             // Do NOT send any UI prompt (waiting/request) — continue polling for content until timeout
                         } else {
-                            sender.send('log-message', { type: 'info', msg: 'Página de login detectada. Aguardando usuário realizar login...', tech: 'sharepoint.startSession' });
+                            sender.send('log-message', { type: 'info', msg: '[AUTH_WAIT] Página de autenticação Microsoft detectada (redirect). Aguardando input manual do usuário...', tech: 'sharepoint.startSession::login_flow' });
                             sender.send('sharepoint:waiting-for-login', { url: cur, sessionId });
                             sender.send('sharepoint:request-login', { sessionId });
 
@@ -244,7 +244,8 @@ async function startSession(args = {}, webContents) {
 
                             const action = await waitForUserAction();
                             if (action === 'cancel' || action === 'timeout') {
-                                throw new Error(action === 'cancel' ? 'Usuário cancelou login' : 'Tempo esgotado aguardando confirmação de login');
+                                const reason = action === 'cancel' ? 'USER_CANCELLED_LOGIN' : 'TIMEOUT_WAITING_LOGIN';
+                                throw new Error(`Processo interrompido: ${reason}`);
                             }
                             // if action === 'done' continue; loop will retry detection
                         }
