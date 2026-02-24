@@ -116,3 +116,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: a93c6b9
 - Notes: Add documentation: PJe extraction planning and requirements (PLANEJAMENTO_PJE.md)
+## v1.2.9 - 2026-02-24
+
+- Commit: 0857706
+- Notes: feat: standardizing About section, fixing theme on archived pages, and fixing modal overlay. README updated.
