@@ -112,3 +112,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 272d1f5
 - Notes: chore(release): bump to v1.2.7 due to existing tag
+## v1.2.8 - 2026-02-24
+
+- Commit: a93c6b9
+- Notes: Add documentation: PJe extraction planning and requirements (PLANEJAMENTO_PJE.md)
