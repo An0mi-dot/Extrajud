@@ -1,0 +1,77 @@
+{
+  "name": "projudi_cita_inti",
+  "version": "1.2.8",
+  "description": "Automação de extração de Citações e Intimações do Portal PROJUDI",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env NODE_ENV=development electron .",
+    "dist": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lfs:install": "git lfs install",
+    "lfs:track:zip": "git lfs track \"*.zip\" && git add .gitattributes",
+    "bump-version": "node scripts/bump_version.js",
+    "inspect:projudi": "node scripts/inspect_projudi_api.js"
+  },
+  "keywords": [],
+  "author": "João Guilherme Almeida Viana <joao.aviana@neoenergia.com>",
+  "license": "ISC",
+  "build": {
+    "appId": "com.neoenergia.extratjud",
+    "productName": "EXTRATJUD",
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/assets/icon.ico",
+      "forceCodeSigning": false,
+      "verifyUpdateCodeSignature": false,
+      "publish": [
+        "github"
+      ]
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "An0mi-dot",
+        "repo": "Extrajud"
+      }
+    ],
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "EXTRATJUD",
+      "installerIcon": "public/assets/icon.ico",
+      "uninstallerIcon": "public/assets/icon.ico",
+      "installerHeaderIcon": "public/assets/icon.ico",
+      "installerSidebar": "public/assets/installerSidebar.bmp",
+      "uninstallerSidebar": "public/assets/installerSidebar.bmp",
+      "installerHeader": "public/assets/installerHeader.bmp"
+    },
+    "files": [
+      "**/*",
+      "!dist/**/*",
+      "!**/*.xlsx",
+      "!**/*.pdf",
+      "!screenshots/**/*"
+    ]
+  },
+  "type": "commonjs",
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.4.0",
+    "electron-reload": "^2.0.0-alpha.1",
+    "jimp": "^1.6.0",
+    "png-to-ico": "^3.0.1"
+  },
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "dayjs": "^1.11.19",
+    "electron-updater": "^6.7.3",
+    "exceljs": "^4.4.0",
+    "playwright-core": "^1.57.0"
+  }
+}
