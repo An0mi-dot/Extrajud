@@ -138,57 +138,145 @@ async function runAutomation(eventSender, inputReceiver, args) {
     log(eventSender, "[CONFIG_LOAD] Carregando parâmetros de execução e drivers (ExcelJS, Cheerio).", "Memory Allocation | Drivers Init", 'info');
 
     try {
-        // 1. Configurar Navegador
-        log(eventSender, "[BROWSER_SPAWN] Invocando processo child: msedge.exe (Chromium Engine). Buscando executável no path...", "ChildProcess::Spawn", 'info');
-        
-        // Tenta achar o executável do Edge no Windows
-        const edgePaths = [
-            "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-            "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
-        ];
-        const edgeExe = edgePaths.find(p => fs.existsSync(p));
-        
-        if (!edgeExe) {
-            throw new Error("[FATAL_ERROR] Binário 'msedge.exe' não localizado nos diretórios padrão do Windows.");
-        }
+        // 1. Detectar modo do navegador (interno ou externo)
+        // Webview integration has been removed; always use external browser.
+        let browserMode = 'external';
+        log(eventSender, `[BROWSER_MODE] Forced mode: ${browserMode}`, null, 'info');
 
-        browser = await chromium.launch({
-            executablePath: edgeExe,
-            headless: false,
-            args: ["--start-maximized", "--disable-blink-features=AutomationControlled"]
-        });
+        if (browserMode === 'internal') {
+            // dead code left for reference but will never execute
+            log(eventSender, '[BROWSER_MODE] Usando navegador integrado (webview via CDP).', 'webview', 'info');
+            try {
+                // antes de listar alvos, pergunta ao renderer qual URL o webview está exibindo
+                let webviewUrl = null;
+                try {
+                    // tenta por alguns instantes caso a webview ainda não tenha carregado
+                    for (let attempt=0; attempt<5; attempt++) {
+                        webviewUrl = await eventSender.executeJavaScript(`(() => {
+                            const w = document.getElementById('integrated-webview');
+                            return w ? w.getURL() : null;
+                        })();`);
+                        if (webviewUrl) break;
+                        await delay(500);
+                    }
+                } catch (e) {
+                    log(eventSender, `[WARN] não foi possível obter URL do webview: ${e.message}`, e.stack, 'warn');
+                }
+                log(eventSender, `[BROWSER_CDP] URL atual do webview: ${webviewUrl}`, null, 'info');
 
-        context = await browser.newContext({
-            viewport: null, // Máximo
-            userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
-        });
+                // Conecta ao navegador interno através da porta de depuração remota aberta pelo Electron
+                const cdpEndpoint = 'http://127.0.0.1:9222';
+                log(eventSender, `[BROWSER_CDP] Tentando conectar em ${cdpEndpoint}`, null, 'info');
 
-        // Anti-detecção simples
-        await context.addInitScript(() => {
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-        });
+                // consulta manual usando http ou https conforme o endpoint
+                const urlModule = require('url');
+                const parsed = urlModule.parse(cdpEndpoint);
+                const httpModule = parsed.protocol === 'https:' ? require('https') : require('http');
+                const targets = await new Promise((resolve, reject) => {
+                    let data = '';
+                    httpModule.get(`${cdpEndpoint}/json/list`, res => {
+                        res.on('data', c => data += c);
+                        res.on('end', () => {
+                            try { resolve(JSON.parse(data)); }
+                            catch (err) { reject(err); }
+                        });
+                    }).on('error', reject);
+                });
+                log(eventSender, `[BROWSER_CDP] Targets disponíveis: ${targets.map(t=>t.url).join(', ')}`, null, 'info');
 
-        page = await context.newPage();
-        
-        // Aumenta timeout de navegação padrão
-        page.setDefaultTimeout(60000); 
-        page.setDefaultNavigationTimeout(60000);
-
-        // Bring main window to front once so the automation window (Edge) won't be hidden by other apps
-        try {
-            // Find main Electron window
-            const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed()); 
-            if (win) {
-                log(eventSender, '[WINDOW_MANAGER] Solicitando foco para Main Window (Electron) para sobreposição inicial...', 'IPC::WindowFocus', 'info');
-                // Temporarily set always on top to ensure visibility, then restore
-                win.setAlwaysOnTop(true, 'screen');
-                // increased delay to ensure it overrides browser focus initialization
-                await delay(500); 
-                win.setAlwaysOnTop(false);
-                try { win.focus(); } catch (e) { /* ignore */ }
+                // Seleciona o alvo que corresponde ao webviewUrl (ou PROJUDI_URL se webviewUrl não estiver disponível)
+                const matchUrl = webviewUrl || PROJUDI_URL;
+                let projudiTarget = targets.find(t => t.url && t.url.includes(matchUrl));
+                if (!projudiTarget && targets.length > 0) {
+                    projudiTarget = targets[0];
+                    log(eventSender, `[BROWSER_CDP] Nenhum target correspondente encontrado; usando primeiro disponível: ${projudiTarget.url}`, null, 'warn');
+                }
+                if (projudiTarget && projudiTarget.webSocketDebuggerUrl) {
+                    browser = await chromium.connectOverCDP(projudiTarget.webSocketDebuggerUrl);
+                    const pages = await browser.pages();
+                    page = pages.length ? pages[0] : await browser.newPage();
+                    log(eventSender, `[BROWSER_CDP] Conectado ao target ${projudiTarget.url}`, null, 'info');
+                    // confirm attachment visually and by console
+                    try {
+                        await page.evaluate(() => {
+                            console.log('PLAYWRIGHT_ATTACHED');
+                            document.body.style.outline = '4px solid red';
+                        });
+                    } catch (_) {}
+                } else {
+                    throw new Error('Target CDP para URL do webview não encontrado');
+                }
+                page.setDefaultTimeout(60000);
+                page.setDefaultNavigationTimeout(60000);
+            } catch (cdpErr) {
+                log(eventSender, `[WARN] Falha ao conectar via CDP, retornando para modo externo: ${cdpErr.message}`, cdpErr.stack, 'warn');
+                browserMode = 'external';
             }
-        } catch (e) {
-            log(eventSender, `[DEBUG_WARN] Falha ao manipular foco da janela: ${e && e.message ? e.message : String(e)}`, 'IPC::WindowFocus_Error', 'warn');
+        }
+        if (browserMode === 'external') {
+            log(eventSender, '[BROWSER_MODE] Usando navegador externo (Edge).', 'external', 'info');
+            // --- Código original para Edge ---
+            log(eventSender, "[BROWSER_SPAWN] Invocando processo child: msedge.exe (Chromium Engine). Buscando executável no path...", "ChildProcess::Spawn", 'info');
+            const edgePaths = [
+                "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+                "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
+            ];
+            const edgeExe = edgePaths.find(p => fs.existsSync(p));
+            if (!edgeExe) {
+                throw new Error("[FATAL_ERROR] Binário 'msedge.exe' não localizado nos diretórios padrão do Windows.");
+            }
+            browser = await chromium.launch({
+                executablePath: edgeExe,
+                headless: false,
+                args: ["--start-maximized", "--disable-blink-features=AutomationControlled"]
+            });
+            context = await browser.newContext({
+                viewport: null, // Máximo
+                userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+            });
+            // if we got cookies from webview, inject them before creating page
+            if (args && Array.isArray(args.webviewCookies) && args.webviewCookies.length) {
+                try {
+                    const cookiesToAdd = args.webviewCookies.map(c => {
+                        const obj = { name: c.name || '', value: c.value || '' };
+                        if (c.domain) obj.domain = c.domain;
+                        if (c.path) obj.path = c.path;
+                        if (c.url) obj.url = c.url;
+                        // fallback: construct url
+                        else obj.url = `${c.secure ? 'https' : 'http'}://${c.domain}${c.path || '/'}"`;
+                        return obj;
+                    });
+                    await context.addCookies(cookiesToAdd);
+                    log(eventSender, `Webview cookies injected: ${cookiesToAdd.length}`, null, 'info');
+                } catch(e) {
+                    log(eventSender, `Falha ao injetar cookies do webview: ${e.message}`, null, 'warn');
+                }
+            }
+            // Anti-detecção simples
+            await context.addInitScript(() => {
+                Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            });
+            page = await context.newPage();
+            // Aumenta timeout de navegação padrão
+            page.setDefaultTimeout(60000); 
+            page.setDefaultNavigationTimeout(60000);
+
+            // Bring main window to front once so the automation window (Edge) won't be hidden by other apps
+            try {
+                // Find main Electron window
+                const win = BrowserWindow.getAllWindows().find(w => !w.isDestroyed()); 
+                if (win) {
+                    log(eventSender, '[WINDOW_MANAGER] Solicitando foco para Main Window (Electron) para sobreposição inicial...', 'IPC::WindowFocus', 'info');
+                    // Temporarily set always on top to ensure visibility, then restore
+                    win.setAlwaysOnTop(true, 'screen');
+                    // increased delay to ensure it overrides browser focus initialization
+                    await delay(500); 
+                    win.setAlwaysOnTop(false);
+                    try { win.focus(); } catch (e) { /* ignore */ }
+                }
+            } catch (e) {
+                log(eventSender, `[DEBUG_WARN] Falha ao manipular foco da janela: ${e && e.message ? e.message : String(e)}`, 'IPC::WindowFocus_Error', 'warn');
+            }
         }
 
         // 2. Acesso e Login

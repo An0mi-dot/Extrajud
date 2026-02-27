@@ -1,0 +1,30 @@
+[2026-02-25T14:43:09.155Z] [DEBUG] ipcRenderer available? yes 
+[2026-02-25T14:43:09.155Z] [DEBUG] [renderer] sending run-script 
+[2026-02-25T14:43:09.156Z] [INFO] Iniciando Automação... | DEV: Spawn Node.js Worker Thread
+[2026-02-25T14:43:09.157Z] [INFO] [main] run-script invoked, currentBrowserMode= internal | DEV: main
+[2026-02-25T14:43:09.158Z] [INFO] No Global Log Dir found in state. | DEV: main
+[2026-02-25T14:43:09.158Z] [INFO] [main] requesting internal automation start | DEV: main
+[2026-02-25T14:43:24.169Z] [INFO] [main] internal automation ack= false | DEV: main
+[2026-02-25T14:43:24.169Z] [INFO] [main] No ack from renderer for internal automation; falling back to external | DEV: main
+[2026-02-25T14:43:24.170Z] [INFO] [SETUP_LOG] Iniciando configuração de log para: PROJUDI_Iniciais | DEV: main
+[2026-02-25T14:43:24.170Z] [INFO] [SETUP_LOG] Args recebidos: {
+  "user": "05296357558.rep",
+  "dateStart": "2026-02-24",
+  "dateEnd": "2026-02-24",
+  "outputDir": ""
+} | DEV: main
+[2026-02-25T14:43:24.171Z] [INFO] [SETUP_LOG] AVISO: Nem globalLogDir nem outputDir fornecidos. Log em arquivo DESATIVADO. | DEV: main
+[2026-02-25T14:43:24.172Z] [INFO] [INFO] [THREAD_MAIN] Inicializando worker de automação (RPA Core). | DEV: main
+[2026-02-25T14:43:24.172Z] [INFO] [THREAD_MAIN] Inicializando worker de automação (RPA Core). | DEV: Process Control Block | Playwright Engine
+[2026-02-25T14:43:24.173Z] [INFO] [INFO] [CONFIG_LOAD] Carregando parâmetros de execução e drivers (ExcelJS, Cheerio). | DEV: main
+[2026-02-25T14:43:24.173Z] [INFO] [CONFIG_LOAD] Carregando parâmetros de execução e drivers (ExcelJS, Cheerio). | DEV: Memory Allocation | Drivers Init
+[2026-02-25T14:43:24.173Z] [INFO] [INFO] [BROWSER_MODE] Detected mode from global: internal | DEV: main
+[2026-02-25T14:43:24.174Z] [INFO] [BROWSER_MODE] Detected mode from global: internal | DEV: Function execution trace...
+[2026-02-25T14:43:24.174Z] [INFO] [INFO] [BROWSER_MODE] Usando navegador integrado (webview via CDP). | DEV: main
+[2026-02-25T14:43:24.174Z] [INFO] [BROWSER_MODE] Usando navegador integrado (webview via CDP). | DEV: webview
+[2026-02-25T14:43:24.176Z] [INFO] [INFO] [BROWSER_CDP] URL atual do webview: https://projudi.tjba.jus.br/projudi/ | DEV: main
+[2026-02-25T14:43:24.176Z] [INFO] [BROWSER_CDP] URL atual do webview: https://projudi.tjba.jus.br/projudi/ | DEV: Function execution trace...
+[2026-02-25T14:43:24.177Z] [INFO] [INFO] [BROWSER_CDP] Tentando conectar em http://127.0.0.1:9222 | DEV: main
+[2026-02-25T14:43:24.177Z] [INFO] [BROWSER_CDP] Tentando conectar em http://127.0.0.1:9222 | DEV: Function execution trace...
+[2026-02-25T14:43:32.178Z] [INFO] [INFO] [HEARTBEAT] Processo ativo: aguardando ciclo de execução ou I/O... | DEV: main
+[2026-02-25T14:43:32.179Z] [INFO] [HEARTBEAT] Processo ativo: aguardando ciclo de execução ou I/O... | DEV: System.Monitoring.Heartbeat

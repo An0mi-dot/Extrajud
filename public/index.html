@@ -267,6 +267,22 @@
                     <i class="fa-solid fa-arrow-right"></i>
                 </div>
             </div>
+            <!-- SOLICITAÇÕES JURÍDICO CARD -->
+            <div class="hub-card animate fade-in-up delay-400" onclick="window.location.href='hub_solicitacoes.html'">
+                <div class="card-cover">
+                    <div class="circle-deco"></div>
+                </div>
+                <div class="card-icon">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Solicitações Jurídico</h3>
+                    <p class="card-description">Gerencie e registre solicitações de subsídios preventivos.</p>
+                </div>
+                <div class="card-arrow">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -292,7 +308,6 @@
                     <div id="tab-geral" class="settings-tab-pane active">
                         <h3 class="settings-section-title">Aparência</h3>
                         <p class="settings-section-desc">Personalize o tema visual do aplicativo.</p>
-                        
                         <div class="theme-selector-group" style="display:flex; gap:10px; margin-bottom: 25px;">
                             <button class="theme-option" data-theme="light" title="Claro">
                                 <i class="fa-solid fa-sun"></i> Claro
@@ -497,6 +512,12 @@
             if (e.target === modalSettings) modalSettings.style.display = 'none';
         });
 
+
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // ensure app ready
+            // (login removed)
+        });
     </script>
 
 </body>

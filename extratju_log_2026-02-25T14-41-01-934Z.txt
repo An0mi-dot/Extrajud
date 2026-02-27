@@ -1,0 +1,25 @@
+[2026-02-25T14:39:18.637Z] [DEBUG] ipcRenderer available? yes 
+[2026-02-25T14:39:18.638Z] [DEBUG] [renderer] sending run-script 
+[2026-02-25T14:39:18.638Z] [INFO] Iniciando Automação... | DEV: Spawn Node.js Worker Thread
+[2026-02-25T14:39:18.640Z] [INFO] [main] run-script invoked, currentBrowserMode= internal | DEV: main
+[2026-02-25T14:39:18.652Z] [INFO] No Global Log Dir found in state. | DEV: main
+[2026-02-25T14:39:18.653Z] [INFO] [main] requesting internal automation start | DEV: main
+[2026-02-25T14:39:18.654Z] [INFO] [renderer] [ipc-renderer] received start-internal-automation {"user":"05296357558.rep","pass":"neocoelba@2023","dateStart":"2026-02-25","dateEnd":"2026-02-25","outputDir":""} | DEV: main
+[2026-02-25T14:39:18.655Z] [INFO] [main] internal progress: received start command | DEV: main
+[2026-02-25T14:39:18.655Z] [INFO] [main] internal progress: received start command | DEV: main
+[2026-02-25T14:39:18.656Z] [INFO] [main] internal progress: received start command | DEV: main
+[2026-02-25T14:39:18.656Z] [INFO] [main] internal progress: received start command | DEV: main
+[2026-02-25T14:39:18.656Z] [INFO] [main] internal automation ack= true | DEV: main
+[2026-02-25T14:39:18.657Z] [INFO] [main] internal progress: sent internal-started | DEV: main
+[2026-02-25T14:39:18.657Z] [INFO] [main] internal progress: sent internal-started | DEV: main
+[2026-02-25T14:39:18.658Z] [INFO] [main] internal progress: sent internal-started | DEV: main
+[2026-02-25T14:39:18.658Z] [INFO] [main] internal progress: sent internal-started | DEV: main
+[2026-02-25T14:39:18.659Z] [INFO] [main] internal progress: start | DEV: main
+[2026-02-25T14:39:18.659Z] [INFO] [main] internal progress: start | DEV: main
+[2026-02-25T14:39:18.660Z] [INFO] [main] internal progress: start | DEV: main
+[2026-02-25T14:39:18.660Z] [INFO] [main] internal progress: start | DEV: main
+[2026-02-25T14:39:18.663Z] [INFO] [main] internal progress: navigated | DEV: main
+[2026-02-25T14:39:18.664Z] [INFO] [main] internal progress: navigated | DEV: main
+[2026-02-25T14:39:18.664Z] [INFO] [main] internal progress: navigated | DEV: main
+[2026-02-25T14:39:18.665Z] [INFO] [main] internal progress: navigated | DEV: main
+[2026-02-25T14:39:18.747Z] [INFO] [BrowserMode] Changed to: internal | DEV: main

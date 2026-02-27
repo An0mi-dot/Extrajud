@@ -1,4 +1,28 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, webContents } = require('electron');
+
+// Mirror main-process logs into the renderer's log panel for debugging
+(function patchConsole() {
+    const origLog = console.log;
+    const origWarn = console.warn;
+    const origError = console.error;
+
+    function forward(level, origFn, args) {
+        origFn(...args);
+        try {
+            const msg = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send('log-message', { msg, type: level === 'error' ? 'error' : 'info', tech: 'main' });
+            }
+        } catch (_) {}
+    }
+
+    console.log = (...args) => forward('log', origLog, args);
+    console.warn = (...args) => forward('warn', origWarn, args);
+    console.error = (...args) => forward('error', origError, args);
+})();
+
+
+
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
@@ -9,6 +33,7 @@ const automacaoService = require('./src/automacao_service');
 
 let mainWindow;
 let appTray = null;
+let loadingWindow = null;
 
 // --- Dev Live-Reload (only in development) ---
 if (process.env.NODE_ENV !== 'production') {
@@ -100,6 +125,14 @@ ipcMain.on('bring-window-front', (event, args) => {
     }, 300);
   } catch (e) {
     console.error('bring-window-front handler error', e);
+  }
+});
+
+// Listener para redimensionamento dinâmico da janela
+ipcMain.on('window-resize', (event, { width, height }) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.setSize(width, height);
+    mainWindow.center();
   }
 });
 
@@ -508,7 +541,8 @@ function createWindow() {
     icon: path.join(__dirname, 'public', 'assets', 'logo2.png'), // Ícone da janela e barra de tarefas
     webPreferences: {
         nodeIntegration: true,
-        contextIsolation: false
+        contextIsolation: false,
+        webviewTag: true // Ativa a tag <webview> para o navegador integrado
     }
   });
 
@@ -517,6 +551,24 @@ function createWindow() {
   }
 
   mainWindow.setMenu(null); // Remove o menu completamente
+  // Show a modal loading window using the new loading.html to act as the app-wide loader
+  try {
+    if (!loadingWindow || loadingWindow.isDestroyed()) {
+      loadingWindow = new BrowserWindow({
+        width: 880,
+        height: 260,
+        frame: false,
+        resizable: false,
+        modal: true,
+        parent: mainWindow,
+        show: false,
+        webPreferences: { nodeIntegration: false, contextIsolation: true }
+      });
+      loadingWindow.loadFile(path.join(__dirname, 'public', 'loading.html')).catch(() => {});
+      loadingWindow.once('ready-to-show', () => { try { loadingWindow.show(); } catch(e){} });
+    }
+  } catch (e) { console.error('loadingWindow create error', e); }
+
   mainWindow.loadFile(path.join('public', 'index.html'));
 
   // Close behavior: Minimize to Tray if enabled
@@ -538,8 +590,16 @@ function createWindow() {
       return false;
   });
 
-  // Send initial automation status to renderer after load
+  // Send initial automation status to renderer after load and close loader
   mainWindow.webContents.on('did-finish-load', () => {
+    // Close modal loader if present
+    try {
+      if (loadingWindow && !loadingWindow.isDestroyed()) {
+        try { loadingWindow.close(); } catch(e) {}
+        loadingWindow = null;
+      }
+    } catch (e) { /* ignore */ }
+
     mainWindow.webContents.send('automation-status', global.isAutomationRunning || false);
   });
 }
@@ -640,9 +700,17 @@ app.on('window-all-closed', () => {
   }
 });
 
+// Global renderer log forward handler (always active)
+ipcMain.on('renderer-log', (e, { level, args }) => {
+    try {
+        console[level ? level : 'log']('[renderer]', ...(Array.isArray(args) ? args : []));
+    } catch (_){ console.log('[renderer] (log error)', args); }
+});
+
 // --- IPC Handler ---
-ipcMain.on('run-script', (event, args) => {
-  // Inject global settings: RE-READ state to ensure fresh config
+ipcMain.on('run-script', async (event, args) => {
+  console.log('[main] run-script invoked');
+  // simple merge of global log dir state
   let state = {};
   try {
     if (fs.existsSync(STATE_FILE)) {
@@ -650,22 +718,45 @@ ipcMain.on('run-script', (event, args) => {
     }
   } catch (e) { console.error('Error reading state file:', e); }
 
-  // Ensure args is an object
-  if (!args || typeof args !== 'object') {
-      args = {};
-  }
-  
-  // Merge globalLogDir into args
+  if (!args || typeof args !== 'object') args = {};
   if (state && state.globalLogDir) {
-      args.globalLogDir = state.globalLogDir;
-      console.log('Using Global Log Dir:', state.globalLogDir);
-  } else {
-      console.warn('No Global Log Dir found in state.');
+    args.globalLogDir = state.globalLogDir;
+    console.log('Using Global Log Dir:', state.globalLogDir);
   }
-  
-  // Executa a automação nativa (Node.js) -> Citações/Intimações
+
+  // always run external automation (no webview logic)
   automacaoService.runAutomation(event.sender, ipcMain, args);
 });
+
+// IPC handler to collect webview url and cookies in one shot
+ipcMain.handle('collect-webview-state', async () => {
+    try {
+        if (!mainWindow || mainWindow.isDestroyed()) return { url: null, cookies: [] };
+        // execute scripts in renderer context to get URL and webContentsId
+        const url = await mainWindow.webContents.executeJavaScript(`(() => {
+            const w = document.getElementById('integrated-webview');
+            return w ? w.getURL() : null;
+        })();`);
+        const wcId = await mainWindow.webContents.executeJavaScript(`(() => {
+            const w = document.getElementById('integrated-webview');
+            return w ? w.getWebContentsId() : null;
+        })();`);
+        let cookies = [];
+        if (wcId) {
+            try {
+                const wc = webContents.fromId(wcId);
+                cookies = await wc.session.cookies.get({});
+            } catch (e) {
+                console.error('collect-webview-state cookie error', e);
+            }
+        }
+        return { url, cookies };
+    } catch (e) {
+        console.error('collect-webview-state error', e);
+        return { url: null, cookies: [] };
+    }
+});
+
 
 ipcMain.on('run-archived-script', (event, args) => {
   let state = {};
@@ -709,6 +800,84 @@ ipcMain.on('run-pje-script', (event, args) => {
     automacaoService.runPjeAutomation(event.sender, ipcMain, args);
 });
 
+// Test helper: show standalone loading screen (used by renderer via F5+B for visual check)
+ipcMain.handle('show-loading-test', async () => {
+  try {
+    if (loadingWindow && !loadingWindow.isDestroyed()) {
+      try { loadingWindow.show(); } catch (e) {}
+      return { ok: true };
+    }
+
+    loadingWindow = new BrowserWindow({
+      width: 880,
+      height: 260,
+      frame: false,
+      resizable: false,
+      modal: true,
+      parent: mainWindow || undefined,
+      show: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    });
+
+    loadingWindow.loadFile(path.join(__dirname, 'public', 'loading.html'))
+      .catch(err => console.error('Loading test screen failed', err));
+
+    loadingWindow.once('ready-to-show', () => {
+      try { loadingWindow.show(); } catch (e) {}
+    });
+
+    // Auto-close after a short demo period
+    setTimeout(() => {
+      try {
+        if (loadingWindow && !loadingWindow.isDestroyed()) loadingWindow.close();
+      } catch (e) {}
+      loadingWindow = null;
+    }, 5000);
+
+    loadingWindow.on('closed', () => { loadingWindow = null; });
+
+    return { ok: true };
+  } catch (e) {
+    console.error('show-loading-test error', e);
+    return { ok: false, error: e && e.message };
+  }
+});
+
+// Show/hide global loading overlay inside the main window (for app-wide loading UI)
+ipcMain.handle('show-loading-global', async () => {
+  try {
+    if (!mainWindow || mainWindow.isDestroyed()) return { ok: false, error: 'no_main_window' };
+    const html = fs.readFileSync(path.join(__dirname, 'public', 'loading.html'), 'utf8');
+    // Inject HTML into renderer safely via executeJavaScript
+    await mainWindow.webContents.executeJavaScript(`(function(html){
+      try{
+        const existing = document.getElementById('global-loading-overlay');
+        if(existing) existing.remove();
+        const wrapper = document.createElement('div');
+        wrapper.id = 'global-loading-overlay';
+        wrapper.style.position = 'fixed'; wrapper.style.left='0'; wrapper.style.top='0'; wrapper.style.right='0'; wrapper.style.bottom='0';
+        wrapper.style.zIndex = '999999';
+        wrapper.innerHTML = html;
+        document.body.appendChild(wrapper);
+        // Small auto-progress hint
+        try{ const pb = wrapper.querySelector('#progressBar'); if(pb) pb.style.width = '92%'; } catch(e){}
+      }catch(e){ console.error('inject loading overlay error', e); }
+    })(${JSON.stringify(html)});`);
+    return { ok: true };
+  } catch (e) { console.error('show-loading-global error', e); return { ok: false, error: e && e.message }; }
+});
+
+ipcMain.handle('hide-loading-global', async () => {
+  try {
+    if (!mainWindow || mainWindow.isDestroyed()) return { ok: false, error: 'no_main_window' };
+    await mainWindow.webContents.executeJavaScript(`(function(){ try{ const el = document.getElementById('global-loading-overlay'); if(el) el.remove(); }catch(e){} })();`);
+    return { ok: true };
+  } catch (e) { console.error('hide-loading-global error', e); return { ok: false, error: e && e.message }; }
+});
+
 ipcMain.on('skip-pje-script', (event) => {
     automacaoService.skipCurrentStep(event.sender);
 });
@@ -746,4 +915,20 @@ ipcMain.handle('dialog:openDirectory', async () => {
     } else {
         return filePaths[0];
     }
+});
+
+// Return the current URL loaded inside the integrated webview (renderer side)
+ipcMain.handle('get-webview-url', async () => {
+    try {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            const script = `(() => {
+                const w = document.getElementById('integrated-webview');
+                return w ? w.getURL() : null;
+            })();`;
+            return await mainWindow.webContents.executeJavaScript(script);
+        }
+    } catch (e) {
+        console.error('get-webview-url error', e);
+    }
+    return null;
 });
