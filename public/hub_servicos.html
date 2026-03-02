@@ -770,15 +770,28 @@
         })();
     </script>
     <div id="intro-overlay">
-        <div class="intro-content">
-            <div class="intro-logo">
-                <img src="assets/logo.png" alt="Intro Logo" style="width:100%; height:100%; object-fit: contain;">
+        <!-- New Loading Interface Integrated -->
+        <style>
+            .loader-wrap-injected { height:100%; display:flex; align-items:center; justify-content:center; font-family: 'Inter', sans-serif; }
+            .card-injected { background: #fff; border-radius:18px; padding:36px; box-shadow: 0 30px 60px rgba(16,24,32,0.06); max-width:600px; width:90%; display:flex; gap:24px; align-items:center; text-align: left; }
+            .logo-circle-injected { width:80px; height:80px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.06); flex-shrink: 0; }
+            .logo-circle-injected img { width:60px; height:60px; object-fit:contain; }
+            .title-injected { font-family:'Rajdhani',sans-serif; font-size:24px; letter-spacing:1px; color:#0f1720; text-transform: uppercase; margin: 0; }
+            .subtitle-injected { color:#6b7280; font-size:13px; margin: 4px 0 0 0; }
+            .progress-area-injected { flex:1; }
+            .progress-track-injected { height:8px; background: #eef7f1; border-radius:4px; overflow:hidden; margin-top: 10px; }
+            .progress-bar-injected { width:100%; height:100%; background:#10b981; border-radius:4px; animation: load-in 1.5s ease-out; }
+            @keyframes load-in { from { width: 0%; } to { width: 100%; } }
+        </style>
+        <div class="loader-wrap-injected">
+            <div class="card-injected">
+                <div class="logo-circle-injected"><img src="assets/logo.png" alt="Logo"></div>
+                <div class="progress-area-injected">
+                    <h2 class="title-injected">EXTRATJUD</h2>
+                    <p class="subtitle-injected">Entrando no Hub de Serviços...</p>
+                    <div class="progress-track-injected"><div class="progress-bar-injected"></div></div>
+                </div>
             </div>
-            <div class="intro-title">EXTRATJUD</div>
-            <div class="intro-bar">
-                <div class="intro-progress"></div>
-            </div>
-            <div class="intro-status">Inicializando sistema...</div>
         </div>
     </div>
 
@@ -1021,17 +1034,15 @@
                     
                     // Reset animations if possible to make it look like "loading"
                     // Force restart of progress bar
-                    const bar = overlay.querySelector('.intro-progress');
+                    const bar = overlay.querySelector('.progress-bar-injected');
                     if(bar) {
                         bar.style.animation = 'none';
                         bar.offsetHeight; /* trigger reflow */
-                        bar.style.animation = 'progress-fill 2.5s ease-in-out forwards 0s';
+                        bar.style.animation = 'load-in 3.5s ease-out forwards';
                     }
-                    const txt = overlay.querySelector('.intro-status');
+                    const txt = overlay.querySelector('.subtitle-injected');
                     if(txt) {
-                        txt.style.animation = 'none';
                         txt.textContent = 'Carregando Serviço...';
-                        txt.style.opacity = '1';
                     }
                 }
 
@@ -1471,21 +1482,19 @@
 
             if (overlay) {
                 if (hasSeenIntro) {
-                    // Skip animation instantly if already seen in this session
                     overlay.style.display = 'none';
-                    // We keep the element in DOM for reuse as a loading screen
                     document.body.classList.add('loaded');
                 } else {
-                    // Play animation if first time
+                    // Injected loading window closes after did-finish-load,
+                    // but we keep a local fade-in for smoothness.
                     setTimeout(() => {
                         overlay.classList.add('fade-out');
                         setTimeout(() => { 
-                            overlay.style.display = 'none'; // Hide instead of remove
-                            overlay.classList.remove('fade-out'); // Reset class for next use (but keep hidden)
+                            overlay.style.display = 'none';
                             document.body.classList.add('loaded'); 
                             sessionStorage.setItem('extjt-intro-seen', 'true');
                         }, 800);
-                    }, 3500); 
+                    }, 1200); // Shorter duration since external loader already ran
                 }
             }
         })();

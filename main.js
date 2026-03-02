@@ -1,5 +1,11 @@
 const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, webContents } = require('electron');
 
+// --- INSPECT EXCEL (Remove after use) ---
+// const inspectExcel = require('./scripts/inspect_excel');
+// app.on('ready', () => {
+    // inspectExcel(app);
+// });
+
 // Mirror main-process logs into the renderer's log panel for debugging
 (function patchConsole() {
     const origLog = console.log;

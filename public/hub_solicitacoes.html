@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+
+    <!-- Supabase Módulo -->
+    <script type="module" src="assets/supabaseClient.js"></script>
     <style>
         /* replicate header rules from hub_servicos for consistent look */
         body {
@@ -265,6 +268,22 @@
         .tab-btn { border-radius: 999px; padding: 8px 16px; }
         .tab-btn.active { background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.25); color: var(--primary-color); }
 
+        /* Badge Status Styling */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
         /* Table improvements */
         .table tbody tr:nth-child(odd) { background: rgba(16,185,129,0.02); }
         .table tbody tr:hover { background: rgba(16,185,129,0.04); }
@@ -276,6 +295,22 @@
         /* Brand adjustments */
         .brand { font-size: 28px; }
         .brand img { height: 72px !important; }
+
+        /* Badge Status Styling */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -293,11 +328,41 @@
             <button id="create-request" class="btn-primary" title="Nova solicitação">
                 <i class="fa-solid fa-plus"></i> Nova solicitação
             </button>
+            <button id="btn-import-exyon" class="btn-theme" title="Importar Planilha Exyon" style="color:#059669; border-color:#059669;">
+                <i class="fa-solid fa-file-excel"></i> Importar
+            </button>
             <button id="btn-settings" class="btn-theme" title="Configurações">
                 <i class="fa-solid fa-gear"></i>
             </button>
         </div>
     </header>
+
+    <div id="intro-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:9999; display:flex; align-items:center; justify-content:center; transition: opacity 0.6s ease;">
+        <style>
+            .loader-wrap-injected { display:flex; align-items:center; justify-content:center; width: 100%; }
+            .card-injected { background: #fff; border-radius:18px; padding:30px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); max-width:500px; width:85%; display:flex; gap:20px; align-items:center; text-align: left; }
+            .logo-circle-injected { width:64px; height:64px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.06); flex-shrink: 0; }
+            .logo-circle-injected img { width:48px; height:48px; object-fit:contain; }
+            .title-injected { font-family:'Rajdhani',sans-serif; font-size:22px; letter-spacing:1px; color:#0f1720; text-transform: uppercase; margin: 0; }
+            .subtitle-injected { color:#6b7280; font-size:12px; margin: 4px 0 0 0; }
+            .progress-area-injected { flex:1; }
+            .progress-track-injected { height:6px; background: #eef7f1; border-radius:3px; overflow:hidden; margin-top: 10px; }
+            .progress-bar-injected { width:100%; height:100%; background:#10b981; border-radius:3px; animation: load-in 1.2s ease-out; }
+            @keyframes load-in { from { width: 0%; } to { width: 100%; } }
+            .fade-out { opacity: 0; pointer-events: none; }
+        </style>
+        <div class="loader-wrap-injected">
+            <div class="card-injected">
+                <div class="logo-circle-injected"><img src="assets/logo.png" alt="Logo"></div>
+                <div class="progress-area-injected">
+                    <h2 class="title-injected">EXTRATJUD</h2>
+                    <p class="subtitle-injected">Carregando Solicitações...</p>
+                    <div class="progress-track-injected"><div class="progress-bar-injected"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="tabs">
             <button class="tab-btn btn-theme active" data-tab="nova">Nova solicitação</button>
@@ -309,66 +374,106 @@
         <div id="nova" class="tab-content active">
             <h2 class="animate fade-in-up">Nova solicitação</h2>
             <div class="panel-box">
-            <form>
+            <form id="form-nova-solicitacao">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Título</label>
-                        <input type="text" disabled />
+                        <label>Título *</label>
+                        <input type="text" id="inp-titulo" required placeholder="Ex: Resolver ofício do MP" />
                     </div>
                     <div class="form-group">
                         <label>Unidade de Negócio</label>
-                        <select disabled><option></option></select>
+                        <select id="inp-unidade">
+                            <option value="">Selecione...</option>
+                            <option value="UTD">UTD</option>
+                            <option value="UTEP">UTEP</option>
+                            <option value="PROJETOS">PROJETOS</option>
+                            <option value="AMBIENTAL">AMBIENTAL</option>
+                            <option value="QUALIDADE">QUALIDADE</option>
+                            <option value="PCP">PCP</option>
+                            <option value="Obras">PROGRAMAÇÃO DE OBRAS</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Área Solicitante</label>
-                        <input type="text" disabled />
+                        <input type="text" id="inp-area" placeholder="Ex: Jurídico" />
                     </div>
                     <div class="form-group">
                         <label>Tipo de Subsídio</label>
-                        <select disabled><option></option></select>
+                        <select id="inp-tipo">
+                            <option value="">Selecione...</option>
+                            <option value="Parecer">Parecer</option>
+                            <option value="Minuta/Contrato">Minuta/Contrato</option>
+                            <option value="Oficio">Ofício</option>
+                            <option value="Diligencia">Diligência</option>
+                            <option value="Relatorio">Relatório</option>
+                            <option value="Outros">Outros</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Órgão Demandante</label>
-                        <select disabled><option></option></select>
+                        <select id="inp-orgao">
+                            <option value="">Selecione...</option>
+                            <option value="MP">Ministério Público (MP)</option>
+                            <option value="DPE">Defensoria (DPE)</option>
+                            <option value="TJ">Tribunal de Justiça (TJ)</option>
+                            <option value="Prefeitura">Prefeitura</option>
+                            <option value="Consumidor">Consumidor</option>
+                            <option value="Outro">Outro</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label>Número do Processo</label>
-                        <input type="text" disabled />
+                        <label>Número do Processo (Opcional)</label>
+                        <input type="text" id="inp-processo" placeholder="IDEA/NPU/Ofício" />
                     </div>
                     <div class="form-group">
                         <label>Prazo Externo</label>
-                        <input type="date" disabled />
+                        <input type="date" id="inp-prazo-ext" />
                     </div>
                     <div class="form-group">
-                        <label>Prazo Interno</label>
-                        <input type="date" disabled />
+                        <label>Regra (SLA)</label>
+                        <select id="inp-sla">
+                            <option value="">Selecione...</option>
+                            <option value="Critico">Crítico (24h)</option>
+                            <option value="Alto">Alto (3 dias)</option>
+                            <option value="Medio">Médio (5 dias)</option>
+                            <option value="Baixo">Baixo (10-20 dias)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Nova linha para Metadados solicitados no Escopo -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cidade / Localidade</label>
+                        <input type="text" id="inp-cidade" placeholder="Ex: Salvador - BA" />
+                    </div>
+                    <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:15px; margin-top: 10px;">
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer;">
+                            <input type="checkbox" id="chk-importante" style="width:16px; height:16px; margin:0;" /> 
+                            Importante
+                        </label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer;">
+                            <input type="checkbox" id="chk-indigena" style="width:16px; height:16px; margin:0;" /> 
+                            Povos Indígenas
+                        </label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer;">
+                            <input type="checkbox" id="chk-tradicional" style="width:16px; height:16px; margin:0;" /> 
+                            Comunidade Tradicional
+                        </label>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group" style="flex:1 1 100%;">
-                        <label>Descrição</label>
-                        <textarea rows="4" disabled></textarea>
+                        <label>Descrição e Contexto do Pedido</label>
+                        <textarea id="inp-descricao" rows="4" placeholder="Descreva o que preicsa ser feito..."></textarea>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Anexos</label>
-                        <input type="file" disabled />
-                    </div>
-                    <div class="form-group">
-                        <label>Responsável Jurídico</label>
-                        <input type="text" disabled />
-                    </div>
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select disabled><option></option></select>
-                    </div>
-                    <div class="form-group">
-                        <label>SLA Regra</label>
-                        <select disabled><option></option></select>
-                    </div>
+                
+                <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                    <button type="submit" class="btn-primary" id="btn-submit-solicitacao">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Salvar no Banco
+                    </button>
                 </div>
             </form>
             </div>
@@ -384,11 +489,11 @@
                         <th>Unidade</th>
                         <th>Tipo</th>
                         <th>Status</th>
-                        <th>Prazo Interno</th>
+                        <th>Prazo Externo</th>
                         <th>SLA</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbody-minhas-solicitacoes">
                     <!-- rows will appear here -->
                 </tbody>
             </table>
@@ -397,15 +502,58 @@
 
         <div id="detalhe" class="tab-content">
             <h2 class="animate fade-in-up">Detalhe da solicitação</h2>
+            
             <div class="panel-box">
-                <strong>Informações gerais</strong>
-                <p>Localidade: <em></em></p>
-                <p>Superintendência: <em></em></p>
-                <p>Setor UTEP/UTD: <em></em></p>
-                <p>Consumidores vinculados: <em></em></p>
-            </div>
-            <div class="timeline">
-                <div class="timeline-item">Linha do tempo estará aqui</div>
+                <!-- Header with Title and Status -->
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+                    <div>
+                        <span id="dt-id" style="font-size:12px; color:var(--text-secondary); font-family:'JetBrains Mono';">ID: #000</span>
+                        <h3 id="dt-titulo" style="margin:5px 0 0 0; font-size:20px; color:var(--primary-color);">Título da Solicitação</h3>
+                        <div id="dt-flags" style="margin-top:5px;"></div>
+                    </div>
+                     <div style="text-align:right;">
+                        <label style="font-size:12px; display:block; margin-bottom:4px;">Status Atual</label>
+                        <select id="dt-status" style="padding:6px; border-radius:6px; border:1px solid var(--border-color);">
+                            <option value="Novo">Novo</option>
+                            <option value="Em Análise">Em Análise</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Pendente Info">Pendente Info</option>
+                            <option value="Concluído">Concluído</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                        <button id="btn-update-status" class="btn-primary" style="padding:4px 8px; font-size:12px; margin-left:5px;">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Grid -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px; background:rgba(0,0,0,0.02); padding:15px; border-radius:8px;">
+                    <div>
+                        <p style="margin:5px 0;"><strong>Unidade:</strong> <span id="dt-unidade">-</span></p>
+                        <p style="margin:5px 0;"><strong>Área Solicitante:</strong> <span id="dt-area">-</span></p>
+                        <p style="margin:5px 0;"><strong>Órgão:</strong> <span id="dt-orgao">-</span></p>
+                        <p style="margin:5px 0;"><strong>Processo:</strong> <span id="dt-processo">-</span></p>
+                    </div>
+                    <div>
+                        <p style="margin:5px 0;"><strong>Tipo Subsídio:</strong> <span id="dt-tipo">-</span></p>
+                        <p style="margin:5px 0;"><strong>Prazo Externo:</strong> <span id="dt-prazo">-</span></p>
+                        <p style="margin:5px 0;"><strong>SLA:</strong> <span id="dt-sla">-</span></p>
+                        <p style="margin:5px 0;"><strong>Cidade:</strong> <span id="dt-cidade">-</span></p>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div style="margin-bottom:20px;">
+                    <strong>Descrição / Contexto</strong>
+                    <p id="dt-descricao" style="background:#fff; border:1px solid var(--border-color); padding:10px; border-radius:6px; margin-top:5px; white-space:pre-wrap; min-height:80px;">-</p>
+                </div>
+
+                <!-- Actions / Timeline placeholder -->
+                <div style="border-top:1px solid var(--border-color); padding-top:15px; display:flex; gap:10px;">
+                    <button class="btn-theme" title="Em breve"><i class="fa-solid fa-paperclip"></i> Anexar Arquivo</button>
+                    <button class="btn-theme" title="Em breve"><i class="fa-solid fa-robot"></i> Buscar no PJE</button>
+                </div>
             </div>
         </div>
 
@@ -718,8 +866,412 @@
                     if (e.target === modalSettings) modalSettings.style.display = 'none';
                 });
             }
+
+            // --- Intro/Loading Logic ---
+            const overlay = document.getElementById('intro-overlay');
+            if (overlay) {
+                // Wait for the window to settle before fading out
+                const hideOverlay = () => {
+                    overlay.classList.add('fade-out');
+                    setTimeout(() => { 
+                        overlay.style.display = 'none';
+                    }, 600);
+                };
+
+                if (document.readyState === 'complete') {
+                    setTimeout(hideOverlay, 800);
+                } else {
+                    window.addEventListener('load', () => setTimeout(hideOverlay, 500));
+                }
+                
+                // Safety fallback
+                setTimeout(() => {
+                    if (overlay.style.display !== 'none') hideOverlay();
+                }, 4000);
+            }
         })();
     </script>
+
+    <!-- Supabase Form Logic -->
+    <script type="module">
+        import { supabase } from './assets/supabaseClient.js';
+
+        const form = document.getElementById('form-nova-solicitacao');
+        
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // 1. Coleta e Validação
+                const titulo = document.getElementById('inp-titulo').value;
+                const unidade = document.getElementById('inp-unidade').value;
+                const area = document.getElementById('inp-area').value;
+                const tipo = document.getElementById('inp-tipo').value;
+                const orgao = document.getElementById('inp-orgao').value;
+                const processo = document.getElementById('inp-processo').value;
+                const prazoExt = document.getElementById('inp-prazo-ext').value;
+                const sla = document.getElementById('inp-sla').value;
+                const cidade = document.getElementById('inp-cidade').value;
+                const descricao = document.getElementById('inp-descricao').value;
+                
+                // Checkboxes
+                const importante = document.getElementById('chk-importante').checked;
+                const indigena = document.getElementById('chk-indigena').checked;
+                const tradicional = document.getElementById('chk-tradicional').checked;
+
+                if (!titulo || !unidade || !area || !tipo || !orgao || !prazoExt || !sla || !cidade) {
+                    alert('Por favor, preencha todos os campos obrigatórios.');
+                    return;
+                }
+
+                const btn = document.getElementById('btn-submit-solicitacao');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+                btn.disabled = true;
+
+                try {
+                    // 2. Insert no Supabase
+                    const { data, error } = await supabase
+                        .from('solicitacoes_preventivo') // Nome da tabela
+                        .insert([
+                            {
+                                titulo: titulo,
+                                unidade_negocio: unidade,
+                                area_solicitante: area,
+                                tipo_subsidio: tipo,
+                                orgao_demandante: orgao,
+                                numero_processo: processo,
+                                prazo_externo: prazoExt,
+                                sla_regra: sla,
+                                cidade: cidade,
+                                descricao: descricao,
+                                importance_flag: importante,
+                                indigena_flag: indigena,
+                                tradicional_flag: tradicional,
+                                status: 'Novo', // Status inicial default
+                                // data_abertura: new Date().toISOString() // Removido pois a coluna não existe
+                            }
+                        ])
+                        .select();
+
+                    if (error) throw error;
+
+                    alert('Solicitação criada com sucesso!');
+                    form.reset();
+                    // Opcional: Voltar para a aba "Minhas solicitações" ou recarregar a lista
+                    loadSolicitacoes(); // Refresh list if needed in background
+                    
+                } catch (err) {
+                    console.error('Erro ao salvar:', err);
+                    alert('Erro ao salvar solicitação: ' + err.message);
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        // --- Listagem na aba "Minhas solicitações" ---
+        async function loadSolicitacoes() {
+            const tbody = document.getElementById('tbody-minhas-solicitacoes');
+            if (!tbody) return;
+
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
+
+            const { data, error } = await supabase
+                .from('solicitacoes_preventivo')
+                .select('*')
+                .order('id', { ascending: false });
+
+            if (error) {
+                console.error('Erro ao carregar:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Erro ao carregar dados.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhuma solicitação encontrada.</td></tr>';
+                return;
+            }
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                // Formatação simples de data
+                const dateVal = item.prazo_externo ? new Date(item.prazo_externo).toLocaleDateString('pt-BR') : '-';
+                
+                // Monta ícones das flags
+                let flagsHtml = '';
+                if (item.importance_flag) flagsHtml += '<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-left:6px;" title="Importante"></i>';
+                if (item.indigena_flag) flagsHtml += '<i class="fa-solid fa-feather" style="color:#10b981; margin-left:6px;" title="Povos Indígenas"></i>';
+                if (item.tradicional_flag) flagsHtml += '<i class="fa-solid fa-users-line" style="color:#f59e0b; margin-left:6px;" title="Comunidade Tradicional"></i>';
+
+                tr.innerHTML = `
+                    <td>${(item.titulo || '-') + flagsHtml}</td>
+                    <td>${item.unidade_negocio || '-'}</td>
+                    <td>${item.tipo_subsidio || '-'}</td>
+                    <td><span class="badge-status">${item.status || 'Novo'}</span></td>
+                    <td>${dateVal}</td>
+                    <td>${item.sla_regra || '-'}</td>
+                `;
+                tr.style.cursor = 'pointer';
+                tr.title = 'Clique para ver detalhes';
+                tr.addEventListener('click', () => openDetalhe(item));
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- Detalhe Logic ---
+        window.currentSolicitacao = null; // Store current item for updates
+
+        function openDetalhe(item) {
+            window.currentSolicitacao = item;
+
+            // 1. Populate fields
+            document.getElementById('dt-id').textContent = `ID: #${item.id}`;
+            document.getElementById('dt-titulo').textContent = item.titulo || 'Sem Título';
+            document.getElementById('dt-unidade').textContent = item.unidade_negocio || '-';
+            document.getElementById('dt-area').textContent = item.area_solicitante || '-';
+            document.getElementById('dt-orgao').textContent = item.orgao_demandante || '-';
+            document.getElementById('dt-processo').textContent = item.numero_processo || '-';
+            document.getElementById('dt-tipo').textContent = item.tipo_subsidio || '-';
+            document.getElementById('dt-prazo').textContent = item.prazo_externo ? new Date(item.prazo_externo).toLocaleDateString('pt-BR') : '-';
+            document.getElementById('dt-sla').textContent = item.sla_regra || '-';
+            document.getElementById('dt-cidade').textContent = item.cidade || '-';
+            document.getElementById('dt-descricao').textContent = item.descricao || '-';
+            
+            // Set Status Select
+            const selStatus = document.getElementById('dt-status');
+            if (selStatus) selStatus.value = item.status || 'Novo';
+
+            // Flags
+            const flagsDiv = document.getElementById('dt-flags');
+            let flagsHtml = '';
+            if (item.importance_flag) flagsHtml += '<span style="background:#fecaca; color:#dc2626; padding:2px 8px; border-radius:12px; font-size:10px; margin-right:5px; font-weight:bold;">IMPORTANTE</span>';
+            if (item.indigena_flag) flagsHtml += '<span style="background:#d1fae5; color:#059669; padding:2px 8px; border-radius:12px; font-size:10px; margin-right:5px; font-weight:bold;">INDÍGENA</span>';
+            if (item.tradicional_flag) flagsHtml += '<span style="background:#fef3c7; color:#d97706; padding:2px 8px; border-radius:12px; font-size:10px; margin-right:5px; font-weight:bold;">TRADICIONAL</span>';
+            flagsDiv.innerHTML = flagsHtml;
+
+            // 2. Switch Tab
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Activate Detail Tab (assuming there's a button for it, usually hidden or just index 2)
+            const detailTab = document.getElementById('detalhe');
+            detailTab.classList.add('active');
+            
+            // Highlight the tab button "Detalhes" if it exists
+            const btnDetail = document.querySelector('button[data-tab="detalhe"]');
+            if (btnDetail) btnDetail.classList.add('active');
+        }
+
+        // --- Update Status Logic ---
+        const btnUpdate = document.getElementById('btn-update-status');
+        if (btnUpdate) {
+            btnUpdate.addEventListener('click', async () => {
+                if (!window.currentSolicitacao) return;
+
+                const newStatus = document.getElementById('dt-status').value;
+                const originalHtml = btnUpdate.innerHTML;
+                btnUpdate.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                btnUpdate.disabled = true;
+
+                try {
+                    const { error } = await supabase
+                        .from('solicitacoes_preventivo')
+                        .update({ status: newStatus })
+                        .eq('id', window.currentSolicitacao.id);
+
+                    if (error) throw error;
+
+                    alert('Status atualizado para: ' + newStatus);
+                    // Update local object to reflect change immediately
+                    window.currentSolicitacao.status = newStatus;
+                } catch (err) {
+                    console.error('Erro ao atualizar status:', err);
+                    alert('Falha ao atualizar status.');
+                } finally {
+                    btnUpdate.innerHTML = originalHtml;
+                    btnUpdate.disabled = false;
+                }
+            });
+        }
+
+        // Hook into the tab button to load on click
+        const btnMinhas = document.querySelector('button[data-tab="minhas"]');
+        if (btnMinhas) {
+            btnMinhas.addEventListener('click', loadSolicitacoes);
+        }
+
+        // --- IMPORT EXYON LOGIC (Beta) ---
+        const btnImportExyon = document.getElementById('btn-import-exyon');
+        if (btnImportExyon) {
+            btnImportExyon.addEventListener('click', async () => {
+                // FORCE: Try to trigger file input immediately without remote dialog first
+                // If it fails, we know it's not the dialog module
+                
+                const inpFile = document.createElement('input');
+                inpFile.type = 'file';
+                inpFile.accept = '.xlsx, .xls'; // removed .csv to simplify
+                inpFile.style.display = 'none';
+                document.body.appendChild(inpFile);
+                
+                inpFile.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) {
+                        document.body.removeChild(inpFile);
+                        return;
+                    }
+                    
+                    try {
+                        // Use ExcelJS directly in renderer (nodeIntegration: true)
+                        const ExcelJS = require('exceljs');
+                        const wb = new ExcelJS.Workbook();
+                        
+                        // Show loading state
+                        const originalText = btnImportExyon.innerHTML;
+                        btnImportExyon.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lendo...';
+                        
+                        // Read file as buffer (works even if file.path is undefined)
+                        const arrayBuffer = await file.arrayBuffer();
+                        const buffer = Buffer.from(arrayBuffer);
+                        await wb.xlsx.load(buffer);
+
+                        const ws = wb.worksheets[0];
+                        
+                        if (!ws) throw new Error('Planilha sem abas.');
+
+                        // Read headers (Row 1) to map columns dynamically
+                        const headers = {};
+                        ws.getRow(1).eachCell((cell, colNum) => {
+                            const val = cell.value ? cell.value.toString().trim() : '';
+                            headers[val] = colNum;
+                        });
+                        
+                        // Validate required columns - fallback to names from user file if specific keys fail
+                        let colPolo = headers['Posicao_Cliente'];
+                        let colParte = headers['Destinatario']; 
+                        let colProcesso = headers['Numero_CNJ'] || headers['nu_CNJ_Tribunal']; 
+
+                        // If exact match fails, try fuzzy search for robustness
+                        if (!colPolo) colPolo = Object.keys(headers).find(k => k.toLowerCase().includes('posicao') || k.toLowerCase().includes('participacao')) ? headers[Object.keys(headers).find(k => k.toLowerCase().includes('posicao') || k.toLowerCase().includes('participacao'))] : null;
+                        if (!colParte) colParte = Object.keys(headers).find(k => k.toLowerCase().includes('destinatario') || k.toLowerCase().includes('cliente')) ? headers[Object.keys(headers).find(k => k.toLowerCase().includes('destinatario') || k.toLowerCase().includes('cliente'))] : null;
+                        
+                        if (!colPolo || !colParte || !colProcesso) {
+                            console.error('Headers found:', headers);
+                            alert('Colunas obrigatórias não encontradas na planilha.\nEsperado: Posicao_Cliente, Destinatario, Numero_CNJ');
+                            throw new Error('Colunas ausentes');
+                        }
+
+                        // Filter Rows
+                        const rowsToImport = [];
+                        let rowsRead = 0;
+                        const debugRows = []; // Store first few rows for debugging
+
+                        ws.eachRow((row, rowNumber) => {
+                            if (rowNumber === 1) return; // Skip header
+                            rowsRead++;
+
+                            let poloVal = row.getCell(colPolo).value;
+                            let parteVal = row.getCell(colParte).value;
+                            let processoVal = row.getCell(colProcesso).value;
+
+                            // Handle rich text or objects
+                            if (poloVal && typeof poloVal === 'object') poloVal = poloVal.text || poloVal.toString();
+                            if (parteVal && typeof parteVal === 'object') parteVal = parteVal.text || parteVal.toString();
+                            if (processoVal && typeof processoVal === 'object') processoVal = processoVal.text || processoVal.toString();
+                            
+                            poloVal = poloVal ? poloVal.toString().trim() : '';
+                            parteVal = parteVal ? parteVal.toString().trim() : '';
+                            processoVal = processoVal ? processoVal.toString().trim() : '';
+
+                            // Collect debug info for first 5 rows
+                            if (rowsRead <= 5) {
+                                debugRows.push(`L${rowNumber}: Polo="${poloVal}", Parte="${parteVal}", Proc="${processoVal}"`);
+                            }
+
+                            // Strict Filter
+                            const isTerceiro = poloVal.toLowerCase().includes('terceiro interessado');
+                            // Expanded check for Neoenergia aliases
+                            const isCoelba = parteVal.toLowerCase().includes('coelba') || 
+                                             parteVal.toLowerCase().includes('neoenergia') ||
+                                             parteVal.toLowerCase().includes('distribuidora');
+
+                            if (isTerceiro && isCoelba && processoVal) {
+                                rowsToImport.push({
+                                    numero_processo: processoVal,
+                                    polo: poloVal,
+                                    parte: parteVal,
+                                    status: 'Novo',
+                                    titulo: `Processo ${processoVal}`,
+                                    tipo_subsidio: 'Captação Automática',
+                                    origem_dado: 'Planilha Exyon',
+                                    unidade_negocio: 'Jurídico Massificado',
+                                    area_solicitante: 'Jurídico Recebimento',
+                                    descricao: `Importado via Planilha. Parte: ${parteVal} | Polo: ${poloVal}`
+                                });
+                            }
+                        });
+
+
+                        if (rowsToImport.length === 0) {
+                            const debugMsg = debugRows.join('\n');
+                            alert(`Nenhum processo encontrado com os critérios.\n\nTotal de linhas lidas: ${rowsRead}.\n\nAMOSTRA DAS PRIMEIRAS LINHAS:\n${debugMsg}\n\nVerifique se a coluna 'Posicao_Cliente' realmente contém 'Terceiro Interessado'.`);
+                            btnImportExyon.innerHTML = originalText;
+                            return;
+                        }
+
+                        // Confirmation Dialog
+                        const confirmMsg = `Encontrados ${rowsToImport.length} processos compatíveis.\n\nDeseja importar agora?`;
+                        if (!confirm(confirmMsg)) {
+                            btnImportExyon.innerHTML = originalText;
+                            return;
+                        }
+
+                        // Prepare payload for Supabase
+                        const payload = rowsToImport.map(r => ({
+                            titulo: r.titulo,
+                            numero_processo: r.numero_processo,
+                            status: r.status,
+                            tipo_subsidio: r.tipo_subsidio,
+                            unidade_negocio: r.unidade_negocio,
+                            area_solicitante: r.area_solicitante, 
+                            descricao: r.descricao
+                        }));
+
+                        const { data, error } = await supabase
+                            .from('solicitacoes_preventivo') // Ensure this table matches exactly what is used elsewhere
+                            .insert(payload);
+
+                        if (error) throw error; 
+
+                        console.log('Import success', data);
+                        alert(`Sucesso! ${rowsToImport.length} solicitações importadas.`);
+                        
+                        // If loadSolicitacoes exists, refresh list
+                        if (typeof loadSolicitacoes === 'function') {
+                            loadSolicitacoes(); 
+                        }
+                        
+                        btnImportExyon.innerHTML = originalText;
+                        
+                    } catch (err) {
+                        alert('Erro na importação: ' + err.message);
+                        console.error(err);
+                        btnImportExyon.innerHTML = originalText;
+                    } finally {
+                        if (document.body.contains(inpFile)) {
+                            document.body.removeChild(inpFile);
+                        }
+                    }
+                };
+                
+                // Trigger click - MUST be synchronous or very close to user click
+                setTimeout(() => inpFile.click(), 50);
+            });
+        }
+
+    </script>
 </body>
-</html>
 </html>

@@ -3,522 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXTRATJUD - Principal</title>
+    <title>EXTRATJUD - Hub Principal</title>
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Theme -->
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
 
     <style>
-        :root {
-            --card-icon-bg: var(--primary-light);
-            --card-icon-color: var(--primary-color);
-            --card-icon-disabled-bg: #e9ecef;
-            --card-icon-disabled-color: #adb5bd;
-        }
-
-        /* Enhanced Global Animations */
-        @keyframes slideDown {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes fadeInUpElastic {
-            0% { opacity: 0; transform: translateY(30px) scale(0.95); }
-            60% { opacity: 1; transform: translateY(-5px) scale(1.01); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        
-        .fade-in-up { 
-            animation-name: fadeInUpElastic; 
-            animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        
-        /* Delays */
-        .delay-100 { animation-delay: 100ms; }
-        .delay-200 { animation-delay: 200ms; }
-
         body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
-            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
-            background-size: 24px 24px;
-        }
-
-        h1, h2, h3, .brand {
-            font-family: 'Rajdhani', sans-serif;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        /* Header Styles */
-        .header {
-            background-color: var(--card-bg);
-            padding: 14px 40px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: var(--shadow-sm);
-            animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .brand {
-            font-size: 26px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-color) 0%, #34d399 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            letter-spacing: -0.5px;
-        }
-        
-        /* Make sure icon is visible (override text-fill-color for img) */
-        .brand img {
-            -webkit-text-fill-color: initial;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-        }
-
-        .container {
-            flex: 1;
-            padding: 60px 40px;
-            overflow-y: auto;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .welcome-section {
-            margin-bottom: 50px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 20px;
-        }
-
-        .intro-title {
-            font-size: 36px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: var(--text-color);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
-        .intro-subtitle {
-            font-size: 16px;
-            color: var(--text-secondary);
-            max-width: 600px;
-            line-height: 1.5;
-            margin: 0;
-        }
-
-        /* Wrapper for Grid */
-        .hub-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 32px;
-            padding-bottom: 40px;
-        }
-
-        /* Card Styles */
-        .hub-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 30px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: flex-start;
-            gap: 20px;
-            box-shadow: var(--shadow-sm);
             overflow: hidden;
         }
 
+        .main-container {
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+            padding: 20px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .brand-main {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            /* Gradient Text */
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-bottom: 60px;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .cards-grid {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hub-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 50px 40px;
+            width: 280px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            cursor: pointer;
+        }
+
         .hub-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary-color);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(16,185,129,0.12);
+            border-color: rgba(16,185,129,0.3);
         }
 
-        /* Optional decorative circle in card background */
-        .circle-deco {
-            position: absolute;
-            top: -50px;
-            right: -50px;
-            width: 150px;
-            height: 150px;
-            background: var(--primary-light);
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: rgba(16,185,129,0.08);
             border-radius: 50%;
-            opacity: 0.5;
-            z-index: 0;
-            transition: transform 0.5s ease;
-        }
-        .hub-card:hover .circle-deco {
-            transform: scale(1.5);
-        }
-
-        .card-icon {
-            width: 56px;
-            height: 56px;
-            background-color: var(--card-icon-bg);
-            color: var(--card-icon-color);
-            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 1;
-            flex-shrink: 0;
+            margin-bottom: 24px;
+            font-size: 32px;
+            color: var(--primary-color);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .hub-card:hover .card-icon {
-            transform: rotate(10deg);
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .card-content {
-            position: relative;
-            z-index: 1;
-            flex: 1;
+        .hub-card:hover .icon-circle {
+            transform: scale(1.15) rotate(5deg);
+            background: var(--primary-color);
+            color: #fff;
         }
 
         .card-title {
-            font-size: 20px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 26px;
             font-weight: 700;
-            color: var(--text-color);
-            margin: 0 0 8px 0;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .card-description {
+        .card-desc {
             font-size: 14px;
             color: var(--text-secondary);
-            line-height: 1.6;
-            margin: 0;
+            line-height: 1.5;
         }
 
-        .card-arrow {
-            color: var(--border-color);
-            align-self: center;
-            font-size: 18px;
-            transition: all 0.3s;
-            position: relative;
-            z-index: 1;
+        .version-tag {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            opacity: 0.5;
         }
-        
-        .hub-card:hover .card-arrow {
-            color: var(--primary-color);
-            transform: translateX(5px);
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <header class="header">
-        <div class="brand">
-            <!-- Brand Logo/Icon -->
-            <img src="assets/logo.png" alt="Logo" style="height: 60px; width: auto; margin-right: 12px;">
-            EXTRATJUD
-        </div>
-        <button id="btn-settings" title="Configurações" style="background:none; border:none; color:var(--text-color); font-size:20px; cursor:pointer; opacity: 0.6; transition: opacity 0.2s;">
-            <i class="fa-solid fa-gear"></i>
-        </button>
-    </header>
+    <div class="main-container">
+        <div class="brand-main">ExtratJud</div>
+        <div class="subtitle">Selecione o módulo de trabalho</div>
 
-    <div class="container">
-        <div class="welcome-section animate fade-in-up">
-            <h1 class="intro-title">Bem-vindo</h1>
-            <p class="intro-subtitle">Portal central de automação jurídica.</p>
-        </div>
-        
-        <div class="hub-grid">
-            
-            <!-- SERVICES CARD -->
-            <div class="hub-card animate fade-in-up delay-200" onclick="window.location.href='hub_servicos.html'">
-                <div class="card-cover">
-                    <!-- Optional decorative circle -->
-                    <div class="circle-deco"></div>
+        <div class="cards-grid">
+            <!-- Módulo 1: Robôs (Antigo Hub) -->
+            <a href="hub_servicos.html" class="hub-card">
+                <div class="icon-circle">
+                    <i class="fa-solid fa-robot"></i>
                 </div>
-                <div class="card-icon">
-                    <i class="fa-solid fa-briefcase"></i>
+                <div class="card-title">Robôs</div>
+                <div class="card-desc">
+                    Automação processual (PROJUDI, PJE) e extração de dados em massa.
                 </div>
-                <div class="card-content">
-                    <h3 class="card-title">Serviços de Automação</h3>
-                    <p class="card-description">Acesse o centralizador de robôs e extratores do PJE, Projudi e outras ferramentas.</p>
-                </div>
-                <div class="card-arrow">
-                    <i class="fa-solid fa-arrow-right"></i>
-                </div>
-            </div>
-            <!-- SOLICITAÇÕES JURÍDICO CARD -->
-            <div class="hub-card animate fade-in-up delay-400" onclick="window.location.href='hub_solicitacoes.html'">
-                <div class="card-cover">
-                    <div class="circle-deco"></div>
-                </div>
-                <div class="card-icon">
-                    <i class="fa-solid fa-file-circle-plus"></i>
-                </div>
-                <div class="card-content">
-                    <h3 class="card-title">Solicitações Jurídico</h3>
-                    <p class="card-description">Gerencie e registre solicitações de subsídios preventivos.</p>
-                </div>
-                <div class="card-arrow">
-                    <i class="fa-solid fa-arrow-right"></i>
-                </div>
-            </div>
+            </a>
 
+            <!-- Módulo 2: Helpdesk (Novo Hub) -->
+            <a href="hub_solicitacoes.html" class="hub-card">
+                <div class="icon-circle">
+                    <i class="fa-solid fa-folder-tree"></i>
+                </div>
+                <div class="card-title">Fluxo</div>
+                <div class="card-desc">
+                    Gestão de demandas jurídicas, ofícios e solicitações internas.
+                </div>
+            </a>
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="modal-settings" class="settings-modal-overlay">
-        <div class="settings-modal-content">
-            <div class="settings-modal-header">
-                <h2><i class="fa-solid fa-sliders"></i> Configurações</h2>
-                <button id="btn-close-settings" class="settings-close-btn">&times;</button>
-            </div>
-            
-            <div class="settings-modal-body">
-                <div class="settings-sidebar">
-                    <button class="settings-tab active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
-                    <button class="settings-tab" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
-                    <button class="settings-tab" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
-                </div>
-                
-                <div class="settings-content-area">
-                    
-                    <!-- ABAS DE CONTEÚDO -->
-                    <div id="tab-geral" class="settings-tab-pane active">
-                        <h3 class="settings-section-title">Aparência</h3>
-                        <p class="settings-section-desc">Personalize o tema visual do aplicativo.</p>
-                        <div class="theme-selector-group" style="display:flex; gap:10px; margin-bottom: 25px;">
-                            <button class="theme-option" data-theme="light" title="Claro">
-                                <i class="fa-solid fa-sun"></i> Claro
-                            </button>
-                            <button class="theme-option" data-theme="dark" title="Escuro">
-                                <i class="fa-solid fa-moon"></i> Escuro
-                            </button>
-                            <button class="theme-option" data-theme="system" title="Sistema">
-                                <i class="fa-solid fa-desktop"></i> Sistema
-                            </button>
-                        </div>
-
-                        <h3 class="settings-section-title">Comportamento da Janela</h3>
-                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-minimize-tray" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Minimizar para a bandeja ao fechar</span>
-                            </label>
-                            
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-always-top" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Manter janela sempre no topo</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div id="tab-logs" class="settings-tab-pane">
-                         <h3 class="settings-section-title">Gerenciamento de Logs</h3>
-                         <p class="settings-section-desc">Centralize os arquivos de registro para facilitar o suporte.</p>
-
-                        <div class="settings-item">
-                            <label class="settings-label">Diretório Global de Logs</label>
-                            <div class="settings-input-group">
-                                <input type="text" id="inp-global-log" readonly placeholder="Selecione uma pasta..." class="settings-input">
-                                <button id="btn-sel-log-dir" class="settings-btn-icon"><i class="fa-solid fa-folder-open"></i></button>
-                            </div>
-                            <small style="display:block; margin-top:5px; color:var(--text-secondary);">Todos os robôs salvarão seus relatórios de execução nesta pasta.</small>
-                        </div>
-                    </div>
-
-                    <div id="tab-sobre" class="settings-tab-pane">
-                        <div style="text-align:center; padding:10px 20px;">
-                            <img src="assets/logo.png" style="height:80px; margin-bottom:15px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-                            <h3 style="margin:0; color:var(--primary-color); font-size: 24px;">EXTRATJUD</h3>
-                            <p style="margin:5px 0; color:var(--text-secondary); font-family: 'JetBrains Mono', monospace;">v<span id="settings-app-ver">?.?.?</span></p>
-                            
-                            <hr style="margin:25px 0; border:0; border-top:1px solid var(--border-color);">
-                            
-                            <div style="text-align:left; font-size:14px; color:var(--text-color); margin-bottom:25px; line-height: 1.6;">
-                                <h4 style="margin:0 0 12px 0; font-size:16px; color: var(--primary-color);">Sobre a Ferramenta</h4>
-                                <p style="margin-bottom:12px;">
-                                    O <strong>EXTRATJUD</strong> é uma solução corporativa de automação robótica de processos (RPA) desenvolvida para otimizar as operações do setor jurídico da Neoenergia Coelba.
-                                </p>
-                                <p style="margin-bottom:12px;">
-                                    <strong>Nota Técnica:</strong> O aplicativo não utiliza APIs oficiais dos tribunais, devido à indisponibilidade de acesso público a esses recursos. Em vez disso, a ferramenta automatiza processos manuais, utilizando Inteligência Artificial para executar a navegação e as tarefas repetitivas da forma mais rápida possível.
-                                </p>
-                                <p style="margin-bottom:12px;">
-                                    A ferramenta emprega tecnologias de navegação headless para interagir com portais judiciais de forma segura e eficiente, permitindo a extração massiva de dados, geração de relatórios gerenciais e auditoria com evidências documentais.
-                                </p>
-                            </div>
-
-                            <div style="background: rgba(var(--primary-rgb, 16, 185, 129), 0.05); border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 25px; border: 1px solid rgba(var(--primary-rgb, 16, 185, 129), 0.1);">
-                                <h4 style="margin:0 0 10px 0; font-size:14px; display:flex; align-items:center; gap:8px;">
-                                    <i class="fa-solid fa-code" style="color:var(--primary-color)"></i> Ficha Técnica
-                                </h4>
-                                <ul style="margin:0; padding-left:20px; font-size:13px; color:var(--text-secondary);">
-                                    <li><strong>Engine:</strong> Electron & Node.js</li>
-                                    <li><strong>Automação:</strong> Microsoft Playwright</li>
-                                    <li><strong>Interface:</strong> HTML5 / CSS3 (Custom Theme)</li>
-                                </ul>
-                            </div>
-                            
-                            <div style="margin-top:20px; font-size:13px; color:var(--text-secondary); margin-bottom:20px;">
-                                <p>
-                                    Desenvolvido por <strong>João Guilherme Almeida Viana</strong><br>
-                                    <span style="opacity:0.8; font-size:12px;">Aprendiz Administrativo | Jurídico Contencioso Cível</span><br>
-                                    <a href="mailto:joao.aviana@neoenergia.com" style="color:var(--primary-color); text-decoration:none;">joao.aviana@neoenergia.com</a>
-                                </p>
-                            </div>
-                            
-                            <div style="margin-top:20px; font-size:11px; color:#9ca3af; text-align:left; border-top: 1px dashed var(--border-color); padding-top: 15px;">
-                                <p style="font-weight:600; margin-bottom:5px;">Ambiente de Execução:</p>
-                                <ul style="columns: 2; list-style: none; padding: 0; margin: 0;">
-                                    <li>Electron: <span id="env-electron">...</span></li>
-                                    <li>Node: <span id="env-node">...</span></li>
-                                    <li>Chrome: <span id="env-chrome">...</span></li>
-                                    <li>OS: <span id="env-plat">...</span></li>
-                                </ul>
-                            </div>
-                            <div style="margin-top:25px; font-size: 11px; color: #aaa; text-align: center;">
-                                &copy; 2026 Neoenergia Coelba. Todos os direitos reservados.
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <div class="settings-modal-footer">
-                <button id="btn-save-settings" class="settings-btn-primary"><i class="fa-solid fa-check"></i> Salvar Alterações</button>
-            </div>
-        </div>
-    </div>
-
-    <style>
-    </style>
-
-    <script>
-        const { ipcRenderer } = require('electron');
-        
-        // --- Settings Logic ---
-        const modalSettings = document.getElementById('modal-settings');
-        const inpGlobalLog = document.getElementById('inp-global-log');
-        const chkMinimize = document.getElementById('chk-minimize-tray');
-        const chkAlwaysTop = document.getElementById('chk-always-top');
-
-        const tabs = document.querySelectorAll('.settings-tab');
-        const panes = document.querySelectorAll('.settings-tab-pane');
-
-        // Tab Switching
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class
-                tabs.forEach(t => t.classList.remove('active'));
-                panes.forEach(p => p.classList.remove('active'));
-                // Add active class
-                tab.classList.add('active');
-                const targetId = 'tab-' + tab.getAttribute('data-tab');
-                document.getElementById(targetId).classList.add('active');
-            });
-        });
-
-        document.getElementById('btn-settings').addEventListener('click', async () => {
-            // Load current theme state logic via theme.js if available
-            if (window.themeConfig) {
-                window.themeConfig.updateUI();
-            }
-
-            // Load current state
-            try {
-                const state = await ipcRenderer.invoke('load-app-state');
-                if (state && state.globalLogDir) {
-                    inpGlobalLog.value = state.globalLogDir;
-                }
-                
-                // Load General Config
-                const genConfig = await ipcRenderer.invoke('get-general-config');
-                if (chkMinimize) chkMinimize.checked = genConfig.minimizeToTray || false;
-                if (chkAlwaysTop) chkAlwaysTop.checked = genConfig.alwaysOnTop || false;
-                
-                // Populate version info
-                const ver = await ipcRenderer.invoke('get-app-version') || '1.0.0';
-                const verEls = document.querySelectorAll('#settings-app-ver'); 
-                verEls.forEach(el => el.textContent = ver);
-                
-                // Env Info
-                const envNode = document.getElementById('env-node');
-                if(envNode) envNode.textContent = process.versions.node;
-                const envElec = document.getElementById('env-electron');
-                if(envElec) envElec.textContent = process.versions.electron;
-                const envChrome = document.getElementById('env-chrome');
-                if(envChrome) envChrome.textContent = process.versions.chrome;
-                const envPlat = document.getElementById('env-plat');
-                if(envPlat) envPlat.textContent = process.platform + ' (' + process.arch + ')';
-
-            } catch(e) { console.error(e); }
-            modalSettings.style.display = 'flex'; // Use flex for centering logic in CSS
-        });
-
-        document.getElementById('btn-close-settings').addEventListener('click', () => {
-             modalSettings.style.display = 'none';
-        });
-
-        document.getElementById('btn-sel-log-dir').addEventListener('click', async () => {
-             const dir = await ipcRenderer.invoke('dialog:openDirectory');
-             if (dir) {
-                 inpGlobalLog.value = dir;
-             }
-        });
-
-        document.getElementById('btn-save-settings').addEventListener('click', async () => {
-             try {
-                const state = await ipcRenderer.invoke('load-app-state') || {};
-                state.globalLogDir = inpGlobalLog.value;
-                ipcRenderer.send('save-app-state', state);
-                
-                // Save General Config
-                const genConfig = {
-                    minimizeToTray: chkMinimize ? chkMinimize.checked : false,
-                    alwaysOnTop: chkAlwaysTop ? chkAlwaysTop.checked : false
-                };
-                ipcRenderer.invoke('set-general-config', genConfig);
-
-                modalSettings.style.display = 'none';
-             } catch(e) {
-                 alert('Erro ao salvar: ' + e.message);
-             }
-        });
-
-        // Close on outside click
-        modalSettings.addEventListener('click', (e) => {
-            if (e.target === modalSettings) modalSettings.style.display = 'none';
-        });
-
-
-
-        window.addEventListener('DOMContentLoaded', () => {
-            // ensure app ready
-            // (login removed)
-        });
-    </script>
+    <div class="version-tag">ver 1.2.10</div>
 
 </body>
 </html>
