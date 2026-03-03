@@ -653,16 +653,21 @@
                 <h2><i class="fa-solid fa-sliders"></i> Configurações</h2>
                 <button id="btn-close-settings" class="settings-close-btn">&times;</button>
             </div>
+            
             <div class="settings-modal-body">
                 <div class="settings-sidebar">
                     <button class="settings-tab active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
                     <button class="settings-tab" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
                     <button class="settings-tab" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
                 </div>
+                
                 <div class="settings-content-area">
+                    
+                    <!-- ABAS DE CONTEÚDO -->
                     <div id="tab-geral" class="settings-tab-pane active">
                         <h3 class="settings-section-title">Aparência</h3>
                         <p class="settings-section-desc">Personalize o tema visual do aplicativo.</p>
+                        
                         <div class="theme-selector-group" style="display:flex; gap:10px; margin-bottom: 25px;">
                             <button class="theme-option" data-theme="light" title="Claro">
                                 <i class="fa-solid fa-sun"></i> Claro
@@ -674,21 +679,42 @@
                                 <i class="fa-solid fa-desktop"></i> Sistema
                             </button>
                         </div>
-                        <h3 class="settings-section-title" style="margin-top:20px;">Comportamento da Janela</h3>
+
+                        <h3 class="settings-section-title">Comportamento da Janela</h3>
+                        <p class="settings-section-desc">Personalize como o Extratjud interage com seu desktop.</p>
+
                         <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
                             <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                                 <input type="checkbox" id="chk-minimize-tray" style="width:16px; height:16px;">
                                 <span style="font-size:13px; color:var(--text-color);">Minimizar para a bandeja ao fechar</span>
                             </label>
+                            
                             <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                                 <input type="checkbox" id="chk-always-top" style="width:16px; height:16px;">
                                 <span style="font-size:13px; color:var(--text-color);">Manter janela sempre no topo</span>
                             </label>
                         </div>
+
+                        <h3 class="settings-section-title" style="margin-top: 25px;">Notificações</h3>
+                        <p class="settings-section-desc">Alertas sobre o status das automações.</p>
+
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-sound-finish" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Emitir som ao finalizar</span>
+                            </label>
+                            
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-notification-finish" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Notificação do Windows</span>
+                            </label>
+                        </div>
                     </div>
+
                     <div id="tab-logs" class="settings-tab-pane">
-                        <h3 class="settings-section-title">Gerenciamento de Logs</h3>
-                        <p class="settings-section-desc">Centralize os arquivos de registro para facilitar o suporte.</p>
+                         <h3 class="settings-section-title">Gerenciamento de Logs</h3>
+                         <p class="settings-section-desc">Centralize os arquivos de registro para facilitar o suporte.</p>
+
                         <div class="settings-item">
                             <label class="settings-label">Diretório Global de Logs</label>
                             <div class="settings-input-group">
@@ -698,12 +724,15 @@
                             <small style="display:block; margin-top:5px; color:var(--text-secondary);">Todos os robôs salvarão seus relatórios de execução nesta pasta.</small>
                         </div>
                     </div>
+
                     <div id="tab-sobre" class="settings-tab-pane">
                         <div style="text-align:center; padding:10px 20px;">
                             <img src="assets/logo.png" style="height:80px; margin-bottom:15px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                             <h3 style="margin:0; color:var(--primary-color); font-size: 24px;">EXTRATJUD</h3>
                             <p style="margin:5px 0; color:var(--text-secondary); font-family: 'JetBrains Mono', monospace;">v<span id="settings-app-ver">?.?.?</span></p>
+                            
                             <hr style="margin:25px 0; border:0; border-top:1px solid var(--border-color);">
+                            
                             <div style="text-align:left; font-size:14px; color:var(--text-color); margin-bottom:25px; line-height: 1.6;">
                                 <h4 style="margin:0 0 12px 0; font-size:16px; color: var(--primary-color);">Sobre a Ferramenta</h4>
                                 <p style="margin-bottom:12px;">
@@ -716,6 +745,7 @@
                                     A ferramenta emprega tecnologias de navegação headless para interagir com portais judiciais de forma segura e eficiente, permitindo a extração massiva de dados, geração de relatórios gerenciais e auditoria com evidências documentais.
                                 </p>
                             </div>
+
                             <div style="background: rgba(var(--primary-rgb, 16, 185, 129), 0.05); border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 25px; border: 1px solid rgba(var(--primary-rgb, 16, 185, 129), 0.1);">
                                 <h4 style="margin:0 0 10px 0; font-size:14px; display:flex; align-items:center; gap:8px;">
                                     <i class="fa-solid fa-code" style="color:var(--primary-color)"></i> Ficha Técnica
@@ -726,6 +756,7 @@
                                     <li><strong>Interface:</strong> HTML5 / CSS3 (Custom Theme)</li>
                                 </ul>
                             </div>
+
                             <div style="text-align:left; font-size:13px; color:var(--text-secondary); margin-bottom:20px;">
                                 <p>
                                     Desenvolvido por <strong>João Guilherme Almeida Viana</strong><br>
@@ -733,10 +764,26 @@
                                     <a href="mailto:joao.aviana@neoenergia.com" style="color:var(--primary-color); text-decoration:none;">joao.aviana@neoenergia.com</a>
                                 </p>
                             </div>
+
+                            <div style="margin-top:20px; font-size:11px; color:#9ca3af; text-align:left; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                                <p style="font-weight:600; margin-bottom:5px;">Ambiente de Execução:</p>
+                                <ul style="columns: 2; list-style: none; padding: 0; margin: 0;">
+                                    <li>Electron: <span id="env-electron">...</span></li>
+                                    <li>Node: <span id="env-node">...</span></li>
+                                    <li>Chrome: <span id="env-chrome">...</span></li>
+                                    <li>OS: <span id="env-plat">...</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div style="margin-top:25px; font-size: 11px; color: #aaa; text-align: center;">
+                                &copy; 2026 Neoenergia Coelba. Todos os direitos reservados.
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
+
             <div class="settings-modal-footer">
                 <button id="btn-save-settings" class="settings-btn-primary"><i class="fa-solid fa-check"></i> Salvar Alterações</button>
             </div>
