@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExtratJud - Downloads</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --bg: #111827;
+            --text: #f3f4f6;
+            --secondary: #374151;
+            --card-bg: #1f2937;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+        /* Background Animation */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: linear-gradient(125deg, #111827, #064e3b, #111827);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        h1 { font-family: 'Rajdhani', sans-serif; font-size: 3rem; margin-bottom: 10px; }
+        
+        .download-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            width: 100%;
+            margin-top: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: var(--primary);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: 0.2s;
+            min-width: 250px;
+        }
+        .btn-download.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-download:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        
+        .version-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .release-notes {
+            margin: 20px 0;
+            text-align: left;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+            border-left: 4px solid var(--primary);
+        }
+
+        .history-section {
+            width: 100%;
+            margin-top: 60px;
+            text-align: left;
+        }
+        .history-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .history-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+        .history-item:hover {
+            background: rgba(255,255,255,0.06);
+        }
+        .history-meta { display: flex; flex-direction: column; gap: 4px; }
+        .history-tag { font-weight: 700; color: #fff; }
+        .history-date { font-size: 0.85rem; color: #9ca3af; }
+        .history-actions { display: flex; gap: 10px; }
+        .history-btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            text-decoration: none;
+            color: white;
+            background: rgba(255,255,255,0.1);
+            transition: 0.2s;
+        }
+        .history-btn:hover { background: var(--primary); }
+
+        .back-btn {
+            position: absolute;
+            top: 20px; left: 20px;
+            color: white;
+            text-decoration: none;
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        .back-btn:hover { opacity: 1; }
+
+        .error-msg {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    
+    <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+
+    <div class="container">
+        <h1>Baixar ExtratJud</h1>
+        <p style="opacity: 0.8; font-size: 1.1rem;">A automação judiciária ao seu alcance.</p>
+        
+        <div class="download-card">
+            <div id="loading" class="loading-spinner" style="display: block;"></div>
+            
+            <div id="latest-content" style="display: none;">
+                <span class="version-badge" id="latest-tag">v...</span>
+                <h2 style="margin: 0 0 10px 0;">Versão Mais Recente</h2>
+                <p id="latest-date" style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 20px;"></p>
+                
+                <div class="release-notes" id="latest-notes"></div>
+
+                <div class="btn-group">
+                    <a href="#" id="btn-exe" class="btn-download">
+                        <i class="fa-brands fa-windows"></i> Instalador (.exe)
+                    </a>
+                    <a href="#" id="btn-zip" class="btn-download secondary">
+                        <i class="fa-solid fa-file-zipper"></i> Portátil (.zip)
+                    </a>
+                    <div style="width: 100%; margin-top: 10px; font-size: 0.85rem; color: #9ca3af;">
+                        ⬇️ Zip recomendado se o download do Exe for bloqueado pelo navegador.
+                    </div>
+                </div>
+            </div>
+
+            <div id="error-box" class="error-msg"></div>
+        </div>
+        
+        <div class="history-section" id="history-section" style="display: none;">
+            <div class="history-title">
+                <i class="fa-solid fa-clock-rotate-left"></i> Histórico de Versões
+            </div>
+            <div id="history-list">
+                <!-- Items injected via JS -->
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; color: #6b7280; font-size: 0.8rem;">
+            Desenvolvido por João Guilherme almeida Viana. • <a href="https://github.com/An0mi-dot/Extrajud" target="_blank" style="color: #6b7280; text-decoration: underline;">Código Fonte</a>
+        </div>
+    </div>
+
+    <script>
+        const REPO_OWNER = 'An0mi-dot';
+        const REPO_NAME = 'Extrajud';
+
+        async function fetchReleases() {
+            const loading = document.getElementById('loading');
+            const latestContent = document.getElementById('latest-content');
+            const historySection = document.getElementById('history-section');
+            const historyList = document.getElementById('history-list');
+            const errorBox = document.getElementById('error-box');
+            
+            try {
+                // Fetch ALL releases (or the first page of them)
+                const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases`);
+                
+                if (!response.ok) {
+                    if (response.status === 404) throw new Error("Repositório não encontrado ou privado.");
+                    throw new Error(`Erro API: ${response.status}`);
+                }
+
+                const releases = await response.json();
+                
+                if (releases.length === 0) {
+                    throw new Error("Nenhuma versão encontrada neste repositório.");
+                }
+
+                // 1. Setup Latest Release (First item)
+                const latest = releases[0];
+                setupLatestRelease(latest);
+
+                // 2. Setup History (Remaining items)
+                if (releases.length > 1) {
+                    const olderReleases = releases.slice(1);
+                    olderReleases.forEach(release => {
+                        const item = createHistoryItem(release);
+                        if (item) historyList.appendChild(item);
+                    });
+                    historySection.style.display = 'block';
+                }
+
+                loading.style.display = 'none';
+                latestContent.style.display = 'block';
+
+            } catch (err) {
+                loading.style.display = 'none';
+                errorBox.textContent = err.message;
+                errorBox.style.display = 'block';
+            }
+        }
+
+        function setupLatestRelease(release) {
+            document.getElementById('latest-tag').textContent = release.tag_name;
+            document.getElementById('latest-date').textContent = new Date(release.published_at).toLocaleDateString('pt-BR');
+            document.getElementById('latest-notes').textContent = release.body || "Sem notas de atualização.";
+
+            const exeAsset = release.assets.find(a => a.name.endsWith('.exe'));
+            const zipAsset = release.assets.find(a => a.name.endsWith('.zip'));
+
+            // Configure EXE Button
+            const btnExe = document.getElementById('btn-exe');
+            if (exeAsset) {
+                btnExe.href = exeAsset.browser_download_url;
+                btnExe.innerHTML = `<i class="fa-brands fa-windows"></i> Instalador (.exe) <span style="font-size: 0.8em; opacity: 0.8; margin-left: 5px;">(${(exeAsset.size/1024/1024).toFixed(1)}MB)</span>`;
+            } else {
+                btnExe.style.display = 'none';
+            }
+
+            // Configure ZIP Button
+            const btnZip = document.getElementById('btn-zip');
+            if (zipAsset) {
+                btnZip.href = zipAsset.browser_download_url;
+                btnZip.innerHTML = `<i class="fa-solid fa-file-zipper"></i> Portátil (.zip) <span style="font-size: 0.8em; opacity: 0.8; margin-left: 5px;">(${(zipAsset.size/1024/1024).toFixed(1)}MB)</span>`;
+            } else {
+                btnZip.style.display = 'none';
+            }
+        }
+
+        function createHistoryItem(release) {
+            const date = new Date(release.published_at).toLocaleDateString('pt-BR');
+            
+            // Find assets
+            const exeAsset = release.assets.find(a => a.name.endsWith('.exe'));
+            const zipAsset = release.assets.find(a => a.name.endsWith('.zip'));
+
+            if (!exeAsset && !zipAsset) return null;
+
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            
+            let buttonsHtml = '';
+            if (exeAsset) buttonsHtml += `<a href="${exeAsset.browser_download_url}" class="history-btn"><i class="fa-brands fa-windows"></i> .exe</a>`;
+            if (zipAsset) buttonsHtml += `<a href="${zipAsset.browser_download_url}" class="history-btn"><i class="fa-solid fa-file-zipper"></i> .zip</a>`;
+
+            div.innerHTML = `
+                <div class="history-meta">
+                    <span class="history-tag">${release.tag_name}</span>
+                    <span class="history-date">Lançado em ${date}</span>
+                </div>
+                <div class="history-actions">
+                    ${buttonsHtml}
+                </div>
+            `;
+            return div;
+        }
+
+        fetchReleases();
+    </script>
+</body>
+</html>

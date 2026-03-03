@@ -142,7 +142,186 @@
 </head>
 <body>
 
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #ffffff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite; /* Slower spin */
+            margin: 40px auto;
+        }
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 4s infinite linear;
+        }
+
+        /* Debug Button Styles */
+        #debug-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: #ef4444; /* Red to indicate debug */
+            color: white;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100000;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+        #debug-fab:hover { transform: scale(1.1); }
+        
+        #debug-menu {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            width: 200px;
+            z-index: 100000;
+            display: none;
+            overflow: hidden;
+        }
+        .debug-item {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .debug-item:last-child { border-bottom: none; }
+        .debug-item:hover { background: #f5f5f5; }
+    </style>
+
+    <!-- Debug UI -->
+    <button id="debug-fab" title="Menu de Teste"><i class="fa-solid fa-bug"></i></button>
+    <div id="debug-menu">
+        <div class="debug-item" id="btn-force-welcome">
+            <i class="fa-solid fa-play-circle" style="color:#059669;"></i> Forçar Welcome
+        </div>
+    </div>
+
+    <div id="welcome-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#059669; z-index:99999; flex-direction:column; justify-content:center; align-items:center; color:white; text-align:center; overflow:hidden; transition: opacity 0.8s ease-out, filter 0.8s ease-out;">
+        <!-- Particles Container -->
+        <div id="particles-area" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+
+        <div style="z-index: 2; position: relative;">
+            <h1 style="font-size:3.5rem; margin-bottom:10px; font-weight:800; animation: slideUp 0.8s ease-out;">Bem-vindo, <span id="welcome-name" style="color:#d1fae5;">Colega</span>!</h1>
+            <p style="font-size:1.4rem; opacity:0.9; font-weight:400; animation: slideUp 0.8s ease-out 0.2s backwards;">Seu ambiente está pronto.</p>
+            
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <style>
+        /* Header Profile Styles */
+        .header-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .header-profile:hover {
+            background: rgba(0,0,0,0.06);
+        }
+        .profile-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        .profile-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .profile-role {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.4; }
+        }
+    </style>
+
     <div class="main-container">
+        <!-- New Top Header -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; pointer-events: none;">
+            <div style="flex: 1;"></div> <!-- Spacer -->
+            
+            <div style="display: flex; gap: 10px; align-items: center; pointer-events: auto;">
+                <button id="btn-open-settings" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+
+                <div id="user-header-area" class="header-profile" style="pointer-events: auto; display: none;">
+                    <div class="profile-info">
+                        <span class="profile-name" id="display-name">Carregando...</span>
+                        <span class="profile-role">Usuário</span>
+                    </div>
+                    <div class="profile-avatar" id="display-avatar">
+                    ?
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="brand-main">ExtratJud</div>
         <div class="subtitle">Selecione o módulo de trabalho</div>
 
@@ -173,5 +352,574 @@
 
     <div class="version-tag">ver 1.2.10</div>
 
+
+    <style>
+        /* Profile Modal Styles */
+        /* Override default modal behavior which is flex-row */
+        #modal-profile .settings-modal-body {
+            display: block; /* Force block layout */
+            flex-direction: column; /* Just in case */
+            overflow-y: auto; /* Allow scrolling */
+        }
+        
+        .profile-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .profile-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .profile-tab:hover {
+            color: var(--primary-color);
+            background: rgba(0,0,0,0.02);
+        }
+        .profile-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        .profile-section {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .profile-section.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+            background: var(--bg-color);
+            color: var(--text-color);
+            box-sizing: border-box; /* Fix width overflow */
+        }
+        .form-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        .form-helper {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+    </style>
+
+    <!-- Profile Edit Modal -->
+    <div id="modal-profile" class="settings-modal-overlay">
+        <div class="settings-modal-content" style="max-width: 500px; width: 90%;">
+            <div class="settings-modal-header">
+                <h2><i class="fa-solid fa-user-gear"></i> Configurações de Conta</h2>
+                <button id="btn-close-profile" class="settings-close-btn">&times;</button>
+            </div>
+            
+            <div class="settings-modal-body" style="padding: 0;">
+                <div class="profile-tabs">
+                    <div class="profile-tab active" onclick="switchTab('tab-general')">Geral</div>
+                    <div class="profile-tab" onclick="switchTab('tab-security')">Segurança</div>
+                </div>
+
+                <div style="padding: 20px;">
+                    <!-- General Tab -->
+                    <div id="tab-general" class="profile-section active">
+                        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                            <div style="text-align: center;">
+                                <div class="profile-avatar" style="width: 80px; height: 80px; margin: 0 auto 10px; font-size: 32px;" id="modal-avatar-preview">?</div>
+                                <button class="settings-btn-primary" style="font-size: 11px; padding: 4px 8px; background: var(--text-secondary); width: 100%;" onclick="alert('Upload de arquivo em breve. Use URL por enquanto.')">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                </button>
+                            </div>
+                            <div style="flex: 1;">
+                                <div class="form-group">
+                                    <label class="form-label">Nome de Exibição</label>
+                                    <input type="text" id="inp-full-name" class="form-input" placeholder="Seu nome completo">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">URL do Avatar</label>
+                                    <input type="text" id="inp-avatar-url" class="form-input" placeholder="https://exemplo.com/foto.jpg">
+                                    <div class="form-helper">Link direto para imagem (Web)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div id="tab-security" class="profile-section">
+                        <div class="form-group">
+                            <label class="form-label">Email Cadastrado</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="email" id="inp-email" class="form-input" readonly style="background: rgba(0,0,0,0.05); cursor: not-allowed;">
+                                <button id="btn-change-email" class="settings-btn-primary" style="font-size: 12px; white-space: nowrap;">Alterar</button>
+                            </div>
+                            <div class="form-helper">Para alterar o email, será enviado um link de confirmação para o novo endereço.</div>
+                        </div>
+
+                        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                        <div class="form-group">
+                            <label class="form-label">Senha</label>
+                            <p style="font-size: 13px; color: var(--text-color); margin-bottom: 10px;">
+                                Você pode solicitar um link para redefinir sua senha.
+                            </p>
+                            <button id="btn-reset-password" class="settings-btn-primary" style="background: var(--warning-color, #f59e0b);">
+                                <i class="fa-solid fa-key"></i> Enviar Email de Redefinição
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-modal-footer">
+                <button id="btn-save-profile" class="settings-btn-primary"><i class="fa-solid fa-check"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal (New) -->
+    <div id="modal-settings" class="settings-modal-overlay">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h2><i class="fa-solid fa-sliders"></i> Configurações</h2>
+                <button id="btn-close-settings" class="settings-close-btn">&times;</button>
+            </div>
+            
+            <div class="settings-modal-body">
+                <div class="settings-sidebar">
+                    <button class="settings-tab active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
+                    <button class="settings-tab" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
+                    <button class="settings-tab" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
+                </div>
+                
+                <div class="settings-content-area">
+                    
+                    <!-- ABAS DE CONTEÚDO -->
+                    <div id="tab-geral" class="settings-tab-pane active">
+                        <h3 class="settings-section-title">Aparência</h3>
+                        <p class="settings-section-desc">Personalize o tema visual do aplicativo.</p>
+                        
+                        <div class="theme-selector-group" style="display:flex; gap:10px; margin-bottom: 25px;">
+                            <button class="theme-option" data-theme="light" title="Claro">
+                                <i class="fa-solid fa-sun"></i> Claro
+                            </button>
+                            <button class="theme-option" data-theme="dark" title="Escuro">
+                                <i class="fa-solid fa-moon"></i> Escuro
+                            </button>
+                            <button class="theme-option" data-theme="system" title="Sistema">
+                                <i class="fa-solid fa-desktop"></i> Sistema
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="tab-logs" class="settings-tab-pane">
+                         <h3 class="settings-section-title">Gerenciamento de Logs</h3>
+                         <p class="settings-section-desc">Visualização de eventos do sistema.</p>
+                         <div style="padding: 20px; text-align: center; color: var(--text-secondary); background: rgba(0,0,0,0.03); border-radius: 8px;">
+                            Logs globais estarão disponíveis aqui em breve.
+                         </div>
+                    </div>
+
+                    <div id="tab-sobre" class="settings-tab-pane">
+                        <div style="text-align:center; padding:10px 20px;">
+                            <img src="assets/logo.png" style="height:80px; margin-bottom:15px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                            <h3 style="margin:0; color:var(--primary-color); font-size: 24px;">EXTRATJUD</h3>
+                            <p style="margin:5px 0; color:var(--text-secondary); font-family: 'JetBrains Mono', monospace;">v<span id="settings-app-ver">2.0.0</span></p>
+                            
+                            <hr style="margin:25px 0; border:0; border-top:1px solid var(--border-color);">
+                            
+                            <div style="text-align:left; font-size:14px; color:var(--text-color); margin-bottom:25px; line-height: 1.6;">
+                                <p>Automação jurídica corporativa para otimização de processos do NEE (Núcleo de Eficiência e Estratégia).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Logic -->
+    <script type="module">
+        import { supabase } from './assets/supabaseClient.js';
+        const { ipcRenderer } = require('electron');
+
+        // --- User Global Context ---
+        let userData = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+             // 1. Setup Header & Modal
+            const header = document.getElementById('user-header-area');
+            const nameEl = document.getElementById('display-name');
+            const btnSaveProfile = document.getElementById('btn-save-profile');
+            const modalProfile = document.getElementById('modal-profile');
+            const btnCloseProfile = document.getElementById('btn-close-profile');
+            const btnOpenSettings = document.getElementById('btn-open-settings');
+
+            // NEW SETTINGS VARS
+            const modalSettings = document.getElementById('modal-settings');
+            const btnCloseSettings = document.getElementById('btn-close-settings');
+            
+            if (btnCloseProfile) btnCloseProfile.onclick = () => modalProfile.style.display = 'none';
+            if (btnCloseSettings) btnCloseSettings.onclick = () => modalSettings.style.display = 'none';
+
+            if (btnOpenSettings) {
+                btnOpenSettings.onclick = () => {
+                   modalSettings.style.display = 'flex';
+                   
+                   // Init Settings Tabs Logic
+                   const tabs = modalSettings.querySelectorAll('.settings-tab');
+                   const panes = modalSettings.querySelectorAll('.settings-tab-pane');
+
+                   tabs.forEach(tab => {
+                      tab.onclick = () => {
+                          tabs.forEach(t => t.classList.remove('active'));
+                          panes.forEach(p => p.classList.remove('active'));
+                          
+                          tab.classList.add('active');
+                          const target = tab.getAttribute('data-tab'); // geral, logs, sobre
+                          
+                          // Convert data-tab to ID
+                          const realTarget = document.getElementById('tab-' + target);
+                          if(realTarget) realTarget.classList.add('active');
+                      };
+                   });
+                   
+                   // Init Theme Buttons Logic inside modal
+                   modalSettings.querySelectorAll('.theme-option').forEach(btn => {
+                       btn.onclick = () => {
+                           const mode = btn.getAttribute('data-theme');
+                           if(window.themeConfig) window.themeConfig.apply(mode);
+                       };
+                   });
+                };
+            }
+
+            // 2. Load User
+            try {
+                // Get user from Main Process
+                userData = await ipcRenderer.invoke('get-current-user');
+                
+                if (userData) {
+                    initUserInterface(userData);
+                } else {
+                    // Fallback: try session from Supabase client directly
+                    const { data } = await supabase.auth.getSession();
+                    if (data.session) {
+                        userData = data.session.user;
+                        initUserInterface(userData);
+                        ipcRenderer.send('update-user-cache', userData);
+                    }
+                }
+            } catch (e) {
+                console.error('User load error', e);
+            }
+
+            // 3. Save Profile Logic
+            if (btnSaveProfile) {
+                btnSaveProfile.onclick = async () => {
+                    const newName = document.getElementById('inp-full-name').value;
+                    const newAvatar = document.getElementById('inp-avatar-url').value;
+                    
+                    const originalText = btnSaveProfile.innerHTML;
+                    btnSaveProfile.textContent = 'Salvando...';
+                    
+                    try {
+                        const { data, error } = await supabase.auth.updateUser({
+                            data: { full_name: newName, avatar_url: newAvatar }
+                        });
+
+                        if (error) throw error;
+                        
+                        // Update Local
+                        userData = data.user;
+                        ipcRenderer.send('update-user-cache', userData);
+                        initUserInterface(userData);
+                        
+                        modalProfile.style.display = 'none';
+                        alert('Perfil atualizado com sucesso!');
+                        
+                    } catch (e) {
+                        alert('Erro ao atualizar: ' + e.message);
+                    } finally {
+                        btnSaveProfile.innerHTML = originalText;
+                    }
+                };
+            }
+        });
+
+        function getDisplayName(user) {
+            const meta = user.user_metadata || {};
+            if (meta.full_name) return meta.full_name;
+            if (meta.first_name) return `${meta.first_name} ${meta.last_name || ''}`.trim();
+            // Fallback to email username
+            if (user.email) return user.email.split('@')[0];
+            return 'Usuário';
+        }
+
+        function getAvatarUrl(user) {
+             const meta = user.user_metadata || {};
+             return meta.avatar_url || null;
+        }
+
+        function getInitials(name) {
+            const parts = name.split(' ').filter(p => p.length > 0);
+            if (parts.length === 0) return '?';
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+
+        function updateAvatarUI(elId, name, url) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            
+            if (url) {
+                el.innerHTML = `<img src="${url}" alt="Avatar">`;
+                el.style.backgroundColor = 'transparent';
+                el.style.border = 'none';
+            } else {
+                el.textContent = getInitials(name);
+                el.style.backgroundColor = 'var(--primary-color)';
+            }
+        }
+
+        function initUserInterface(user) {
+            const displayName = getDisplayName(user);
+            const avatarUrl = getAvatarUrl(user);
+
+            window.switchTab = (tabName) => {
+                document.querySelectorAll('.profile-section').forEach(el => el.classList.remove('active'));
+    
+                // Remove active class from all tabs first
+               const allTabs = document.querySelectorAll('.profile-tab');
+               allTabs.forEach(t => t.classList.remove('active'));
+               
+               // Activate Section
+               const section = document.getElementById(tabName);
+               if(section) section.classList.add('active');
+
+               // Activate Button
+               // Find the tab that calls this function with this Argument
+               // Simple text match since we don't have IDs on tabs
+               for(const t of allTabs) {
+                   if(t.getAttribute('onclick').includes(tabName)) {
+                       t.classList.add('active');
+                       break;
+                   }
+               }
+            };
+
+            // 1. Setup Header
+            const header = document.getElementById('user-header-area');
+            const nameEl = document.getElementById('display-name');
+            const btnChangeEmail = document.getElementById('btn-change-email');
+            const btnResetPass = document.getElementById('btn-reset-password');
+
+            if (header && nameEl) {
+                nameEl.textContent = displayName;
+                updateAvatarUI('display-avatar', displayName, avatarUrl);
+                header.style.display = 'flex';
+                
+                // Open Profile Modal
+                header.addEventListener('click', () => {
+                   document.getElementById('modal-profile').style.display = 'flex';
+                   document.getElementById('inp-full-name').value = getDisplayName(user);
+                   document.getElementById('inp-avatar-url').value = getAvatarUrl(user) || '';
+                   document.getElementById('inp-email').value = user.email || ''; 
+                   updateAvatarUI('modal-avatar-preview', getDisplayName(user), getAvatarUrl(user));
+
+                   // Reset tab
+                   window.switchTab('tab-general');
+                });
+            }
+
+            // --- Security Handlers ---
+
+            if (btnChangeEmail) {
+                btnChangeEmail.onclick = async () => {
+                    const newEmail = prompt("Digite o novo email:");
+                    if (!newEmail || !newEmail.includes('@')) return;
+                    
+                    const originalText = btnChangeEmail.textContent;
+                    btnChangeEmail.textContent = '...';
+                    btnChangeEmail.disabled = true;
+
+                    try {
+                        const { error } = await supabase.auth.updateUser({ email: newEmail });
+                        if (error) throw error;
+                        alert(`Um email de confirmação foi enviado para ${newEmail} e para o seu email atual.`);
+                    } catch (e) {
+                        alert('Erro ao alterar email: ' + e.message);
+                    } finally {
+                        btnChangeEmail.textContent = originalText;
+                        btnChangeEmail.disabled = false;
+                    }
+                };
+            }
+
+            if (btnResetPass) {
+                btnResetPass.onclick = async () => {
+                    if (!confirm("Isso enviará um link de redefinição para " + user.email + ". Continuar?")) return;
+                    
+                    const originalText = btnResetPass.innerHTML;
+                    btnResetPass.textContent = 'Enviando...';
+                    btnResetPass.disabled = true;
+
+                    try {
+                        const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+                        if (error) throw error;
+                        alert('Email enviado! Verifique sua caixa de entrada.');
+                    } catch (e) {
+                        alert('Erro: ' + e.message);
+                    } finally {
+                        btnResetPass.innerHTML = originalText;
+                        btnResetPass.disabled = false;
+                    }
+                };
+            }
+
+
+            // --- Debug Logic ---
+            let isTestMode = false;
+            let f5Timer = null;
+            let f5Flag = false;
+
+            const toggleTestMode = () => {
+                isTestMode = !isTestMode;
+                const fab = document.getElementById('debug-fab');
+                if (fab) {
+                    fab.style.display = isTestMode ? 'flex' : 'none';
+                    // Reset menu when turning off
+                    if (!isTestMode) {
+                        const menu = document.getElementById('debug-menu');
+                        if (menu) menu.style.display = 'none';
+                    } else {
+                        // Announce activation
+                        alert('Modo de Teste: ' + (isTestMode ? 'ATIVADO' : 'DESATIVADO'));
+                    }
+                }
+            };
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'F5') {
+                    // Prevent default only if we are planning to use the combination? 
+                    // Be careful not to block reload if user just wants to reload.
+                    // But for now, user requested F5+T
+                    // Let's not prevent Default immediately unless needed, or just warn user
+                    // e.preventDefault(); 
+                    f5Flag = true;
+                    // We don't prevent default here to allow normal F5 refresh if T is not pressed quickly
+                    // But if T is pressed, we might be too late. 
+                    // Actually, if F5 is held down, it will refresh repeatedly. 
+                    // In Electron PROD, F5 is usually disabled. In DEV, it's useful.
+                    // Let's assumes user holds F5.
+                    clearTimeout(f5Timer);
+                    f5Timer = setTimeout(() => { f5Flag = false; }, 500);
+                }
+                if ((e.key === 't' || e.key === 'T') && f5Flag) {
+                    e.preventDefault(); // Prevent 't' being typed if focused somewhere
+                    f5Flag = false;
+                    toggleTestMode();
+                }
+            });
+
+            const fab = document.getElementById('debug-fab');
+            const menu = document.getElementById('debug-menu');
+            const btnForce = document.getElementById('btn-force-welcome');
+
+            if(fab) {
+                fab.addEventListener('click', () => {
+                   if(menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+                });
+            }
+
+            if(btnForce) {
+                btnForce.addEventListener('click', () => {
+                    playWelcomeAnimation(displayName);
+                    if(menu) menu.style.display = 'none';
+                });
+            }
+
+            // 2. Welcome Screen Logic - refactored
+            // Helper function
+            window.playWelcomeAnimation = (name) => {
+                const welcome = document.getElementById('welcome-overlay');
+                const welcomeName = document.getElementById('welcome-name');
+                const particles = document.getElementById('particles-area');
+
+                if (welcome) {
+                    const firstName = name.split(' ')[0];
+                    if(welcomeName) welcomeName.textContent = firstName;
+                    
+                    // Reset styles for replay
+                    welcome.style.display = 'flex';
+                    welcome.style.opacity = '1';
+                    welcome.style.filter = 'none';
+                    
+                    // Clear existing particles
+                    if(particles) particles.innerHTML = '';
+
+                    // Particle Generation
+                    if(particles) {
+                        for(let i=0; i<50; i++) {
+                            const p = document.createElement('div');
+                            p.className = 'particle';
+                            p.style.left = Math.random() * 100 + '%';
+                            p.style.top = Math.random() * 100 + '%'; // Start anywhere
+                            // Randomize animation so they don't all start at once
+                            p.style.animationDelay = (Math.random() * 2) + 's';
+                            p.style.animationDuration = (Math.random() * 3 + 3) + 's'; // 3-6s
+                            const size = Math.random() * 6 + 2;
+                            p.style.width = size + 'px';
+                            p.style.height = size + 'px';
+                            p.style.opacity = Math.random() * 0.4 + 0.1;
+                            particles.appendChild(p);
+                        }
+                    }
+
+                    const closeWelcome = () => {
+                         welcome.style.opacity = '0';
+                         welcome.style.filter = 'blur(10px) brightness(1.2)'; // Smooth cinematic exit
+                         // Wait for transition end
+                         setTimeout(() => {
+                             welcome.style.display = 'none';
+                             welcome.style.filter = 'none'; // reset
+                         }, 800);
+                         sessionStorage.setItem('welcome_seen', 'true');
+                    };
+
+                    // Auto hide after 4.5s
+                    // Clear any existing timeout if we are forcing it multiple times
+                    if(window.welcomeTimeout) clearTimeout(window.welcomeTimeout);
+                    
+                    window.welcomeTimeout = setTimeout(() => {
+                        if(welcome.style.display !== 'none') closeWelcome();
+                    }, 4500);
+                }
+            };
+
+            // Use sessionStorage to only show once per app launch session
+            if (!sessionStorage.getItem('welcome_seen')) {
+                playWelcomeAnimation(displayName);
+            }
+        }
+    </script>
 </body>
 </html>

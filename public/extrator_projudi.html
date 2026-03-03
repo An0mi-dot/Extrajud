@@ -5,24 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extrator PROJUDI - Automação Jurídica</title>
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/theme.css">
+    <script src="assets/theme.js"></script>
     <style>
-        :root {
-            --primary-color: #10b981;
-            --primary-hover: #059669;
-            --success-color: #198754;
-            --danger-color: #dc3545;
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --border-color: #dfe1e5;
-            --log-bg: #1e1e1e;
-            --log-text: #00ff9d;
-        }
+        /* :root removed to inherit from theme.css */
 
+        /* Log colors override for dark/light consistency */
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            /* font-family: 'Segoe UI', sans-serif; - Handled by theme.css/global */
+            /* background-color: var(--bg-color); - Handled by theme.css */
+            /* color: var(--text-color); - Handled by theme.css */
             margin: 0;
             padding: 0;
             display: flex;
@@ -353,7 +345,7 @@
             <div style="font-size:16px;">Extrator Citações e Intimações</div>
         </div>
 
-        <button class="btn-back" onclick="window.location.href='index.html'">
+        <button class="btn-back" onclick="window.location.href='hub_servicos.html'">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -474,7 +466,7 @@
             e.preventDefault();
             document.body.style.opacity = '0';
             setTimeout(() => {
-                window.location.href = 'index.html';
+                window.location.href = 'hub_servicos.html';
             }, 400);
         };
 

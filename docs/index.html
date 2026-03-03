@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExtratJud - Automação Jurídica</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --bg: #111827;
+            --text: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --card-bg: #1f2937;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; position: relative; }
+        
+        /* Particle Background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        .particle {
+            position: absolute;
+            background: rgba(16, 185, 129, 0.5);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            /* Dark Overlay + Image */
+            background: linear-gradient(rgba(17, 24, 39, 0.9), rgba(17, 24, 39, 0.95)), url('https://images.unsplash.com/photo-1505664063603-28e48ca204eb');
+            background-size: cover;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 6rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+            to { text-shadow: 0 0 40px rgba(16, 185, 129, 0.6); }
+        }
+
+        .subtitle {
+            font-size: 1.6rem;
+            max-width: 700px;
+            color: var(--text-secondary);
+            margin-bottom: 50px;
+            font-weight: 300;
+        }
+
+        .scroll-down {
+            position: absolute;
+            bottom: 40px;
+            animation: bounce 2s infinite;
+            cursor: pointer;
+            color: var(--primary);
+            font-size: 2rem;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 40px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            border: 2px solid transparent;
+        }
+        .btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            background: var(--primary-dark);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Features */
+        .features { padding: 80px 20px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 2; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-bottom: 80px; }
+        
+        .card {
+            background: rgba(31, 41, 55, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .card:hover { transform: translateY(-8px); border-color: var(--primary); background: rgba(31, 41, 55, 0.8); }
+        
+        .icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 24px;
+        }
+
+        h3 { font-family: 'Rajdhani', sans-serif; font-size: 2rem; margin: 0 0 15px 0; }
+        p { color: var(--text-secondary); margin: 0; font-size: 1.05rem; }
+
+        /* Download Section */
+        .download-section {
+            text-align: center;
+            padding: 80px 20px;
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: 24px;
+            margin-top: 40px;
+        }
+        
+        footer { text-align: center; padding: 40px; color: var(--text-secondary); border-top: 1px solid rgba(255,255,255,0.05); margin-top: 60px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <!-- Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Hero -->
+    <header class="hero">
+        <div class="brand">ExtratJud</div>
+        <p class="subtitle">A plataforma definitiva para automação processual (PJE & PROJUDI) e gestão jurídica inteligente.</p>
+        
+        <div class="scroll-down" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})">
+            <i class="fa-solid fa-chevron-down"></i>
+        </div>
+    </header>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="grid">
+            <div class="card">
+                <div class="icon"><i class="fa-solid fa-robot"></i></div>
+                <h3>Automação de Robôs</h3>
+                <p>Execute tarefas repetitivas no PJE e PROJUDI automaticamente. Extração de dados em massa, consulta de processos e muito mais.</p>
+            </div>
+            <div class="card">
+                <div class="icon"><i class="fa-solid fa-folder-tree"></i></div>
+                <h3>Gestão de Fluxo</h3>
+                <p>Organize suas demandas jurídicas em um quadro Kanban intuitivo. Controle prazos, anotações e documentos em um só lugar.</p>
+            </div>
+            <div class="card">
+                <div class="icon"><i class="fa-solid fa-bolt"></i></div>
+                <h3>Performance</h3>
+                <p>Construído com Electron para máxima velocidade. Funciona localmente na sua máquina com segurança e privacidade.</p>
+            </div>
+        </div>
+
+        <!-- Download Section (Below Cards) -->
+        <div class="download-section">
+            <h2 style="font-family: 'Rajdhani'; font-size: 3rem; margin-bottom: 20px;">Comece Agora</h2>
+            <p style="margin-bottom: 40px;">Disponível para Windows 10/11 (64-bit)</p>
+            
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                <!-- Link to internal download page -->
+                <a href="downloads.html" class="btn">
+                    <i class="fa-brands fa-windows"></i> Baixar para Windows
+                </a>
+                <a href="https://github.com/An0mi-dot/Extrajud" class="btn" style="background: rgba(255,255,255,0.1); box-shadow: none; border: 1px solid rgba(255,255,255,0.2);">
+                    <i class="fa-brands fa-github"></i> Ver Código Fonte
+                </a>
+            </div>
+            <div style="margin-top: 20px; font-size: 0.9rem; color: #6b7280; font-family: monospace;">Versão Atual: <span id="ver-tag">...</span></div>
+        </div>
+    </section>
+
+    <footer>
+        &copy; 2026 ExtratJud. Desenvolvido por João Guilherme Almeida Viana.
+    </footer>
+
+    <script>
+        // Particles Generator
+        const container = document.getElementById('particles');
+        for(let i=0; i<30; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.width = Math.random() * 5 + 2 + 'px';
+            p.style.height = p.style.width;
+            p.style.animationDuration = Math.random() * 10 + 5 + 's';
+            p.style.animationDelay = Math.random() * 5 + 's';
+            container.appendChild(p);
+        }
+
+        // Fetch version tag
+        fetch('https://api.github.com/repos/An0mi-dot/Extrajud/releases/latest')
+            .then(r => r.json())
+            .then(data => {
+                if(data.tag_name) {
+                    document.getElementById('ver-tag').textContent = data.tag_name;
+                }
+            })
+            .catch(() => {});
+    </script>
+</body>
+</html>

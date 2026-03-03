@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXTRATJUD - Login</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Theme -->
+    <link rel="stylesheet" href="assets/theme.css">
+    <script src="assets/theme.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 20%),
+                              radial-gradient(circle at 90% 80%, rgba(52, 211, 153, 0.05) 0%, transparent 20%);
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            width: 360px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* Soft shadow */
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.1) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .brand-logo img {
+            width: 50px;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(16, 185, 129, 0.2));
+        }
+
+        h2 {
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0 0 5px 0;
+            font-size: 28px;
+            color: var(--text-color);
+        }
+
+        p {
+            margin: 0 0 30px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 12px 12px 40px; /* Space for icon */
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color); /* Slightly contrasted background */
+            border-radius: 8px;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-light);
+            background: var(--card-bg);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 15px;
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .footer-link {
+            display: block;
+            margin-top: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        .footer-link:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="brand-logo">
+            <img src="assets/logo.png" alt="Logo">
+        </div>
+        <h2>Bem-vindo</h2>
+        <p>Faça login para acessar o EXTRATJUD</p>
+
+        <form id="login-form">
+            <div class="input-group">
+                <label>Email Corporativo</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" id="email" placeholder="nome@exemplo.com" required>
+                </div>
+            </div>
+
+            <!-- Cadastro Fields -->
+            <div id="signup-fields" style="display:none; transition: all 0.3s ease;">
+                <div style="display:flex; gap:10px;">
+                    <div class="input-group" style="flex:1;">
+                        <label>Nome</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" id="first_name" placeholder="João">
+                        </div>
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label>Sobrenome</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-user-tag"></i>
+                            <input type="text" id="last_name" placeholder="Silva">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Senha</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" id="btn-login">
+                <span>Entrar</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            
+            <div style="margin-top: 15px; font-size: 13px;">
+                <a href="#" id="toggle-mode" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    Não tem conta? Cadastre-se
+                </a>
+            </div>
+
+            <div id="error-message" class="error-msg"></div>
+            <div id="success-message" class="error-msg" style="color: #10b981; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2);"></div>
+        </form>
+        
+        <a href="#" class="footer-link" id="btn-forgot" style="margin-top: 10px;">Esqueci minha senha</a>
+    </div>
+
+    <!-- Logic -->
+    <script type="module">
+        import { supabase } from './assets/supabaseClient.js';
+        const { ipcRenderer } = require('electron');
+
+        const form = document.getElementById('login-form');
+        const emailInput = document.getElementById('email');
+        const passInput = document.getElementById('password');
+        const btnLogin = document.getElementById('btn-login');
+        const errorMsg = document.getElementById('error-message');
+        const successMsg = document.getElementById('success-message');
+        const toggleLink = document.getElementById('toggle-mode');
+        const forgotLink = document.getElementById('btn-forgot');
+        
+        const titleH2 = document.querySelector('h2');
+        const titleP = document.querySelector('.brand-main + p') || document.querySelector('h2 + p');
+        const signupFields = document.getElementById('signup-fields');
+        const btnSpan = btnLogin.querySelector('span');
+
+        let isLoginMode = true;
+
+        if (toggleLink) {
+            toggleLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                isLoginMode = !isLoginMode;
+                
+                // Toggle extra fields visibility
+                signupFields.style.display = isLoginMode ? 'none' : 'block';
+                // Adjust height animation
+                if(!isLoginMode) {
+                     document.getElementById('first_name').setAttribute('required', 'true');
+                     document.getElementById('last_name').setAttribute('required', 'true');
+                } else {
+                     document.getElementById('first_name').removeAttribute('required');
+                     document.getElementById('last_name').removeAttribute('required');
+                }
+
+                // Clear messages
+                if(errorMsg) errorMsg.style.display = 'none';
+                if(successMsg) successMsg.style.display = 'none';
+
+                if (isLoginMode) {
+                    titleH2.textContent = 'Bem-vindo';
+                    if(titleP) titleP.textContent = 'Faça login para acessar o EXTRATJUD';
+                    btnSpan.textContent = 'Entrar';
+                    toggleLink.textContent = 'Não tem conta? Cadastre-se';
+                    if(forgotLink) forgotLink.style.display = 'block';
+                } else {
+                    titleH2.textContent = 'Criar Conta';
+                    if(titleP) titleP.textContent = 'Preencha os dados e registre-se';
+                    btnSpan.textContent = 'Cadastrar';
+                    toggleLink.textContent = 'Já tem conta? Faça Login';
+                    if(forgotLink) forgotLink.style.display = 'none';
+                }
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value;
+            const password = passInput.value;
+
+            // UI Loading state
+            const originalBtnHtml = btnLogin.innerHTML;
+            btnLogin.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processando...';
+            btnLogin.disabled = true;
+            if(errorMsg) errorMsg.style.display = 'none';
+            if(successMsg) successMsg.style.display = 'none';
+
+            try {
+                if (isLoginMode) {
+                    // --- LOGIN ---
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password,
+                    });
+
+                    if (error) throw error;
+                    
+                    // Success
+                    // Combine user data with potential metadata from Supabase that might not be synced yet if we just updated it, 
+                    // though signIn returns the user object with metadata usually.
+                    // SUCCESS - Store timestamp
+                    localStorage.setItem('app_last_login', Date.now().toString());
+                    ipcRenderer.send('login-success', { 
+                        email: data.user.email, 
+                        id: data.user.id,
+                        user_metadata: data.user.user_metadata
+                    });
+                } else {
+                    // --- SIGN UP ---
+                    const firstName = document.getElementById('first_name').value;
+                    const lastName = document.getElementById('last_name').value;
+
+                    const { data, error } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                first_name: firstName,
+                                last_name: lastName,
+                                full_name: `${firstName} ${lastName}`.trim()
+                            }
+                        }
+                    });
+
+                    if (error) throw error;
+
+                    // Check if confirmation is required
+                    if (data.user && !data.session) {
+                         if(successMsg) {
+                            successMsg.textContent = 'Cadastro realizado! Verifique seu email para confirmar.';
+                            successMsg.style.display = 'block';
+                         }
+                         // Reset to login mode automatically
+                         setTimeout(() => {
+                             if(toggleLink) toggleLink.click();
+                         }, 3000);
+                    } else {
+                        // Auto-login if confirmation not required
+                        localStorage.setItem('app_last_login', Date.now().toString());
+                        ipcRenderer.send('login-success', { 
+                            email: data.user.email, 
+                            id: data.user.id, 
+                            user_metadata: (data.user.user_metadata || {}) 
+                        });
+                    }
+                }
+
+            } catch (err) {
+                console.error(err);
+                
+                let msg = err.message;
+                if (msg === 'Invalid login credentials') msg = 'Email ou senha incorretos.';
+                if (msg.includes('rate limit')) msg = 'Muitas tentativas. Aguarde um pouco.';
+                if (msg.includes('User already registered')) msg = 'Este email já está cadastrado.';
+
+                if(errorMsg) {
+                    errorMsg.textContent = 'Erro: ' + msg;
+                    errorMsg.style.display = 'block';
+                }
+            } finally {
+                // Restore button if not successful login (successful login changes page)
+                if (btnLogin.innerHTML.includes('Processando')) {
+                    btnLogin.innerHTML = originalBtnHtml;
+                    btnLogin.disabled = false;
+                }
+            }
+        });
+        
+        // Check if already logged in (persistence)
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                // Check 30-day limit
+                const lastLogin = localStorage.getItem('app_last_login');
+                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+                
+                // If lastLogin is set, enforce the limit
+                if (lastLogin && (Date.now() - parseInt(lastLogin) > THIRTY_DAYS)) {
+                    await supabase.auth.signOut();
+                    localStorage.removeItem('app_last_login');
+                    return; // Stay on login page
+                }
+
+                // If no lastLogin (migration) or within limit, refresh timestamp & auto-login
+                if (!lastLogin) {
+                    localStorage.setItem('app_last_login', Date.now().toString());
+                }
+                
+                ipcRenderer.send('login-success', { 
+                    email: session.user.email,
+                    id: session.user.id,
+                    user_metadata: session.user.user_metadata
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

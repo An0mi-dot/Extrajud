@@ -536,15 +536,37 @@ ${html}
   }
 });
 
+
+// --- Login Logic ---
+let currentUser = null; // Store user in memory
+
+ipcMain.on('login-success', (event, user) => {
+    console.log('Login success for:', user.email);
+    currentUser = user; // Save for the main window
+    
+    if (mainWindow) {
+        mainWindow.setSize(1200, 800);
+        mainWindow.center();
+        mainWindow.setResizable(true);
+        mainWindow.loadFile(path.join('public', 'index.html'));
+    }
+});
+
+ipcMain.handle('get-current-user', () => currentUser);
+
+ipcMain.on('update-user-cache', (event, user) => {
+    currentUser = user;
+});
+
 function createWindow() {
   const state = readStateFile();
   const config = state.general || {};
 
   mainWindow = new BrowserWindow({
-    width: 1000,
+    width: 1000, // Initial size for login (can be smaller if desired, but 1000 is fine)
     height: 750,
-    autoHideMenuBar: true, // Oculta a barra de menu padrão
-    icon: path.join(__dirname, 'public', 'assets', 'logo2.png'), // Ícone da janela e barra de tarefas
+    autoHideMenuBar: true,
+    icon: path.join(__dirname, 'public', 'assets', 'logo2.png'),
     webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -575,8 +597,9 @@ function createWindow() {
     }
   } catch (e) { console.error('loadingWindow create error', e); }
 
-  mainWindow.loadFile(path.join('public', 'index.html'));
-
+  // Load login screen instead of main app
+  mainWindow.loadFile(path.join(__dirname, 'public', 'login.html'));
+  
   // Close behavior: Minimize to Tray if enabled
   mainWindow.on('close', (event) => {
       // Re-read strictly for closing logic
