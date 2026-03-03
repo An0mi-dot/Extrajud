@@ -120,3 +120,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 0857706
 - Notes: feat: standardizing About section, fixing theme on archived pages, and fixing modal overlay. README updated.
+## v1.3.1 - 2026-03-03
+
+- Commit: f50a148
+- Notes: chore(release): v1.3.0 - Inclui importação de planilhas e ajustes de UI
