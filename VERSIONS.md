@@ -140,3 +140,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 14d2ab7
 - Notes: fix: explicit dark bg for disabled inputs
+## v2.0.4 - 2026-03-03
+
+- Commit: 6cfb199
+- Notes: chore(release): v2.0.3 - fix incorrect html tag and ignore notes folder
