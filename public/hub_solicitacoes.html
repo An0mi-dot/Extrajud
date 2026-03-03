@@ -100,6 +100,19 @@
             gap: 10px;
             margin-bottom: 20px;
         }
+        
+        /* Test Mode Selection Style */
+        .selected-row {
+            background-color: #fee2e2 !important; /* light red */
+            border-left: 4px solid #ef4444 !important;
+            transition: 0.2s;
+        }
+        .chk-solicitacao {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #dc2626;
+        }
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -482,8 +495,17 @@
         <div id="minhas" class="tab-content">
             <h2 class="animate fade-in-up">Minhas solicitações</h2>
             <div class="panel-box">
-            <table class="table">
-                <thead>
+            
+            <!-- Test Mode Controls -->
+            <div id="test-mode-controls" style="display:none; background:#fee2e2; border:1px solid #ef4444; padding:10px; border-radius:6px; margin-bottom:15px; align-items:center; justify-content:space-between;">
+                <span style="color:#b91c1c; font-weight:bold;"><i class="fa-solid fa-triangle-exclamation"></i> MODO DE TESTE ATIVO</span>
+                <button id="btn-delete-selected" class="btn-primary" style="background:#dc2626; border:none;">
+                    <i class="fa-solid fa-trash"></i> Excluir Selecionados
+                </button>
+            </div>
+
+            <table class="table" id="table-solicitacoes">
+                <thead id="thead-solicitacoes">
                     <tr>
                         <th>Título</th>
                         <th>Unidade</th>
@@ -972,11 +994,122 @@
         }
 
         // --- Listagem na aba "Minhas solicitações" ---
+        
+        let isTestMode = false;
+        const keysMap = {};
+
+        // Listener Global para atalho F5 + T
+        window.addEventListener('keydown', (e) => {
+            keysMap[e.key] = true;
+            // Verifica se F5 está pressionado e T foi apertado
+            // Nota: F5 geralmente recarrega a página. Tentar prevenir se possível.
+            if (keysMap['F5'] && (e.key === 't' || e.key === 'T')) {
+                e.preventDefault();
+                toggleTestMode();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            delete keysMap[e.key];
+        });
+
+        function toggleTestMode() {
+            isTestMode = !isTestMode;
+            const controls = document.getElementById('test-mode-controls');
+            if (controls) {
+                controls.style.display = isTestMode ? 'flex' : 'none';
+            }
+            alert(isTestMode ? 'MODO TESTE ATIVADO: Permite excluir solicitações.' : 'Modo Teste Desativado.');
+            loadSolicitacoes();
+        }
+
+        // Setup do botão de excluir (se existir na DOM)
+        const btnDeleteSelected = document.getElementById('btn-delete-selected');
+        if (btnDeleteSelected) {
+            btnDeleteSelected.addEventListener('click', async () => {
+                const checks = document.querySelectorAll('.chk-solicitacao:checked');
+                if (checks.length === 0) {
+                    alert('Nenhuma solicitação selecionada.');
+                    return;
+                }
+
+                if (!confirm(`Tem certeza que deseja EXCLUIR PERMANENTEMENTE ${checks.length} solicitações?`)) {
+                    return;
+                }
+
+                // OLD: Parse IDs as integers (caused UUID error)
+                // const ids = Array.from(checks).map(c => parseInt(c.value, 10)).filter(id => !isNaN(id));
+
+                // NEW: Keep IDs as strings to support UUIDs
+                const ids = Array.from(checks).map(c => c.value);
+
+                if (ids.length === 0) {
+                     alert('Não conseguimos identificar os IDs selecionados.');
+                     return;
+                }
+
+                try {
+                    const { error } = await supabase
+                        .from('solicitacoes_preventivo') // Nome da tabela
+                        .delete()
+                        .in('id', ids);
+
+                    if (error) throw error;
+
+                    alert('Solicitações excluídas com sucesso.');
+                    loadSolicitacoes(); // Refresh list immediately
+                } catch (err) {
+                    console.error(err);
+                    alert('Erro ao excluir: ' + (err.message || JSON.stringify(err)));
+                }
+            });
+        }
+
         async function loadSolicitacoes() {
             const tbody = document.getElementById('tbody-minhas-solicitacoes');
+            const thead = document.getElementById('thead-solicitacoes'); // Novo ID adicionado no HTML
+            
             if (!tbody) return;
 
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
+            // Ajusta o cabeçalho conforme o modo
+            if (thead) {
+                if (isTestMode) {
+                    thead.innerHTML = `
+                        <tr>
+                            <th style="width:40px; text-align:center;"><input type="checkbox" id="chk-all-rows"></th>
+                            <th>Título</th>
+                            <th>Unidade</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Prazo</th>
+                            <th>SLA</th>
+                        </tr>
+                    `;
+                    // Listener do select-all
+                    setTimeout(() => {
+                        const chkAll = document.getElementById('chk-all-rows');
+                        if (chkAll) {
+                            chkAll.addEventListener('change', (e) => {
+                                document.querySelectorAll('.chk-solicitacao').forEach(c => c.checked = e.target.checked);
+                            });
+                        }
+                    }, 0);
+                } else {
+                    thead.innerHTML = `
+                        <tr>
+                            <th>Título</th>
+                            <th>Unidade</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Prazo Externo</th>
+                            <th>SLA</th>
+                        </tr>
+                    `;
+                }
+            }
+
+            const colCount = isTestMode ? 7 : 6;
+            tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;">Carregando...</td></tr>`;
 
             const { data, error } = await supabase
                 .from('solicitacoes_preventivo')
@@ -985,14 +1118,14 @@
 
             if (error) {
                 console.error('Erro ao carregar:', error);
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Erro ao carregar dados.</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:red;">Erro ao carregar dados.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = '';
             
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhuma solicitação encontrada.</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;">Nenhuma solicitação encontrada.</td></tr>`;
                 return;
             }
 
@@ -1007,7 +1140,14 @@
                 if (item.indigena_flag) flagsHtml += '<i class="fa-solid fa-feather" style="color:#10b981; margin-left:6px;" title="Povos Indígenas"></i>';
                 if (item.tradicional_flag) flagsHtml += '<i class="fa-solid fa-users-line" style="color:#f59e0b; margin-left:6px;" title="Comunidade Tradicional"></i>';
 
-                tr.innerHTML = `
+                let rowHtml = '';
+                
+                // Checkbox Column
+                if (isTestMode) {
+                    rowHtml += `<td style="text-align:center;"><input type="checkbox" class="chk-solicitacao" value="${item.id}" /></td>`;
+                }
+
+                rowHtml += `
                     <td>${(item.titulo || '-') + flagsHtml}</td>
                     <td>${item.unidade_negocio || '-'}</td>
                     <td>${item.tipo_subsidio || '-'}</td>
@@ -1015,9 +1155,35 @@
                     <td>${dateVal}</td>
                     <td>${item.sla_regra || '-'}</td>
                 `;
+                
+                tr.innerHTML = rowHtml;
                 tr.style.cursor = 'pointer';
-                tr.title = 'Clique para ver detalhes';
-                tr.addEventListener('click', () => openDetalhe(item));
+                tr.title = isTestMode ? 'Clique para selecionar' : 'Clique para ver detalhes';
+                
+                // Click event handles distinct targets
+                tr.addEventListener('click', (e) => {
+                    // Prevent default if clicking directly on a checkbox (it toggles itself)
+                    if (e.target.type === 'checkbox') {
+                         e.stopPropagation();
+                         if (e.target.checked) tr.classList.add('selected-row');
+                         else tr.classList.remove('selected-row');
+                         return;
+                    }
+
+                    if (isTestMode) {
+                        // Toggle selection
+                        const chk = tr.querySelector('.chk-solicitacao');
+                        if (chk) {
+                            chk.checked = !chk.checked;
+                            if (chk.checked) tr.classList.add('selected-row');
+                            else tr.classList.remove('selected-row');
+                        }
+                    } else {
+                        // Normal mode: open details
+                        openDetalhe(item);
+                    }
+                });
+                
                 tbody.appendChild(tr);
             });
         }
@@ -1149,25 +1315,19 @@
                             headers[val] = colNum;
                         });
                         
-                        // Validate required columns - fallback to names from user file if specific keys fail
-                        let colPolo = headers['Posicao_Cliente'];
-                        let colParte = headers['Destinatario']; 
-                        let colProcesso = headers['Numero_CNJ'] || headers['nu_CNJ_Tribunal']; 
-
-                        // If exact match fails, try fuzzy search for robustness
-                        if (!colPolo) colPolo = Object.keys(headers).find(k => k.toLowerCase().includes('posicao') || k.toLowerCase().includes('participacao')) ? headers[Object.keys(headers).find(k => k.toLowerCase().includes('posicao') || k.toLowerCase().includes('participacao'))] : null;
-                        if (!colParte) colParte = Object.keys(headers).find(k => k.toLowerCase().includes('destinatario') || k.toLowerCase().includes('cliente')) ? headers[Object.keys(headers).find(k => k.toLowerCase().includes('destinatario') || k.toLowerCase().includes('cliente'))] : null;
+                        // Hardcoded Columns based on user feedback (N=14, L=12, H=8)
+                        // Coluna N (14): Posicao_Cliente (Se é Terceiro ou não)
+                        // Coluna L (12): Destinatario/Parte (Onde está o nome da Coelba)
+                        // Coluna H (8): Numero_CNJ (Processo)
                         
-                        if (!colPolo || !colParte || !colProcesso) {
-                            console.error('Headers found:', headers);
-                            alert('Colunas obrigatórias não encontradas na planilha.\nEsperado: Posicao_Cliente, Destinatario, Numero_CNJ');
-                            throw new Error('Colunas ausentes');
-                        }
+                        const colPolo = 14; 
+                        const colParte = 12;
+                        const colProcesso = 8;
 
                         // Filter Rows
                         const rowsToImport = [];
                         let rowsRead = 0;
-                        const debugRows = []; // Store first few rows for debugging
+                        const debugRows = []; 
 
                         ws.eachRow((row, rowNumber) => {
                             if (rowNumber === 1) return; // Skip header
@@ -1188,15 +1348,24 @@
 
                             // Collect debug info for first 5 rows
                             if (rowsRead <= 5) {
-                                debugRows.push(`L${rowNumber}: Polo="${poloVal}", Parte="${parteVal}", Proc="${processoVal}"`);
+                                debugRows.push(`L${rowNumber}: Col N="${poloVal}", Col L="${parteVal}"`);
                             }
 
-                            // Strict Filter
-                            const isTerceiro = poloVal.toLowerCase().includes('terceiro interessado');
-                            // Expanded check for Neoenergia aliases
+                            // Filter Logic:
+                            // 1. Column N (14) MUST contain "Terceiro"
+                            const isTerceiro = poloVal.toLowerCase().includes('terceiro');
+                            
+                            // 2. Column L (12) SHOULD contain Coelba/Neoenergia (Safety check, can be relaxed if needed)
                             const isCoelba = parteVal.toLowerCase().includes('coelba') || 
                                              parteVal.toLowerCase().includes('neoenergia') ||
-                                             parteVal.toLowerCase().includes('distribuidora');
+                                             parteVal.toLowerCase().includes('companhia de eletricidade');
+                            
+                            // Specific debug for Processo 8003402-61.2022.8.05.0229
+                            if (processoVal.includes('8003402')) {
+                                console.log(`[DEBUG IMPORTER] Encontrado processo alvo: ${processoVal}`);
+                                console.log(`   - Polo (N) includes 'terceiro'? ${isTerceiro} [Val: "${poloVal}"]`);
+                                console.log(`   - Parte (L) includes 'coelba'? ${isCoelba} [Val: "${parteVal}"]`);
+                            }
 
                             if (isTerceiro && isCoelba && processoVal) {
                                 rowsToImport.push({
@@ -1209,15 +1378,15 @@
                                     origem_dado: 'Planilha Exyon',
                                     unidade_negocio: 'Jurídico Massificado',
                                     area_solicitante: 'Jurídico Recebimento',
-                                    descricao: `Importado via Planilha. Parte: ${parteVal} | Polo: ${poloVal}`
+                                    descricao: `Importado via Planilha. Parte (L): ${parteVal} | Posição (N): ${poloVal}`
                                 });
                             }
                         });
 
 
                         if (rowsToImport.length === 0) {
-                            const debugMsg = debugRows.join('\n');
-                            alert(`Nenhum processo encontrado com os critérios.\n\nTotal de linhas lidas: ${rowsRead}.\n\nAMOSTRA DAS PRIMEIRAS LINHAS:\n${debugMsg}\n\nVerifique se a coluna 'Posicao_Cliente' realmente contém 'Terceiro Interessado'.`);
+                            // Check if our specific process was found but filtered out
+                            alert(`Nenhum processo encontrado onde:\n- Coluna N contenha "Terceiro"\n- Coluna L contenha "Coelba/Neoenergia"\n\nDica: Abra o console (Ctrl+Shift+I) para ver se o processo 8003402 foi encontrado e por que foi ignorado.\n\nLinhas lidas: ${rowsRead}.\n\nAMOSTRA (L vs N):\n${debugMsg}`);
                             btnImportExyon.innerHTML = originalText;
                             return;
                         }
