@@ -144,3 +144,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 6cfb199
 - Notes: chore(release): v2.0.3 - fix incorrect html tag and ignore notes folder
+## v2.0.5 - 2026-03-03
+
+- Commit: 40ace0a
+- Notes: feat: synchronize settings menu across all Hub pages (index, services, requests)
