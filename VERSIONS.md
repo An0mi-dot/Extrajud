@@ -136,3 +136,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 0c04fa8
 - Notes: fix: dark mode input styles in hub solicitacoes and proxy config
+## v2.0.2 - 2026-03-03
+
+- Commit: 14d2ab7
+- Notes: fix: explicit dark bg for disabled inputs
