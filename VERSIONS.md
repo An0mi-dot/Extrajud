@@ -124,3 +124,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: f50a148
 - Notes: chore(release): v1.3.0 - Inclui importação de planilhas e ajustes de UI
+## v1.3.2 - 2026-03-03
+
+- Commit: ec76261
+- Notes: feat(hub): Adiciona modo de teste (F5+T) e corrige exclusão de UUIDs
