@@ -128,3 +128,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: ec76261
 - Notes: feat(hub): Adiciona modo de teste (F5+T) e corrige exclusão de UUIDs
+## v1.3.3 - 2026-03-03
+
+- Commit: 0fe8894
+- Notes: Delete CNAME
