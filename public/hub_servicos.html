@@ -762,9 +762,10 @@
             try {
                 const ipc = require('electron').ipcRenderer;
                 ipc.invoke('get-app-version').then(ver => {
-                    const v = ver || '?.?.?';
+                    const v = ver || '2.0.0';
                     const headVer = document.getElementById('app-version'); if (headVer) headVer.textContent = v;
                     const envVer = document.getElementById('env-app-ver'); if (envVer) envVer.textContent = v;
+                    const setVer = document.getElementById('settings-app-ver'); if (setVer) setVer.textContent = v;
                 }).catch(()=>{});
             } catch(e) { /* ignore if not available */ }
         })();

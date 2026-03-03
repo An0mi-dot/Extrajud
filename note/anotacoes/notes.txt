@@ -1,6 +1,0 @@
-"Seria uma captação automática do PJE para quando a distribuidora atua como terceiro interessado
- 
-COMPANHIA DE ELETRICIDADE DO ESTADO DA BAHIA COELBA
-Posicao: Terceiro interessado"
-
-Coluna N é onde fica se o Processo é terceirizado ou não

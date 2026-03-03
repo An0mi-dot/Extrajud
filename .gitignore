@@ -11,3 +11,13 @@ paginas_html/
 
 
 Relatorios_PJE/
+
+# User specific and secrets
+modelos/
+note/
+backup/
+Ex/
+*.tmp
+credentials.json
+token.json
+
