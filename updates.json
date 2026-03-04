@@ -1,7 +1,7 @@
 {
   "version": "2.0.5",
-  "url": "https://github.com/An0mi-dot/Extrajud/releases/tag/v1.2.7",
+  "url": "https://github.com/An0mi-dot/Extrajud/releases/tag/v2.0.5",
   "raw": "https://raw.githubusercontent.com/An0mi-dot/Extrajud/main/updates.json",
-  "notes": "PJE: Botões Pular/Parar, nomes de arquivo automáticos por data. UI: Novo Header, Logo maior, Glassmorphism. SharePoint: Melhorias no preview de pastas.",
-  "published_at": "2026-03-03T14:57:27.851Z"
+  "notes": "Sincronização global do menu de configurações em todos os hubs.",
+  "published_at": "2026-03-04T12:00:00.000Z"
 }
