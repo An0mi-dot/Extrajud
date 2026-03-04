@@ -152,3 +152,7 @@ script will append a new entry for the current version with the commit message a
 ## v2.0.6 - 2026-03-04
 
 - Notes: feat(rbac): Implementa sistema de cargos (Admin, Tester, Pastas) com gestão via interface
+## v2.0.7 - 2026-03-04
+
+- Commit: 0198202
+- Notes: feat(release): v2.0.6 - Implementa sistema RBAC (Admin, Tester, Pastas)
