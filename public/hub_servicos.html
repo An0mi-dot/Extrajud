@@ -21,6 +21,45 @@
             --card-icon-disabled-color: #adb5bd;
         }
 
+        /* --- Formulário (Admin Modal) --- */
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 14px;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .form-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(16,185,129,0.1);
+            color: var(--primary-color);
+            margin-top: 4px;
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -816,6 +855,9 @@
         </div>
         <div style="display:flex; align-items:center; gap:12px; position:relative;">
             
+            <button id="btn-admin-panel" class="btn-theme" title="Gerenciar Cargos" style="display: none;">
+                <i class="fa-solid fa-user-shield"></i>
+            </button>
             <button id="btn-settings" class="btn-theme" title="Configurações">
                 <i class="fa-solid fa-gear"></i>
             </button>
@@ -917,21 +959,24 @@
                 <div class="card-status status-soon">Em Breve</div>
             </div>
 
-            <!-- App 5: SharePoint - Criar Pastas OFÍCIOS (REMOVIDO PARA TOOL STANDALONE) -->
-            <!--
-            <a id="card-sharepoint-create" href="sharepoint_create.html" class="service-card" data-service="SHAREPOINT" style="opacity: 0.5; pointer-events: none; filter: grayscale(1);">
-                <span class="platform-tag" style="background:#e6f4ff;color:#0b5ed7">TOOL EXTERNO</span>
+            <!-- App 5: SharePoint - Criar Pastas OFÍCIOS (PUBLICADO PARA TESTE) -->
+            <a id="card-sharepoint-create" href="sharepoint_create.html" class="service-card animate fade-in-up delay-400" data-service="SHAREPOINT" style="display: none;">
+                <span class="platform-tag" style="background:#e6f4ff;color:#0b5ed7">SHAREPOINT</span>
                 <div class="card-icon">
                     <i class="fas fa-folder-plus" style="color:#0b5ed7"></i>
                 </div>
                 <div class="card-title">Criar Pastas</div>
                 <div class="card-desc">
-                    Movido para script externo: "tools/criador_pastas_standalone.js".<br>
-                    Execute via terminal.
+                    Automação para criação de pastas padronizadas no SharePoint (Ofícios).
                 </div>
-                <div class="card-status status-offline">Desativado</div>
+                <div class="card-status status-active">Disponível</div>
+
+                <div class="arrow-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </div>
             </a>
-            -->
         </div>
     </div>
 
@@ -954,7 +999,7 @@
     </script>
 
     <div class="footer">
-        <div style="position:absolute; right:12px; bottom:6px; font-size:12px; color:var(--text-secondary);">Versão <span id="app-version">?</span></div>
+        <div style="position:absolute; right:12px; bottom:6px; font-size:12px; color:var(--text-secondary);">Versão <span id="app-version">2.0.6</span></div>
     </div>
 
 
@@ -1883,6 +1928,227 @@
                 });
             }
         })();
+    </script>
+    <!-- Admin: Role Management Modal -->
+    <div id="modal-admin-roles" class="settings-modal-overlay" style="display: none;">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h2>Gerenciar Cargos</h2>
+                <button id="btn-close-admin" class="settings-close-btn">&times;</button>
+            </div>
+            
+            <div class="settings-modal-body">
+                <div class="profile-section active">
+                    <div class="form-group">
+                        <label class="form-label">Email do Usuário</label>
+                        <input type="email" id="inp-role-email" class="form-input" placeholder="usuario@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cargo</label>
+                        <select id="sel-role" class="form-input" style="background:var(--bg-color); color:var(--text-color);">
+                            <option value="admin">Admin (Acesso Total + Gerenciar Cargos)</option>
+                            <option value="tester">Tester (Modo Teste F5+T)</option>
+                            <option value="pastas">Pastas (Criar Pastas SharePoint)</option>
+                            <option value="remove">REMOVER CARGO</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-modal-footer">
+                <button id="btn-save-role" class="settings-btn-primary"><i class="fa-solid fa-save"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin: Role Management Modal -->
+    <div id="modal-admin-roles" class="settings-modal-overlay">
+        <!-- Overlay will use display flex via JS -->
+        <div class="settings-modal-content" style="max-width: 480px; height: auto; min-height: 250px; overflow: visible;">
+            <div class="settings-modal-header" style="padding: 24px; border-bottom: none; background: transparent;">
+                <h2><i class="fa-solid fa-user-shield" style="color: var(--primary-color);"></i> &nbsp;Gerenciar Cargos</h2>
+                <button id="btn-close-admin" class="settings-close-btn">&times;</button>
+            </div>
+            
+            <div class="settings-modal-body" style="display: block; padding: 0 30px 20px;">
+                <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0; margin-bottom: 24px;">
+                    Atribua permissões especiais a outros usuários pelo email cadastrado.
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-regular fa-envelope"></i> Email do Usuário</label>
+                    <input type="email" id="inp-role-email" class="form-input" placeholder="exemplo@dominio.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-id-badge"></i> Cargo</label>
+                    <div style="position: relative;">
+                        <select id="sel-role" class="form-input" style="appearance: none; cursor: pointer;">
+                            <option value="admin">Admin (Acesso Total)</option>
+                            <option value="tester">Tester (Modo Debug)</option>
+                            <option value="pastas">Pastas (SharePoint)</option>
+                            <option value="remove" style="color: #ef4444; font-weight: bold;">❌ REMOVER CARGO</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
+                    </div>
+                    <div id="role-desc" class="role-badge" style="display:none; margin-top: 8px;"></div>
+                </div>
+            </div>
+            
+            <div class="settings-modal-footer" style="padding: 20px 30px; background: var(--bg-color); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                <button id="btn-save-role" class="settings-btn-primary" style="padding: 10px 20px;">
+                    <i class="fa-solid fa-check"></i> Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './assets/supabaseClient.js';
+
+        let currentUser = null;
+        let currentRole = null;
+        let isTestMode = false;
+
+        async function initRoles() {
+            // 1. Get Session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                console.warn('[RBAC] No session found.');
+                return;
+            }
+            currentUser = session.user;
+            
+            // 2. Fetch Role
+            const { data, error } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('email', currentUser.email)
+                .single(); 
+
+            if (data) {
+                currentRole = data.role;
+                console.log('[RBAC] Role:', currentRole);
+            }
+
+            // 3. Apply Permissions
+            applyPermissions();
+        }
+
+        function applyPermissions() {
+            // A. "Criar Pastas" Card Visibility
+            // Access: Admin OR Pastas
+            const cardSharePoint = document.getElementById('card-sharepoint-create');
+            if (cardSharePoint) {
+                if (currentRole === 'admin' || currentRole === 'pastas') {
+                    cardSharePoint.style.display = 'flex'; // Restore flex display
+                } else {
+                    cardSharePoint.style.display = 'none';
+                }
+            }
+
+            // B. Admin Panel Button
+            const btnAdmin = document.getElementById('btn-admin-panel');
+            if (btnAdmin) {
+                if (currentRole === 'admin') {
+                    btnAdmin.style.display = 'flex';
+                } else {
+                    btnAdmin.style.display = 'none';
+                }
+            }
+            
+            // C. F5+T Listener
+            if (currentRole === 'admin' || currentRole === 'tester') {
+                setupTestModeListener();
+            }
+        }
+
+        // --- Event Listeners ---
+        function setupTestModeListener() {
+            let f5Flag = false, f5Timer = null;
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'F5') {
+                    f5Flag = true;
+                    if (f5Timer) clearTimeout(f5Timer);
+                    f5Timer = setTimeout(() => { f5Flag = false; }, 800);
+                }
+                if ((e.key === 't' || e.key === 'T') && f5Flag) toggleTestMode();
+            });
+        }
+
+        function toggleTestMode() {
+            isTestMode = !isTestMode;
+            alert(`MODO TESTE: ${isTestMode ? 'ATIVADO' : 'DESATIVADO'}`);
+            if(isTestMode) document.body.classList.add('test-mode');
+            else document.body.classList.remove('test-mode');
+        }
+
+        // --- Admin UI Logic ---
+        const btnAdmin = document.getElementById('btn-admin-panel');
+        const modalAdmin = document.getElementById('modal-admin-roles');
+        const btnCloseAdmin = document.getElementById('btn-close-admin');
+        const btnSaveRole = document.getElementById('btn-save-role');
+        const overlayAdmin = document.getElementById('modal-admin-roles');
+
+        if (btnAdmin && modalAdmin) {
+            btnAdmin.addEventListener('click', () => {
+                modalAdmin.style.display = 'flex'; // Uses CSS flex to center
+                // Focus input
+                setTimeout(() => document.getElementById('inp-role-email')?.focus(), 100);
+            });
+            
+            const closeAdmin = () => modalAdmin.style.display = 'none';
+            if(btnCloseAdmin) btnCloseAdmin.addEventListener('click', closeAdmin);
+            
+            // Close on overlay click
+            overlayAdmin.addEventListener('click', (e) => {
+                if (e.target === overlayAdmin) closeAdmin();
+            });
+
+            if (btnSaveRole) {
+                btnSaveRole.addEventListener('click', async () => {
+                    const email = document.getElementById('inp-role-email').value;
+                    const role = document.getElementById('sel-role').value;
+                    const statusBadge = document.getElementById('role-desc');
+
+                    if (!email || !email.includes('@')) {
+                        alert('Digite um email válido.');
+                        return;
+                    }
+
+                    const originalText = btnSaveRole.innerHTML;
+                    btnSaveRole.disabled = true;
+                    btnSaveRole.textContent = 'Salvando...';
+
+                    try {
+                        if (role === 'remove') {
+                            const { error } = await supabase
+                                .from('user_roles')
+                                .delete()
+                                .eq('email', email);
+                            if (error) throw error;
+                            alert(`Cargo removido de ${email}`);
+                        } else {
+                            const { error } = await supabase
+                                .from('user_roles')
+                                .upsert({ email: email, role: role }, { onConflict: 'email' });
+                            
+                            if (error) throw error;
+                            alert(`Sucesso! ${email} agora é ${role.toUpperCase()}`);
+                        }
+                        closeAdmin();
+                        document.getElementById('inp-role-email').value = ''; // clear
+                    } catch (e) {
+                         alert('Erro: ' + e.message);
+                    } finally {
+                        btnSaveRole.disabled = false;
+                        btnSaveRole.innerHTML = originalText;
+                    }
+                });
+            }
+        }
+
+        initRoles();
     </script>
 </body>
 </html>

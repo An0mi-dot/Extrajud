@@ -869,7 +869,7 @@
 
                         // Populate version info in 'Sobre' tab
                         const ipc = require('electron').ipcRenderer;
-                        const ver = await ipc.invoke('get-app-version') || '1.0.0';
+                        const ver = await ipc.invoke('get-app-version') || '2.0.5';
                         // Update version text elements
                         const verEls = document.querySelectorAll('#settings-app-ver, .settings-ver-text'); 
                         verEls.forEach(el => el.textContent = ver);

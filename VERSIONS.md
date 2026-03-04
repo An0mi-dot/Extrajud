@@ -148,3 +148,7 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 40ace0a
 - Notes: feat: synchronize settings menu across all Hub pages (index, services, requests)
+
+## v2.0.6 - 2026-03-04
+
+- Notes: feat(rbac): Implementa sistema de cargos (Admin, Tester, Pastas) com gestão via interface

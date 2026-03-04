@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extrator PROJUDI - Automação Jurídica</title>
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
     <style>
@@ -350,6 +351,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Voltar ao Hub
+        </button>
+
+        <button id="btn-settings" class="btn-back" style="margin-top: -20px; margin-bottom: 20px;">
+             <i class="fa-solid fa-gear" style="margin-right: 6px;"></i> Configurações
         </button>
 
         <div class="menu-label">Credenciais</div>
@@ -789,6 +794,305 @@
         }, 500);
 
         // App clock removed per user request
+
+    </script>
+
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="settings-modal-overlay">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h2><i class="fa-solid fa-sliders"></i> Configurações</h2>
+                <button id="btn-close-settings" class="settings-close-btn">&times;</button>
+            </div>
+            
+            <div class="settings-modal-body">
+                <div class="settings-sidebar">
+                    <button class="settings-tab active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
+                    <button class="settings-tab" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
+                    <button class="settings-tab" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
+                </div>
+                
+                <div class="settings-content-area">
+                    
+                    <!-- ABAS DE CONTEÚDO -->
+                    <div id="tab-geral" class="settings-tab-pane active">
+                        <h3 class="settings-section-title">Aparência</h3>
+                        <p class="settings-section-desc">Personalize o tema visual do aplicativo.</p>
+
+                        <div class="theme-selector-group" style="display:flex; gap:10px; margin-bottom: 25px;">
+                            <button class="theme-option" data-theme="light" title="Claro">
+                                <i class="fa-solid fa-sun" style="font-size:18px;"></i> Claro
+                            </button>
+                            <button class="theme-option" data-theme="dark" title="Escuro">
+                                <i class="fa-solid fa-moon" style="font-size:18px;"></i> Escuro
+                            </button>
+                            <button class="theme-option" data-theme="system" title="Sistema">
+                                <i class="fa-solid fa-desktop" style="font-size:18px;"></i> Sistema
+                            </button>
+                        </div>
+                        
+                        <h3 class="settings-section-title">Comportamento da Janela</h3>
+                        <p class="settings-section-desc">Personalize como o Extratjud interage com seu desktop.</p>
+
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-minimize-tray" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Minimizar para a bandeja ao fechar</span>
+                            </label>
+                            
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-always-top" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Manter janela sempre no topo</span>
+                            </label>
+                        </div>
+
+                        <h3 class="settings-section-title" style="margin-top: 25px;">Notificações</h3>
+                        <p class="settings-section-desc">Alertas sobre o status das automações.</p>
+
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-sound-finish" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Emitir som ao finalizar</span>
+                            </label>
+                            
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="chk-notification-finish" style="width:16px; height:16px;">
+                                <span style="font-size:13px; color:var(--text-color);">Notificação do Windows</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="tab-logs" class="settings-tab-pane">
+                         <h3 class="settings-section-title">Gerenciamento de Logs</h3>
+                         <p class="settings-section-desc">Exporte ou limpe o histórico de operações.</p>
+                         
+                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                             <button id="btn-copy-log" class="btn-mini"><i class="fa-regular fa-copy"></i> Copiar Tudo</button>
+                             <button id="btn-download-log" class="btn-mini"><i class="fa-solid fa-download"></i> Baixar .txt</button>
+                             <button id="btn-clear-log-modal" class="btn-mini" style="color:var(--danger-color); border-color:var(--danger-color);"><i class="fa-solid fa-trash"></i> Limpar Console</button>
+                         </div>
+                    </div>
+
+                    <div id="tab-sobre" class="settings-tab-pane">
+                        <div style="text-align:center; padding:10px 20px;">
+                            <img src="assets/logo.png" style="height:80px; margin-bottom:15px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                            <h3 style="margin:0; color:var(--primary-color); font-size: 24px;">EXTRATJUD</h3>
+                            <p style="margin:5px 0; color:var(--text-secondary); font-family: 'JetBrains Mono', monospace;">v<span id="settings-app-ver">?.?.?</span></p>
+                            
+                            <hr style="margin:25px 0; border:0; border-top:1px solid var(--border-color);">
+                            
+                            <div style="text-align:left; font-size:14px; color:var(--text-color); margin-bottom:25px; line-height: 1.6;">
+                                <h4 style="margin:0 0 12px 0; font-size:16px; color: var(--primary-color);">Sobre a Ferramenta</h4>
+                                <p style="margin-bottom:12px;">
+                                    O <strong>EXTRATJUD</strong> é uma solução corporativa de automação robótica de processos (RPA) desenvolvida para otimizar as operações do setor jurídico da Neoenergia Coelba.
+                                </p>
+                                <p style="margin-bottom:12px;">
+                                    <strong>Nota Técnica:</strong> O aplicativo não utiliza APIs oficiais dos tribunais, devido à indisponibilidade de acesso público a esses recursos. Em vez disso, a ferramenta automatiza processos manuais, utilizando Inteligência Artificial para executar a navegação e as tarefas repetitivas da forma mais rápida possível.
+                                </p>
+                                <p style="margin-bottom:12px;">
+                                    A ferramenta emprega tecnologias de navegação headless para interagir com portais judiciais de forma segura e eficiente, permitindo a extração massiva de dados, geração de relatórios gerenciais e auditoria com evidências documentais.
+                                </p>
+                            </div>
+
+                            <div style="background: rgba(var(--primary-rgb, 16, 185, 129), 0.05); border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 25px; border: 1px solid rgba(var(--primary-rgb, 16, 185, 129), 0.1);">
+                                <h4 style="margin:0 0 10px 0; font-size:14px; display:flex; align-items:center; gap:8px;">
+                                    <i class="fa-solid fa-code" style="color:var(--primary-color)"></i> Ficha Técnica
+                                </h4>
+                                <ul style="margin:0; padding-left:20px; font-size:13px; color:var(--text-secondary);">
+                                    <li><strong>Engine:</strong> Electron & Node.js</li>
+                                    <li><strong>Automação:</strong> Microsoft Playwright</li>
+                                    <li><strong>Interface:</strong> HTML5 / CSS3 (Custom Theme)</li>
+                                </ul>
+                            </div>
+
+                            <div style="text-align:left; font-size:13px; color:var(--text-secondary); margin-bottom:20px;">
+                                <p>
+                                    Desenvolvido por <strong>João Guilherme Almeida Viana</strong><br>
+                                    <span style="opacity:0.8; font-size:12px;">Aprendiz Administrativo | Jurídico Contencioso Cível</span><br>
+                                    <a href="mailto:joao.aviana@neoenergia.com" style="color:var(--primary-color); text-decoration:none;">joao.aviana@neoenergia.com</a>
+                                </p>
+                            </div>
+
+                            <div style="margin-top:20px; font-size:11px; color:#9ca3af; text-align:left; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                                <p style="font-weight:600; margin-bottom:5px;">Ambiente de Execução:</p>
+                                <ul style="columns: 2; list-style: none; padding: 0; margin: 0;">
+                                    <li>Electron: <span id="env-electron">...</span></li>
+                                    <li>Node: <span id="env-node">...</span></li>
+                                    <li>Chrome: <span id="env-chrome">...</span></li>
+                                    <li>OS: <span id="env-plat">...</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div style="margin-top:25px; font-size: 11px; color: #aaa; text-align: center;">
+                                &copy; 2026 Neoenergia Coelba. Todos os direitos reservados.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="settings-modal-footer">
+                <button id="btn-save-settings" class="settings-btn-primary"><i class="fa-solid fa-check"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- Settings Modal Logic ---
+        let ipcSettings = null;
+        try { const { ipcRenderer } = require('electron'); ipcSettings = ipcRenderer; } catch(e) {}
+
+        const modalSettings = document.getElementById('modal-settings');
+        const btnSettings = document.getElementById('btn-settings');
+        const btnCloseSettings = document.getElementById('btn-close-settings');
+        
+        if(btnSettings) {
+             btnSettings.onclick = (e) => {
+                e.preventDefault(); // Prevent accidental navigation if inside form
+                modalSettings.style.display = 'flex';
+                loadSettings();
+            };
+        }
+        
+        if(btnCloseSettings) {
+            btnCloseSettings.onclick = () => modalSettings.style.display = 'none';
+        }
+        
+        // Close on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target === modalSettings) modalSettings.style.display = 'none';
+        });
+
+        // Tabs Logic
+        document.querySelectorAll('.settings-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.settings-tab-pane').forEach(p => p.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const target = tab.getAttribute('data-tab');
+                document.getElementById('tab-' + target).classList.add('active');
+            });
+        });
+
+        // Theme Logic
+        if(typeof themeConfig !== 'undefined') themeConfig.init(); 
+        document.querySelectorAll('.theme-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const theme = btn.getAttribute('data-theme');
+                if(typeof themeConfig !== 'undefined') themeConfig.apply(theme);
+                updateThemeUI();
+            });
+        });
+
+        function updateThemeUI() {
+            if(typeof themeConfig === 'undefined') return;
+            const current = themeConfig.current();
+            document.querySelectorAll('.theme-option').forEach(btn => {
+                const t = btn.getAttribute('data-theme');
+                if(t === current) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+        setTimeout(updateThemeUI, 100);
+
+        // Checkbox persistence
+        const chkAlwaysTop      = document.getElementById('chk-always-top');
+        const chkMinimizeTray   = document.getElementById('chk-minimize-tray');
+        const chkSound          = document.getElementById('chk-sound-finish');
+        const chkNotification   = document.getElementById('chk-notification-finish');
+        const btnSaveSettings   = document.getElementById('btn-save-settings');
+
+        async function loadSettings() {
+             if (ipcSettings) {
+                 try {
+                     const genConfig = await ipcSettings.invoke('get-general-config');
+                     if(chkAlwaysTop)      chkAlwaysTop.checked    = genConfig.alwaysOnTop;
+                     if(chkMinimizeTray)   chkMinimizeTray.checked = genConfig.minimizeToTray;
+                     if(chkSound)          chkSound.checked        = genConfig.soundFinish;
+                     if(chkNotification)   chkNotification.checked = genConfig.notificationFinish;
+                     // Populate version & environment info
+                     const ver = await ipcSettings.invoke('get-app-version') || '1.0.0';
+                     const vEl = document.getElementById('settings-app-ver');
+                     if(vEl) vEl.textContent = ver;
+                     
+                     const envNode = document.getElementById('env-node');
+                     if (envNode) envNode.textContent = process.versions.node;
+                     const envElec = document.getElementById('env-electron');
+                     if (envElec) envElec.textContent = process.versions.electron;
+                     const envChrome = document.getElementById('env-chrome');
+                     if (envChrome) envChrome.textContent = process.versions.chrome;
+                     const envPlat = document.getElementById('env-plat');
+                     if (envPlat) envPlat.textContent = process.platform + ' (' + process.arch + ')';
+                 } catch(e) {
+                     loadSettingsLocal();
+                 }
+             } else {
+                 loadSettingsLocal();
+             }
+             updateThemeUI();
+        }
+
+        function loadSettingsLocal() {
+             if(chkAlwaysTop)      chkAlwaysTop.checked    = localStorage.getItem('cfg-always-top') === 'true';
+             if(chkMinimizeTray)   chkMinimizeTray.checked = localStorage.getItem('cfg-minimize-tray') === 'true';
+             if(chkSound)          chkSound.checked        = localStorage.getItem('cfg-sound') === 'true';
+             if(chkNotification)   chkNotification.checked = localStorage.getItem('cfg-notification-finish') === 'true';
+        }
+
+        if(btnSaveSettings) {
+             btnSaveSettings.onclick = async () => {
+                 const config = {
+                    minimizeToTray: chkMinimizeTray ? chkMinimizeTray.checked : false,
+                    alwaysOnTop: chkAlwaysTop ? chkAlwaysTop.checked : false,
+                    soundFinish: chkSound ? chkSound.checked : false,
+                    notificationFinish: chkNotification ? chkNotification.checked : false
+                 };
+
+                 // Local Backup
+                 localStorage.setItem('cfg-always-top', config.alwaysOnTop);
+                 localStorage.setItem('cfg-minimize-tray', config.minimizeToTray);
+                 localStorage.setItem('cfg-sound', config.soundFinish);
+                 localStorage.setItem('cfg-notification-finish', config.notificationFinish);
+
+                 // IPC Save
+                 if (ipcSettings) {
+                     try {
+                         await ipcSettings.invoke('set-general-config', config);
+                     } catch(e) {
+                         console.error('IPC Save Error', e);
+                     }
+                 }
+                 
+                 modalSettings.style.display = 'none';
+                 // alert('Salvo!');
+             };
+        }
+
+        // --- Log Tools Logic ---
+        const btnCopyLog = document.getElementById('btn-copy-log');
+        if(btnCopyLog) btnCopyLog.onclick = () => {
+            const logs = document.getElementById('logs') ? document.getElementById('logs').innerText : '';
+            navigator.clipboard.writeText(logs);
+            alert('Logs copiados!');
+        };
+        
+        const btnDownLog = document.getElementById('btn-download-log');
+        if(btnDownLog) btnDownLog.onclick = () => {
+            const logs = document.getElementById('logs') ? document.getElementById('logs').innerText : '';
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url;
+            a.download = `projudi_logs_${Date.now()}.txt`;
+            a.click();
+        };
+
+        const btnClearLogModal = document.getElementById('btn-clear-log-modal');
+        if(btnClearLogModal) btnClearLogModal.onclick = () => {
+            const l = document.getElementById('logs');
+            if(l) l.innerHTML = '';
+        };
 
     </script>
 </body>
