@@ -82,9 +82,26 @@ const themeConfig = {
 // Expose globally
 window.themeConfig = themeConfig;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     themeConfig.init();
     
+    // Auto-update Version Texts
+    try {
+        if (typeof require !== 'undefined') {
+            const { ipcRenderer } = require('electron');
+            const v = await ipcRenderer.invoke('get-app-version');
+            if (v) {
+                document.querySelectorAll('.app-version, .version-tag, .version-info, .settings-ver-text, #settings-app-ver').forEach(el => {
+                   const txt = el.textContent.trim().toLowerCase();
+                   if (txt.startsWith('ver ')) el.textContent = 'ver ' + v;
+                   else if (txt.startsWith('v') && !txt.startsWith('var')) el.textContent = 'v' + v;
+                   else if (txt.startsWith('version ')) el.textContent = 'Version ' + v;
+                   else el.textContent = v;
+                });
+            }
+        }
+    } catch(e) { console.error('Version auto-update error', e); }
+
     // Bind click events for main toggle
     document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {

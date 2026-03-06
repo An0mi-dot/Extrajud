@@ -13,37 +13,45 @@
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* Professional Dark Mode (Grayscale Clean - Updated to Match Docs) */
+/* Professional Dark Mode (High Contrast Green/Black) */
 [data-theme="dark"] {
-    --bg-color: #111827;        /* Gray 900 */
-    --card-bg: #1f2937;         /* Gray 800 */
-    --text-color: #f3f4f6;      /* Gray 100 */
-    --text-secondary: #9ca3af;  /* Gray 400 */
-    --border-color: #374151;    /* Gray 700 */
+    --bg-color: #000000;        /* Pure Black */
+    --card-bg: #09090b;         /* Almost Black */
+    --text-color: #ecfdf5;      /* White/Mint tint */
+    --text-secondary: #6ee7b7;  /* Soft Green */
+    --border-color: #064e3b;    /* Dark Green Border */
     
     /* Hover override for dark mode */
-    --card-hover-bg: #374151;   /* Lighter gray on hover */
+    --card-hover-bg: #111111;   
 
-    --primary-color: #10b981;   /* Emerald 500 */
-    --primary-hover: #059669;   /* Emerald 600 */
-    --primary-light: rgba(16, 185, 129, 0.15); 
+    --primary-color: #10b981;   /* Emerald 500 (Same as Light) */
+    --primary-hover: #34d399;   /* Lighter Emerald */
+    --primary-light: rgba(16, 185, 129, 0.1); 
     
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 20, 10, 0.8); /* Subtle green tint shadow */
 }
 
 /* Force dark mode card hover fix */
 [data-theme="dark"] .service-card:hover {
     background-color: var(--card-hover-bg) !important;
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); /* Green glow */
     border-color: var(--primary-color);
 }
 
 [data-theme="dark"] .header {
-    background-color: var(--card-bg); /* Ensure header follows dark theme */
+    background-color: #000000; 
     border-bottom: 1px solid var(--border-color);
+}
+
+/* Image Tinting for Dark Mode */
+[data-theme="dark"] .brand-logo img,
+[data-theme="dark"] .header-logo img {
+    /* Filter to turn the logo Green/White/Monochrome */
+    /* Adjust these values based on the original logo color. Assuming original is green/black */
+    filter: brightness(0) saturate(100%) invert(64%) sepia(35%) saturate(764%) hue-rotate(107deg) brightness(89%) contrast(88%);
 }
 
 [data-theme="dark"] .welcome-text p {

@@ -553,9 +553,12 @@ ipcMain.on('login-success', (event, user) => {
 });
 
 ipcMain.handle('get-current-user', () => currentUser);
+// ipcMain.handle('get-app-version', () => app.getVersion()); // Removed duplicate handler
 
 ipcMain.on('update-user-cache', (event, user) => {
     currentUser = user;
+    // Log role verification for debug
+    if (user && user.role) console.log(`User cached with role: ${user.role}`);
 });
 
 function createWindow() {
@@ -579,6 +582,23 @@ function createWindow() {
   }
 
   mainWindow.setMenu(null); // Remove o menu completamente
+  
+  // Enable DevTools via Shortcut (F12 or Ctrl+Shift+I) - ADMIN ONLY
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+      // Allow F12 or Ctrl+Shift+I
+      if (input.type === 'keyDown') {
+          if (input.key === 'F12' || (input.control && input.shift && input.key.toLowerCase() === 'i')) {
+              // SECURITY CHECK: Only allow if currentUser has role 'admin'
+              if (currentUser && currentUser.role === 'admin') {
+                  mainWindow.webContents.toggleDevTools();
+              } else {
+                  console.log('Blocked unauthorized DevTools access attempt.');
+              }
+              event.preventDefault(); // Always block the default behavior to control access
+          }
+      }
+  });
+
   // Show a modal loading window using the new loading.html to act as the app-wide loader
   try {
     if (!loadingWindow || loadingWindow.isDestroyed()) {
