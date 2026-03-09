@@ -311,6 +311,12 @@
                     <i class="fa-solid fa-shield-halved"></i>
                 </button>
 
+                <!-- Update Notification Button -->
+                <button id="btn-update-notify" style="display:none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #f59e0b; background: var(--card-bg); color: #f59e0b; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(245,158,11,0.25); transition: 0.2s; position: relative;" title="Nova versão disponível">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                    <span id="update-dot" style="position:absolute; top:6px; right:6px; width:8px; height:8px; background:#ef4444; border-radius:50%; animation: update-pulse 1.5s infinite;"></span>
+                </button>
+
                 <button id="btn-open-settings" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;">
                     <i class="fa-solid fa-gear"></i>
                 </button>
@@ -370,8 +376,28 @@
 
     <div class="version-tag">ver 2.1.2</div>
 
+    <!-- Update Notification Modal -->
+    <div id="modal-update" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.55); align-items:center; justify-content:center;">
+        <div style="background:var(--card-bg); border-radius:14px; padding:32px 28px; max-width:420px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.22); border:1px solid rgba(245,158,11,0.35); text-align:center; animation: fadeIn 0.25s ease-out;">
+            <div style="font-size:36px; color:#f59e0b; margin-bottom:12px;"><i class="fa-solid fa-rocket"></i></div>
+            <h3 style="margin:0 0 6px; font-size:18px; color:var(--text-color);">Nova versão disponível!</h3>
+            <p id="update-modal-info" style="font-size:14px; color:var(--text-secondary); margin:0 0 20px;">Carregando...</p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button id="btn-update-download" style="padding:10px 22px; border-radius:8px; border:none; background:#f59e0b; color:#fff; font-size:14px; font-weight:600; cursor:pointer;">
+                    <i class="fa-solid fa-download"></i> Baixar Atualização
+                </button>
+                <button id="btn-update-dismiss" style="padding:10px 22px; border-radius:8px; border:1px solid var(--border-color); background:transparent; color:var(--text-secondary); font-size:14px; cursor:pointer;">
+                    Agora não
+                </button>
+            </div>
+        </div>
+    </div>
 
     <style>
+        @keyframes update-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
         /* Profile Modal Styles */
         /* Override default modal behavior which is flex-row */
         #modal-profile .settings-modal-body {
@@ -752,6 +778,46 @@
                 document.querySelectorAll('.version-tag').forEach(el => el.textContent = 'ver ' + ver);
                 document.querySelectorAll('.app-version, .settings-ver-text, #settings-app-ver').forEach(el => el.textContent = ver);
              } catch(e) { console.error('Version fetch failed', e); }
+
+             // --- Update Notification ---
+             const btnUpdateNotify = document.getElementById('btn-update-notify');
+             const modalUpdate = document.getElementById('modal-update');
+             const updateModalInfo = document.getElementById('update-modal-info');
+             let updateUrl = null;
+
+             function showUpdateBadge(newVer, url) {
+                 updateUrl = url;
+                 if (updateModalInfo) updateModalInfo.textContent = `Versão ${newVer} disponível. Clique para baixar.`;
+                 if (btnUpdateNotify) { btnUpdateNotify.style.display = 'flex'; }
+             }
+
+             // Listen for electron-updater events
+             ipcRenderer.on('updater:status', (_, data) => {
+                 if (data.status === 'available' || data.status === 'ready') {
+                     const newVer = (data.info && data.info.version) ? data.info.version : '';
+                     showUpdateBadge(newVer, null);
+                 }
+             });
+
+             // Manual check via updates.json
+             try {
+                 const upd = await ipcRenderer.invoke('check-for-updates');
+                 if (upd && upd.updateAvailable) {
+                     showUpdateBadge(upd.latestVersion, upd.url);
+                 }
+             } catch(e) { console.warn('Update check failed', e); }
+
+             if (btnUpdateNotify) {
+                 btnUpdateNotify.onclick = () => { if (modalUpdate) modalUpdate.style.display = 'flex'; };
+             }
+             document.getElementById('btn-update-dismiss')?.addEventListener('click', () => {
+                 if (modalUpdate) modalUpdate.style.display = 'none';
+             });
+             document.getElementById('btn-update-download')?.addEventListener('click', () => {
+                 const target = updateUrl || 'https://an0mi-dot.github.io/Extrajud/';
+                 require('electron').shell.openExternal(target);
+                 if (modalUpdate) modalUpdate.style.display = 'none';
+             });
 
              // 1. Setup Header & Modal
             const header = document.getElementById('user-header-area');
