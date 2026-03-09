@@ -168,3 +168,7 @@ script will append a new entry for the current version with the commit message a
 
 Fixes Unexpected token '<', '<!--samlch...' JSON parse error caused by
 Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
+## v2.0.9 - 2026-03-09
+
+- Commit: 384f963
+- Notes: fix: force Supabase to use Chromium fetch (bypass corporate proxy)
