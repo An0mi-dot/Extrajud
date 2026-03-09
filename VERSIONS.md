@@ -180,3 +180,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 4270a29
 - Notes: fix: route Supabase via Electron net module + NTLM auth-server-whitelist
+## v2.1.2 - 2026-03-09
+
+- Commit: 2952c71
+- Notes: feat: v2.1.1 - site link in hub/settings, new Download tab, favicon on docs site, updated logo
