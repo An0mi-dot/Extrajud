@@ -7,6 +7,10 @@ const supabaseUrl = 'https://lvicpvodestuhptsaqba.supabase.co';
 const supabaseKey = 'sb_publishable_swkWnnSxhlJfFKtUfBt4TQ_Yj1fbYd1'; // Sua publishable key
 
 // Inicializa o cliente do Supabase
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Força o uso do fetch do Chromium (window.fetch) em vez do fetch nativo do Node.js,
+// garantindo que as regras de bypass de proxy do Electron sejam respeitadas.
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  global: { fetch: window.fetch.bind(window) }
+});
 
 console.log("🟢 Cliente Supabase Inicializado com sucesso!");
