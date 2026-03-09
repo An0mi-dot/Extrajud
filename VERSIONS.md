@@ -172,3 +172,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 384f963
 - Notes: fix: force Supabase to use Chromium fetch (bypass corporate proxy)
+## v2.1.0 - 2026-03-09
+
+- Commit: b1fe235
+- Notes: fix: remove proxy bypass - let Supabase go through corporate proxy
