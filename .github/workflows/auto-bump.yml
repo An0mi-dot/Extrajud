@@ -35,10 +35,8 @@ jobs:
         id: bump
         run: |
           npm ci
-          # Script now writes to GITHUB_OUTPUT: bumped=true/false and version=x.x.x
-          npm run bump-version -- --force
-        env:
-          FORCE_BUMP: true # Temporarily forcing bump for testing the pipeline
+          # Script skips bump if package.json was already updated in the triggering commit
+          npm run bump-version
 
       - name: Push Changes & Tag
         if: steps.bump.outputs.bumped == 'true'
