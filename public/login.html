@@ -327,8 +327,38 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = emailInput.value;
+            const email = emailInput.value.trim().toLowerCase();
             const password = passInput.value;
+
+            // ── CLIENT-SIDE PER-EMAIL RATE LIMITING ──────────────────────────
+            // Prevents one user from exhausting the shared-IP quota on Supabase
+            // and locking out every other user on the same network.
+            const LIMIT_KEY = 'login_fails_' + btoa(email);
+            const LIMIT_MAX = 6;       // attempts before cooldown
+            const LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes in ms
+
+            if (isLoginMode) {
+                let record;
+                try { record = JSON.parse(localStorage.getItem(LIMIT_KEY) || 'null'); } catch(_) { record = null; }
+
+                if (record && record.count >= LIMIT_MAX) {
+                    const elapsed = Date.now() - record.since;
+                    if (elapsed < LIMIT_WINDOW) {
+                        const remaining = Math.ceil((LIMIT_WINDOW - elapsed) / 1000);
+                        const mins = Math.floor(remaining / 60);
+                        const secs = remaining % 60;
+                        if(errorMsg) {
+                            errorMsg.textContent = `Muitas tentativas para este email. Aguarde ${mins}m ${secs}s.`;
+                            errorMsg.style.display = 'block';
+                        }
+                        return; // block without touching Supabase
+                    } else {
+                        // Window expired – reset counter
+                        localStorage.removeItem(LIMIT_KEY);
+                    }
+                }
+            }
+            // ─────────────────────────────────────────────────────────────────
 
             // UI Loading state
             const originalBtnHtml = btnLogin.innerHTML;
@@ -345,12 +375,21 @@
                         password: password,
                     });
 
-                    if (error) throw error;
+                    if (error) {
+                        // ── INCREMENT FAIL COUNTER PER EMAIL ─────────────────
+                        const LIMIT_KEY = 'login_fails_' + btoa(email);
+                        const LIMIT_MAX = 6;
+                        let record;
+                        try { record = JSON.parse(localStorage.getItem(LIMIT_KEY) || 'null'); } catch(_) { record = null; }
+                        if (!record || (Date.now() - record.since > 5 * 60 * 1000)) record = { count: 0, since: Date.now() };
+                        record.count += 1;
+                        localStorage.setItem(LIMIT_KEY, JSON.stringify(record));
+                        // ─────────────────────────────────────────────────────
+                        throw error;
+                    }
                     
-                    // Success
-                    // Combine user data with potential metadata from Supabase that might not be synced yet if we just updated it, 
-                    // though signIn returns the user object with metadata usually.
-                    // SUCCESS - Store timestamp
+                    // Login OK: clear fail counter
+                    localStorage.removeItem('login_fails_' + btoa(email));
                     localStorage.setItem('app_last_login', Date.now().toString());
                     ipcRenderer.send('login-success', { 
                         email: data.user.email, 
@@ -410,9 +449,11 @@
                     errorMsg.style.display = 'block';
                 }
             } finally {
-                // Restore button if not successful login (successful login changes page)
+                // Restore button text based on current mode (not innerHTML snapshot which could be stale)
                 if (btnLogin.innerHTML.includes('Processando')) {
-                    btnLogin.innerHTML = originalBtnHtml;
+                    btnLogin.innerHTML = isLoginMode
+                        ? '<span>Entrar</span><i class="fa-solid fa-arrow-right"></i>'
+                        : '<span>Cadastrar</span><i class="fa-solid fa-arrow-right"></i>';
                     btnLogin.disabled = false;
                 }
             }
