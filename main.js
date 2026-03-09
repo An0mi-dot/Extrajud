@@ -35,10 +35,31 @@ const fs = require('fs');
 const os = require('os');
 const { exec, execSync } = require('child_process');
 const https = require('https');
+const { net } = require('electron');
 const automacaoService = require('./src/automacao_service');
 
-// Note: requests to supabase.co go through the corporate proxy (direct connections are blocked by firewall)
-// The CDN import was replaced with a local npm package, so no proxy bypass needed.
+// IPC bridge: renderer calls this to make HTTP requests via Electron's net module
+// (net module uses Windows credential manager + NTLM/Kerberos proxy auth natively)
+ipcMain.handle('net-fetch', async (event, url, init) => {
+  try {
+    const response = await net.fetch(url, {
+      method: init.method || 'GET',
+      headers: init.headers || {},
+      body: init.body || undefined,
+    });
+    const body = await response.text();
+    const headers = {};
+    response.headers.forEach((value, key) => { headers[key] = value; });
+    return { ok: response.ok, status: response.status, statusText: response.statusText, headers, body };
+  } catch (e) {
+    console.error('net-fetch error:', e.message);
+    throw new Error(e.message);
+  }
+});
+
+// Tell Chromium to auto-authenticate with NTLM/Kerberos for ALL proxy/servers (needed for corporate proxies)
+app.commandLine.appendSwitch('auth-server-whitelist', '*');
+app.commandLine.appendSwitch('auth-negotiate-delegate-whitelist', '*');
 
 let mainWindow;
 let appTray = null;
