@@ -184,3 +184,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 2952c71
 - Notes: feat: v2.1.1 - site link in hub/settings, new Download tab, favicon on docs site, updated logo
+## v2.1.3 - 2026-03-09
+
+- Commit: 9c592a0
+- Notes: fix: icon logo muito pequeno - crop preciso do conteudo nao-transparente
