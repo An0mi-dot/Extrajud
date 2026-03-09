@@ -156,3 +156,15 @@ script will append a new entry for the current version with the commit message a
 
 - Commit: 0198202
 - Notes: feat(release): v2.0.6 - Implementa sistema RBAC (Admin, Tester, Pastas)
+## v2.0.8 - 2026-03-09
+
+- Commit: 28e473f
+- Notes: fix: bypass corporate proxy + bundle Supabase locally (v2.0.8)
+
+- main.js: app.commandLine.appendSwitch proxy-bypass-list for *.supabase.co
+- main.js: session.defaultSession.setProxy proxyBypassRules on app ready
+- supabaseClient.js: replace CDN import with window.require('@supabase/supabase-js')
+- package.json: add @supabase/supabase-js as direct dependency
+
+Fixes Unexpected token '<', '<!--samlch...' JSON parse error caused by
+Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
