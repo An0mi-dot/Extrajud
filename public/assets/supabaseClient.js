@@ -1,11 +1,6 @@
-// Módulo Cliente Supabase via CDN Pattern (Para rodar no Browser / Electron UI)
-/**
- * Como não temos npm/node instalados globalmente e não há permissão de administrador,
- * a forma mais robusta e oficial de integrar o Supabase no lado do cliente 
- * (render process do Electron) é usando o import em módulo a partir da CDN oficial.
- */
-
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+// Módulo Cliente Supabase - usando pacote local (node_modules) para evitar bloqueio de proxy corporativo
+// window.require() está sempre disponível no renderer do Electron (nodeIntegration: true, contextIsolation: false)
+const { createClient } = window.require('@supabase/supabase-js');
 
 // Aqui entram as credenciais do seu projeto
 const supabaseUrl = 'https://lvicpvodestuhptsaqba.supabase.co';

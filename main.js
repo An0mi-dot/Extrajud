@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, webContents } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, webContents, session } = require('electron');
 
 // --- INSPECT EXCEL (Remove after use) ---
 // const inspectExcel = require('./scripts/inspect_excel');
@@ -36,6 +36,9 @@ const os = require('os');
 const { exec, execSync } = require('child_process');
 const https = require('https');
 const automacaoService = require('./src/automacao_service');
+
+// Bypass corporate proxy for Supabase API and CDN so SAML challenges don't intercept requests
+app.commandLine.appendSwitch('proxy-bypass-list', '*.supabase.co,cdn.jsdelivr.net,esm.sh');
 
 let mainWindow;
 let appTray = null;
@@ -678,7 +681,17 @@ ipcMain.handle('get-general-config', () => {
     return s.general || { minimizeToTray: false, alwaysOnTop: false };
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Belt-and-suspenders: also set session-level proxy bypass for Supabase and CDN
+  try {
+    const proxyConfig = await session.defaultSession.resolveProxy('https://lvicpvodestuhptsaqba.supabase.co');
+    if (proxyConfig && proxyConfig !== 'DIRECT') {
+      // A proxy is configured - add bypass rules so Supabase and CDN go direct
+      await session.defaultSession.setProxy({ proxyBypassRules: '*.supabase.co,cdn.jsdelivr.net,esm.sh' });
+      console.log('Proxy bypass configured for Supabase and CDN');
+    }
+  } catch(e) { console.warn('Proxy bypass setup failed (non-critical):', e.message); }
+
   try {
       // Tray Setup
       const iconPath = path.join(__dirname, 'public', 'assets', 'logo2.png');
