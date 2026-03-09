@@ -354,10 +354,21 @@
                     Gestão de demandas jurídicas, ofícios e solicitações internas.
                 </div>
             </a>
+
+            <!-- Módulo 3: Site / Downloads -->
+            <a href="#" onclick="event.preventDefault(); require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" class="hub-card">
+                <div class="icon-circle">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <div class="card-title">Site</div>
+                <div class="card-desc">
+                    Acesse o site oficial, baixe atualizações e veja as novidades.
+                </div>
+            </a>
         </div>
     </div>
 
-    <div class="version-tag">ver 2.0.5</div>
+    <div class="version-tag">ver 2.1.1</div>
 
 
     <style>
@@ -547,6 +558,7 @@
                 <div class="settings-sidebar">
                     <button class="settings-tab active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
                     <button class="settings-tab" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
+                    <button class="settings-tab" data-tab="download"><i class="fa-solid fa-download"></i> Download</button>
                     <button class="settings-tab" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
                 </div>
                 
@@ -614,6 +626,28 @@
                         </div>
                     </div>
 
+                    <div id="tab-download" class="settings-tab-pane">
+                        <div style="text-align:center; padding: 20px;">
+                            <img src="assets/logo2.png" style="height:70px; margin-bottom:15px; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.15));">
+                            <h3 style="margin:0 0 6px 0; color:var(--primary-color); font-size:22px;">EXTRATJUD</h3>
+                            <p style="margin:0 0 25px 0; color:var(--text-secondary); font-size:13px;">v<span class="app-version">?.?.?</span></p>
+
+                            <div style="background: rgba(var(--primary-rgb,16,185,129),0.05); border:1px solid rgba(var(--primary-rgb,16,185,129),0.15); border-radius:12px; padding:20px; margin-bottom:20px; text-align:left;">
+                                <p style="margin:0 0 15px 0; font-size:14px; color:var(--text-color);">Acesse o site oficial para baixar a versão mais recente, ver o changelog e acompanhar as atualizações.</p>
+                                <button onclick="require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" style="width:100%; padding:12px; background:var(--primary-color); color:#000; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px;">
+                                    <i class="fa-solid fa-globe"></i> Abrir Site Oficial
+                                </button>
+                                <button onclick="require('electron').shell.openExternal('https://github.com/An0mi-dot/Extrajud/releases')" style="width:100%; padding:12px; background:transparent; color:var(--text-color); border:1px solid var(--border-color); border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;">
+                                    <i class="fa-brands fa-github"></i> Ver Releases no GitHub
+                                </button>
+                            </div>
+
+                            <div style="font-size:12px; color:var(--text-secondary);">
+                                Desenvolvido por <strong>João Guilherme Almeida Viana</strong>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="tab-sobre" class="settings-tab-pane">
                         <div style="text-align:center; padding:10px 20px;">
                             <!-- Fix: Logo visual offset (transform Y) -->
@@ -665,7 +699,13 @@
                                 </ul>
                             </div>
                             
-                            <div style="margin-top:25px; font-size: 11px; color: #aaa; text-align: center;">
+                            <div style="margin-top:20px;">
+                                <button onclick="require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" style="width:100%; padding:10px; background:var(--primary-color); color:#000; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                    <i class="fa-solid fa-globe"></i> Acessar Site Oficial / Downloads
+                                </button>
+                            </div>
+
+                            <div style="margin-top:15px; font-size: 11px; color: #aaa; text-align: center;">
                                 &copy; 2026 Neoenergia Coelba. Todos os direitos reservados.
                             </div>
                         </div>
