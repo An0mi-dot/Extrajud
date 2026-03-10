@@ -196,3 +196,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 5ceabca
 - Notes: fix: melhorar diagnostico de erro de rede no login
+## v2.1.6 - 2026-03-10
+
+- Commit: 641101b
+- Notes: fix: fallback display name capitaliza email quando metadata vazio
