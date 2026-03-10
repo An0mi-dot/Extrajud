@@ -998,8 +998,11 @@
             const meta = user.user_metadata || {};
             if (meta.full_name) return meta.full_name;
             if (meta.first_name) return `${meta.first_name} ${meta.last_name || ''}`.trim();
-            // Fallback to email username
-            if (user.email) return user.email.split('@')[0];
+            // Fallback: converte "luana.moreira" → "Luana Moreira"
+            if (user.email) {
+                const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+                return user.email.split('@')[0].split(/[._-]/).map(cap).join(' ');
+            }
             return 'Usuário';
         }
 
