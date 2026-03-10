@@ -439,10 +439,14 @@
             } catch (err) {
                 console.error(err);
                 
-                let msg = err.message;
+                let msg = err.message || String(err);
                 if (msg === 'Invalid login credentials') msg = 'Email ou senha incorretos.';
                 if (msg.includes('rate limit')) msg = 'Muitas tentativas. Aguarde um pouco.';
                 if (msg.includes('User already registered')) msg = 'Este email já está cadastrado.';
+                if (msg.includes('NETWORK_ERROR') || msg.includes('Failed to fetch') || msg.includes('ERR_')) {
+                    const code = msg.replace('NETWORK_ERROR:', '');
+                    msg = `Erro de rede — verifique sua conexão. (${code})`;
+                }
 
                 if(errorMsg) {
                     errorMsg.textContent = 'Erro: ' + msg;

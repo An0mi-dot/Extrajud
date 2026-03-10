@@ -42,18 +42,20 @@ const automacaoService = require('./src/automacao_service');
 // (net module uses Windows credential manager + NTLM/Kerberos proxy auth natively)
 ipcMain.handle('net-fetch', async (event, url, init) => {
   try {
-    const response = await net.fetch(url, {
+    const fetchOpts = {
       method: init.method || 'GET',
       headers: init.headers || {},
-      body: init.body || undefined,
-    });
+    };
+    if (init.body !== undefined && init.body !== null) fetchOpts.body = init.body;
+    const response = await net.fetch(url, fetchOpts);
     const body = await response.text();
     const headers = {};
     response.headers.forEach((value, key) => { headers[key] = value; });
     return { ok: response.ok, status: response.status, statusText: response.statusText, headers, body };
   } catch (e) {
-    console.error('net-fetch error:', e.message);
-    throw new Error(e.message);
+    console.error('net-fetch error:', url, e.message);
+    // Return structured error so renderer can show useful diagnostics
+    throw new Error('NETWORK_ERROR:' + e.message);
   }
 });
 
