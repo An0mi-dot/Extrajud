@@ -192,3 +192,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 3b37e2e
 - Notes: fix: rate limiting por email no login + atualizacao logo e lockfile
+## v2.1.5 - 2026-03-10
+
+- Commit: 5ceabca
+- Notes: fix: melhorar diagnostico de erro de rede no login
