@@ -563,6 +563,7 @@
                         <p style="margin:5px 0;"><strong>Prazo Externo:</strong> <span id="dt-prazo">-</span></p>
                         <p style="margin:5px 0;"><strong>SLA:</strong> <span id="dt-sla">-</span></p>
                         <p style="margin:5px 0;"><strong>Cidade:</strong> <span id="dt-cidade">-</span></p>
+                        <p style="margin:5px 0;"><strong>Aberta em:</strong> <span id="dt-abertura" style="color:var(--text-secondary); font-size:12px;">-</span></p>
                     </div>
                 </div>
 
@@ -582,12 +583,34 @@
 
         <div id="painel" class="tab-content">
             <h2 class="animate fade-in-up">Painel de KPIs / SLA</h2>
-            <div class="panel-box">
-                <p>Quantidade de ofícios recebidos por mês: <em>-</em></p>
-                <p>Quantitativo por objeto: <em>-</em></p>
-                <p>Subsídios atrasados: <em>-</em></p>
-                <p>Decisões de arquivamento: <em>-</em></p>
+            <div id="kpi-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:16px; margin-bottom:24px;">
+                <div class="panel-box" style="text-align:center;">
+                    <div style="font-size:28px; font-weight:700; color:var(--primary-color);" id="kpi-total">-</div>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Total de solicitações</div>
+                </div>
+                <div class="panel-box" style="text-align:center;">
+                    <div style="font-size:28px; font-weight:700; color:#f59e0b;" id="kpi-andamento">-</div>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Em andamento</div>
+                </div>
+                <div class="panel-box" style="text-align:center;">
+                    <div style="font-size:28px; font-weight:700; color:#10b981;" id="kpi-concluido">-</div>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Concluídas</div>
+                </div>
+                <div class="panel-box" style="text-align:center;">
+                    <div style="font-size:28px; font-weight:700; color:#ef4444;" id="kpi-atrasado">-</div>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Atrasadas (prazo vencido)</div>
+                </div>
+                <div class="panel-box" style="text-align:center;">
+                    <div style="font-size:28px; font-weight:700; color:#8b5cf6;" id="kpi-pendente">-</div>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Pendentes de info</div>
+                </div>
+                <div class="panel-box" style="text-align:center;">
+                    <div style="font-size:28px; font-weight:700; color:#ef4444;" id="kpi-critico">-</div>
+                    <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">SLA Crítico abertos</div>
+                </div>
             </div>
+            <h3 style="font-size:14px; font-weight:600; color:var(--text-secondary); margin-bottom:12px;">Por tipo de subsídio</h3>
+            <div id="kpi-por-tipo" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
         </div>
     </div>
 
@@ -966,6 +989,13 @@
     <script type="module">
         import { supabase } from './assets/supabaseClient.js';
 
+        // ── Usuário logado ──────────────────────────────────────────────────
+        let currentUser = null;
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            currentUser = user;
+        } catch(e) { console.warn('Não foi possível obter usuário logado', e); }
+
         const form = document.getElementById('form-nova-solicitacao');
         
         if (form) {
@@ -1018,8 +1048,9 @@
                                 importance_flag: importante,
                                 indigena_flag: indigena,
                                 tradicional_flag: tradicional,
-                                status: 'Novo', // Status inicial default
-                                // data_abertura: new Date().toISOString() // Removido pois a coluna não existe
+                                status: 'Novo',
+                                user_id: currentUser ? currentUser.id : null,
+                                user_email: currentUser ? currentUser.email : null,
                             }
                         ])
                         .select();
@@ -1131,6 +1162,7 @@
                             <th>Status</th>
                             <th>Prazo</th>
                             <th>SLA</th>
+                            <th>Aberta em</th>
                         </tr>
                     `;
                     // Listener do select-all
@@ -1151,18 +1183,24 @@
                             <th>Status</th>
                             <th>Prazo Externo</th>
                             <th>SLA</th>
+                            <th>Aberta em</th>
                         </tr>
                     `;
                 }
             }
 
-            const colCount = isTestMode ? 7 : 6;
+            const colCount = isTestMode ? 8 : 7;
             tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;">Carregando...</td></tr>`;
 
-            const { data, error } = await supabase
+            let query = supabase
                 .from('solicitacoes_preventivo')
                 .select('*')
-                .order('id', { ascending: false });
+                .order('created_at', { ascending: false });
+
+            // Filtra apenas as solicitações do usuário logado
+            if (currentUser) query = query.eq('user_id', currentUser.id);
+
+            const { data, error } = await query;
 
             if (error) {
                 console.error('Erro ao carregar:', error);
@@ -1181,6 +1219,7 @@
                 const tr = document.createElement('tr');
                 // Formatação simples de data
                 const dateVal = item.prazo_externo ? new Date(item.prazo_externo).toLocaleDateString('pt-BR') : '-';
+                const openedVal = item.created_at ? new Date(item.created_at).toLocaleDateString('pt-BR') : '-';
                 
                 // Monta ícones das flags
                 let flagsHtml = '';
@@ -1202,6 +1241,7 @@
                     <td><span class="badge-status">${item.status || 'Novo'}</span></td>
                     <td>${dateVal}</td>
                     <td>${item.sla_regra || '-'}</td>
+                    <td style="font-size:11px; color:var(--text-secondary);">${openedVal}</td>
                 `;
                 
                 tr.innerHTML = rowHtml;
@@ -1254,6 +1294,9 @@
             document.getElementById('dt-sla').textContent = item.sla_regra || '-';
             document.getElementById('dt-cidade').textContent = item.cidade || '-';
             document.getElementById('dt-descricao').textContent = item.descricao || '-';
+            // Data de abertura
+            const dtAberta = document.getElementById('dt-abertura');
+            if (dtAberta) dtAberta.textContent = item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-';
             
             // Set Status Select
             const selStatus = document.getElementById('dt-status');
@@ -1317,6 +1360,50 @@
         if (btnMinhas) {
             btnMinhas.addEventListener('click', loadSolicitacoes);
         }
+
+        // ── Painel de KPIs ─────────────────────────────────────────────────
+        async function loadKPIs() {
+            try {
+                let q = supabase.from('solicitacoes_preventivo').select('status, sla_regra, prazo_externo, tipo_subsidio');
+                if (currentUser) q = q.eq('user_id', currentUser.id);
+                const { data, error } = await q;
+                if (error) throw error;
+
+                const today = new Date(); today.setHours(0,0,0,0);
+                const total      = data.length;
+                const andamento  = data.filter(r => r.status === 'Em Andamento' || r.status === 'Em Análise').length;
+                const concluido  = data.filter(r => r.status === 'Concluído').length;
+                const pendente   = data.filter(r => r.status === 'Pendente Info').length;
+                const critico    = data.filter(r => r.sla_regra && r.sla_regra.toLowerCase().includes('crítico') && r.status !== 'Concluído' && r.status !== 'Cancelado').length;
+                const atrasado   = data.filter(r => {
+                    if (!r.prazo_externo) return false;
+                    if (r.status === 'Concluído' || r.status === 'Cancelado') return false;
+                    return new Date(r.prazo_externo) < today;
+                }).length;
+
+                const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+                set('kpi-total',    total);
+                set('kpi-andamento', andamento);
+                set('kpi-concluido', concluido);
+                set('kpi-atrasado',  atrasado);
+                set('kpi-pendente',  pendente);
+                set('kpi-critico',   critico);
+
+                // Por tipo
+                const byTipo = {};
+                data.forEach(r => { const t = r.tipo_subsidio || 'Outros'; byTipo[t] = (byTipo[t]||0)+1; });
+                const tipoEl = document.getElementById('kpi-por-tipo');
+                if (tipoEl) {
+                    tipoEl.innerHTML = Object.entries(byTipo)
+                        .sort((a,b) => b[1]-a[1])
+                        .map(([t,n]) => `<span style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:20px; padding:4px 12px; font-size:12px; color:var(--text-color);"><strong>${n}</strong> ${t}</span>`)
+                        .join('');
+                }
+            } catch(e) { console.error('Erro ao carregar KPIs', e); }
+        }
+
+        const btnPainel = document.querySelector('button[data-tab="painel"]');
+        if (btnPainel) btnPainel.addEventListener('click', loadKPIs);
 
         // --- IMPORT EXYON LOGIC (Beta) ---
         const btnImportExyon = document.getElementById('btn-import-exyon');
