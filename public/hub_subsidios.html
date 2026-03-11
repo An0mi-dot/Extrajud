@@ -956,8 +956,8 @@
                 } catch(err) {
                     console.error('Erro ao salvar:', err);
                     let msg = err.message || String(err);
-                    if (msg.includes('relation') && msg.includes('does not exist')) {
-                        msg = 'A tabela "subsidios_trabalhistas" ainda não existe no Supabase.\n\nExecute o SQL de migração disponível em docs/migrations/001_subsidios_trabalhistas.sql';
+                    if (msg.includes('subsidios_trabalhistas') || msg.includes('schema cache') || (msg.includes('relation') && msg.includes('does not exist'))) {
+                        msg = 'A tabela "subsidios_trabalhistas" ainda não existe no Supabase.\n\nAcesse: Supabase → SQL Editor → cole e execute o conteúdo de docs/migrations/001_subsidios_trabalhistas.sql';
                     }
                     await ipcAlert('Erro ao salvar: ' + msg);
                 } finally {
@@ -1078,10 +1078,10 @@
             } catch(err) {
                 console.error('Erro ao carregar processos:', err);
                 let errMsg = err.message || String(err);
-                if (errMsg.includes('relation') && errMsg.includes('does not exist')) {
-                    errMsg = 'Tabela não encontrada. Execute o SQL de migração em docs/migrations/001_subsidios_trabalhistas.sql';
+                if (errMsg.includes('subsidios_trabalhistas') || errMsg.includes('schema cache') || (errMsg.includes('relation') && errMsg.includes('does not exist'))) {
+                    errMsg = '⚠ Tabela não encontrada no Supabase. Execute o SQL em: docs/migrations/001_subsidios_trabalhistas.sql';
                 }
-                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:#ef4444;">${errMsg}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:#ef4444; padding:16px;">${errMsg}<br><small style="color:var(--text-secondary); font-size:11px;">Supabase → SQL Editor → cole o arquivo docs/migrations/001_subsidios_trabalhistas.sql</small></td></tr>`;}
             }
         }
 
