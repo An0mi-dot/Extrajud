@@ -200,3 +200,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 641101b
 - Notes: fix: fallback display name capitaliza email quando metadata vazio
+## v2.1.7 - 2026-03-11
+
+- Commit: f03839f
+- Notes: feat: fluxo por usuario, painel KPIs, coluna data abertura
