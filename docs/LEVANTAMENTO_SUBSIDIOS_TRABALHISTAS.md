@@ -97,7 +97,43 @@ O EXTRATJUD ficaria verificando a caixa de entrada automaticamente. Quando chega
 
 ---
 
-## 5. Perguntas para Alinhamento
+## 6. Organização por Pessoa (CPF) no SharePoint
+
+Cada pessoa envolvida em um processo trabalhista é **única**, e o CPF é o identificador mais confiável para isso. Pode haver duas pessoas chamadas "João Silva" em processos diferentes — o CPF resolve a ambiguidade.
+
+### Como funcionaria a estrutura de pastas
+
+A pasta raiz de Subsídios no SharePoint seria organizada assim:
+
+```
+Subsídios/
+├── 441.234.567-89 — João Silva/
+│   ├── Contestação — 0001234-56.2024.5.05.0001
+│   └── Laudo Pericial — 0009876-11.2025.5.05.0033
+├── 123.456.789-00 — Maria Souza/
+│   └── Inicial — 0002345-78.2024.5.05.0002
+└── ...
+```
+
+- O nome da pasta combina **CPF + Nome da parte** para facilitar a leitura humana sem perder a precisão
+- Quando chega um novo subsídio para um CPF que já tem pasta, o arquivo vai direto para a pasta existente
+- Se o CPF nunca apareceu antes, o sistema **cria a pasta automaticamente** antes de colocar o arquivo
+- Um mesmo CPF nunca terá duas pastas, independente de variações de grafia no nome
+
+### O que isso resolve
+
+- Dois "João Silva" com CPFs diferentes terão pastas separadas — sem risco de mistura
+- O jurídico pode abrir a pasta de um CPF específico e ver todos os subsídios daquela pessoa em um só lugar
+- Facilita auditorias e buscas futuras
+
+### Pergunta adicional para a equipe
+
+- O CPF já é informado atualmente nos e-mails de pedido? Ou precisaria ser incluído como campo obrigatório no novo formulário?
+- Quando não houver CPF (ex: pessoa jurídica), qual seria o critério de agrupamento? CNPJ? Razão Social?
+
+---
+
+## 6. Perguntas para Alinhamento
 
 Para que possamos construir o sistema da forma certa, precisamos que a equipe responda as seguintes perguntas:
 
@@ -129,7 +165,7 @@ Para que possamos construir o sistema da forma certa, precisamos que a equipe re
 
 ---
 
-## 6. O Que Já Está Pronto
+## 7. O Que Já Está Pronto
 
 Para que a equipe tenha noção do que já foi desenvolvido, o EXTRATJUD já conta com:
 
@@ -144,7 +180,7 @@ O que falta construir depende das respostas acima, principalmente: o formulário
 
 ---
 
-## 7. Próximos Passos Sugeridos
+## 8. Próximos Passos Sugeridos
 
 | # | Ação | Responsável |
 |---|------|-------------|
