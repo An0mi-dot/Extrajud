@@ -177,6 +177,34 @@
             color: var(--primary-color);
             text-decoration: underline;
         }
+
+        .btn-guest {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px dashed var(--border-color);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-guest:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: var(--primary-light);
+        }
+        .btn-guest:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -239,6 +267,10 @@
             <div id="error-message" class="error-msg"></div>
             <div id="success-message" class="error-msg" style="color: #10b981; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2);"></div>
         </form>
+
+        <button class="btn-guest" id="btn-guest-login">
+            <i class="fa-solid fa-user-clock"></i> Entrar como Visitante
+        </button>
         
         <a href="#" class="footer-link" id="btn-forgot" style="margin-top: 10px;">Esqueci minha senha</a>
     </div>
@@ -463,6 +495,63 @@
             }
         });
         
+        const btnGuest = document.getElementById('btn-guest-login');
+        if (btnGuest) {
+            btnGuest.addEventListener('click', async () => {
+                btnGuest.disabled = true;
+                btnGuest.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Criando acesso...';
+                if(errorMsg) errorMsg.style.display = 'none';
+
+                try {
+                    // Generate unique guest credentials using timestamp
+                    const ts = Date.now();
+                    const guestEmail = `naologin${ts}@gmail.com`;
+                    const guestPass  = 'naologin123';
+                    const guestName  = `Visitante ${ts.toString().slice(-4)}`;
+
+                    const { data, error } = await supabase.auth.signUp({
+                        email: guestEmail,
+                        password: guestPass,
+                        options: {
+                            data: {
+                                first_name: 'Visitante',
+                                last_name: ts.toString().slice(-4),
+                                full_name: guestName,
+                                is_guest: true
+                            }
+                        }
+                    });
+
+                    if (error) throw error;
+
+                    // If email confirmation not required, session is set immediately
+                    const session = data.session;
+                    if (!session) {
+                        throw new Error('Confirmação de email necessária — desative-a no painel Supabase para que o acesso visitante funcione.');
+                    }
+
+                    localStorage.setItem('app_last_login', Date.now().toString());
+                    ipcRenderer.send('login-success', {
+                        email: data.user.email,
+                        id: data.user.id,
+                        user_metadata: data.user.user_metadata
+                    });
+                } catch (err) {
+                    console.error('Guest login error:', err);
+                    let msg = err.message || String(err);
+                    if (msg.includes('NETWORK_ERROR') || msg.includes('Failed to fetch')) {
+                        msg = 'Erro de rede — verifique sua conexão com a internet.';
+                    }
+                    if(errorMsg) {
+                        errorMsg.textContent = 'Visitante: ' + msg;
+                        errorMsg.style.display = 'block';
+                    }
+                    btnGuest.disabled = false;
+                    btnGuest.innerHTML = '<i class="fa-solid fa-user-clock"></i> Entrar como Visitante';
+                }
+            });
+        }
+
         // Check if already logged in (persistence)
         (async () => {
             const { data: { session } } = await supabase.auth.getSession();
