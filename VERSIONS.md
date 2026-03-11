@@ -204,3 +204,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: f03839f
 - Notes: feat: fluxo por usuario, painel KPIs, coluna data abertura
+## v2.1.8 - 2026-03-11
+
+- Commit: 292cd14
+- Notes: feat: dialogs nativos do SO - substituir alert/confirm por ipcAlert/ipcConfirm em todos os modulos
