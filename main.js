@@ -993,6 +993,31 @@ ipcMain.handle('dialog:openDirectory', async () => {
     }
 });
 
+// Native OS dialogs (so they appear as real OS windows, not in-page overlays)
+ipcMain.handle('dialog:alert', async (event, message, title = 'EXTRATJUD') => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    await dialog.showMessageBox(win, {
+        type: 'info',
+        buttons: ['OK'],
+        defaultId: 0,
+        title,
+        message: String(message)
+    });
+});
+
+ipcMain.handle('dialog:confirm', async (event, message, title = 'EXTRATJUD') => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const { response } = await dialog.showMessageBox(win, {
+        type: 'question',
+        buttons: ['Cancelar', 'OK'],
+        defaultId: 1,
+        cancelId: 0,
+        title,
+        message: String(message)
+    });
+    return response === 1;
+});
+
 // Return the current URL loaded inside the integrated webview (renderer side)
 ipcMain.handle('get-webview-url', async () => {
     try {

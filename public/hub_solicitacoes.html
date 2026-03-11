@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/dialogs.js"></script>
 
     <!-- Supabase Módulo -->
     <script type="module" src="assets/supabaseClient.js"></script>
@@ -948,7 +949,7 @@
 
                         modalSettings.style.display = 'none';
                      } catch(e) {
-                         alert('Erro ao salvar: ' + e.message);
+                         await ipcAlert('Erro ao salvar: ' + e.message);
                      }
                 });
             }
@@ -1020,7 +1021,7 @@
                 const tradicional = document.getElementById('chk-tradicional').checked;
 
                 if (!titulo || !unidade || !area || !tipo || !orgao || !prazoExt || !sla || !cidade) {
-                    alert('Por favor, preencha todos os campos obrigatórios.');
+                    await ipcAlert('Por favor, preencha todos os campos obrigatórios.');
                     return;
                 }
 
@@ -1057,14 +1058,14 @@
 
                     if (error) throw error;
 
-                    alert('Solicitação criada com sucesso!');
+                    await ipcAlert('Solicitação criada com sucesso!');
                     form.reset();
                     // Opcional: Voltar para a aba "Minhas solicitações" ou recarregar a lista
                     loadSolicitacoes(); // Refresh list if needed in background
                     
                 } catch (err) {
                     console.error('Erro ao salvar:', err);
-                    alert('Erro ao salvar solicitação: ' + err.message);
+                    await ipcAlert('Erro ao salvar solicitação: ' + err.message);
                 } finally {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
@@ -1092,13 +1093,13 @@
             delete keysMap[e.key];
         });
 
-        function toggleTestMode() {
+        async function toggleTestMode() {
             isTestMode = !isTestMode;
             const controls = document.getElementById('test-mode-controls');
             if (controls) {
                 controls.style.display = isTestMode ? 'flex' : 'none';
             }
-            alert(isTestMode ? 'MODO TESTE ATIVADO: Permite excluir solicitações.' : 'Modo Teste Desativado.');
+            await ipcAwait ipcAlert(isTestMode ? 'MODO TESTE ATIVADO: Permite excluir solicitações.' : 'Modo Teste Desativado.');
             loadSolicitacoes();
         }
 
@@ -1108,11 +1109,11 @@
             btnDeleteSelected.addEventListener('click', async () => {
                 const checks = document.querySelectorAll('.chk-solicitacao:checked');
                 if (checks.length === 0) {
-                    alert('Nenhuma solicitação selecionada.');
+                    await ipcAlert('Nenhuma solicitação selecionada.');
                     return;
                 }
 
-                if (!confirm(`Tem certeza que deseja EXCLUIR PERMANENTEMENTE ${checks.length} solicitações?`)) {
+                if (!await ipcConfirm(`Tem certeza que deseja EXCLUIR PERMANENTEMENTE ${checks.length} solicitações?`)) {
                     return;
                 }
 
@@ -1123,7 +1124,7 @@
                 const ids = Array.from(checks).map(c => c.value);
 
                 if (ids.length === 0) {
-                     alert('Não conseguimos identificar os IDs selecionados.');
+                     await ipcAlert('Não conseguimos identificar os IDs selecionados.');
                      return;
                 }
 
@@ -1135,11 +1136,11 @@
 
                     if (error) throw error;
 
-                    alert('Solicitações excluídas com sucesso.');
+                    await ipcAlert('Solicitações excluídas com sucesso.');
                     loadSolicitacoes(); // Refresh list immediately
                 } catch (err) {
                     console.error(err);
-                    alert('Erro ao excluir: ' + (err.message || JSON.stringify(err)));
+                    await ipcAlert('Erro ao excluir: ' + (err.message || JSON.stringify(err)));
                 }
             });
         }
@@ -1342,12 +1343,12 @@
 
                     if (error) throw error;
 
-                    alert('Status atualizado para: ' + newStatus);
+                    await ipcAlert('Status atualizado para: ' + newStatus);
                     // Update local object to reflect change immediately
                     window.currentSolicitacao.status = newStatus;
                 } catch (err) {
                     console.error('Erro ao atualizar status:', err);
-                    alert('Falha ao atualizar status.');
+                    await ipcAlert('Falha ao atualizar status.');
                 } finally {
                     btnUpdate.innerHTML = originalHtml;
                     btnUpdate.disabled = false;
@@ -1521,14 +1522,14 @@
 
                         if (rowsToImport.length === 0) {
                             // Check if our specific process was found but filtered out
-                            alert(`Nenhum processo encontrado onde:\n- Coluna N contenha "Terceiro"\n- Coluna L contenha "Coelba/Neoenergia"\n\nDica: Abra o console (Ctrl+Shift+I) para ver se o processo 8003402 foi encontrado e por que foi ignorado.\n\nLinhas lidas: ${rowsRead}.\n\nAMOSTRA (L vs N):\n${debugMsg}`);
+                            await ipcAlert(`Nenhum processo encontrado onde:\n- Coluna N contenha "Terceiro"\n- Coluna L contenha "Coelba/Neoenergia"\n\nDica: Abra o console (Ctrl+Shift+I) para ver se o processo 8003402 foi encontrado e por que foi ignorado.\n\nLinhas lidas: ${rowsRead}.\n\nAMOSTRA (L vs N):\n${debugMsg}`);
                             btnImportExyon.innerHTML = originalText;
                             return;
                         }
 
                         // Confirmation Dialog
                         const confirmMsg = `Encontrados ${rowsToImport.length} processos compatíveis.\n\nDeseja importar agora?`;
-                        if (!confirm(confirmMsg)) {
+                        if (!await ipcConfirm(confirmMsg)) {
                             btnImportExyon.innerHTML = originalText;
                             return;
                         }
@@ -1551,7 +1552,7 @@
                         if (error) throw error; 
 
                         console.log('Import success', data);
-                        alert(`Sucesso! ${rowsToImport.length} solicitações importadas.`);
+                        await ipcAlert(`Sucesso! ${rowsToImport.length} solicitações importadas.`);
                         
                         // If loadSolicitacoes exists, refresh list
                         if (typeof loadSolicitacoes === 'function') {
@@ -1561,7 +1562,7 @@
                         btnImportExyon.innerHTML = originalText;
                         
                     } catch (err) {
-                        alert('Erro na importação: ' + err.message);
+                        await ipcAlert('Erro na importação: ' + err.message);
                         console.error(err);
                         btnImportExyon.innerHTML = originalText;
                     } finally {

@@ -9,6 +9,7 @@
     
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/dialogs.js"></script>
 
     <style>
         /* Specific overrides - Default moved to theme.css */
@@ -381,8 +382,8 @@
         
         document.getElementById('btn-copy-log').addEventListener('click', () => {
              const json = JSON.stringify(fullLogs, null, 2);
-             navigator.clipboard.writeText(json).then(() => {
-                 alert('Log detalhado copiado para a área de transferência!');
+             navigator.clipboard.writeText(json).then(async () => {
+                 await ipcAlert('Log detalhado copiado para a área de transferência!');
              });
         });
 
@@ -861,9 +862,9 @@
 
                         modalSettings.style.display = 'none';
                         // Feedback visual opcional
-                        alert('Configurações salvas com sucesso.');
+                        await ipcAlert('Configurações salvas com sucesso.');
                      } catch(e) {
-                         alert('Erro ao salvar: ' + e.message);
+                         await ipcAlert('Erro ao salvar: ' + e.message);
                      }
                 });
             }

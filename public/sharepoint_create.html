@@ -13,6 +13,7 @@
     <!-- Theme & Global Assets -->
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/dialogs.js"></script>
 
     <style>
         /* :root variables handled by theme.css */
@@ -935,7 +936,7 @@
             const logs = document.getElementById('logs') ? document.getElementById('logs').innerText : '';
             navigator.clipboard.writeText(logs);
             if(window.addLog) window.addLog('Logs copiados para area de transferência.', 'log-success'); 
-            else alert('Copiado!');
+            else await ipcAlert('Copiado!');
         };
         
         const btnDwn = document.getElementById('btn-download-log');

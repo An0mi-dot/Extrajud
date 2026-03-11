@@ -13,6 +13,7 @@
     <!-- Theme -->
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/dialogs.js"></script>
 
     <style>
         body {
@@ -927,7 +928,7 @@
 
                         modalSettings.style.display = 'none';
                     } catch(e) {
-                        alert('Erro ao salvar: ' + e.message);
+                        await ipcAlert('Erro ao salvar: ' + e.message);
                     }
                 };
             }
@@ -983,10 +984,10 @@
                         initUserInterface(userData);
                         
                         modalProfile.style.display = 'none';
-                        alert('Perfil atualizado com sucesso!');
+                        await ipcAlert('Perfil atualizado com sucesso!');
                         
                     } catch (e) {
-                        alert('Erro ao atualizar: ' + e.message);
+                        await ipcAlert('Erro ao atualizar: ' + e.message);
                     } finally {
                         btnSaveProfile.innerHTML = originalText;
                     }
@@ -1101,7 +1102,7 @@
                     if(!file) return;
                     
                     if(file.size > 2 * 1024 * 1024) {
-                        alert('A imagem deve ter no máximo 2MB.');
+                        await ipcAlert('A imagem deve ter no máximo 2MB.');
                         return;
                     }
                     
@@ -1128,11 +1129,11 @@
                         document.getElementById('inp-avatar-url').value = publicUrl;
                         updateAvatarUI('modal-avatar-preview', getDisplayName(user), publicUrl);
                         
-                        alert('Imagem enviada! Clique em SALVAR ALTERAÇÕES para confirmar.');
+                        await ipcAlert('Imagem enviada! Clique em SALVAR ALTERAÇÕES para confirmar.');
 
                     } catch (error) {
                         console.error('Upload error', error);
-                        alert('Erro ao enviar imagem: ' + (error.message || error));
+                        await ipcAlert('Erro ao enviar imagem: ' + (error.message || error));
                     } finally {
                         if(loadingText) loadingText.style.display = 'none';
                         inpFile.value = ''; // Reset input to allow sending same file again
@@ -1154,9 +1155,9 @@
                     try {
                         const { error } = await supabase.auth.updateUser({ email: newEmail });
                         if (error) throw error;
-                        alert(`Um email de confirmação foi enviado para ${newEmail} e para o seu email atual.`);
+                        await ipcAlert(`Um email de confirmação foi enviado para ${newEmail} e para o seu email atual.`);
                     } catch (e) {
-                        alert('Erro ao alterar email: ' + e.message);
+                        await ipcAlert('Erro ao alterar email: ' + e.message);
                     } finally {
                         btnChangeEmail.textContent = originalText;
                         btnChangeEmail.disabled = false;
@@ -1166,7 +1167,7 @@
 
             if (btnResetPass) {
                 btnResetPass.onclick = async () => {
-                    if (!confirm("Isso enviará um link de redefinição para " + user.email + ". Continuar?")) return;
+                    if (!await ipcConfirm("Isso enviará um link de redefinição para " + user.email + ". Continuar?")) return;
                     
                     const originalText = btnResetPass.innerHTML;
                     btnResetPass.textContent = 'Enviando...';
@@ -1175,9 +1176,9 @@
                     try {
                         const { error } = await supabase.auth.resetPasswordForEmail(user.email);
                         if (error) throw error;
-                        alert('Email enviado! Verifique sua caixa de entrada.');
+                        await ipcAlert('Email enviado! Verifique sua caixa de entrada.');
                     } catch (e) {
-                        alert('Erro: ' + e.message);
+                        await ipcAlert('Erro: ' + e.message);
                     } finally {
                         btnResetPass.innerHTML = originalText;
                         btnResetPass.disabled = false;
@@ -1202,7 +1203,7 @@
                         if (menu) menu.style.display = 'none';
                     } else {
                         // Announce activation
-                        alert('Modo de Teste: ' + (isTestMode ? 'ATIVADO' : 'DESATIVADO'));
+                        ipcAlert('Modo de Teste: ' + (isTestMode ? 'ATIVADO' : 'DESATIVADO')).catch(()=>{});
                     }
                 }
             };
@@ -1408,7 +1409,7 @@
                     const email = document.getElementById('inp-admin-email').value;
                     const role = document.getElementById('sel-admin-role').value;
                     
-                    if(!email || !email.includes('@')) { alert('Email inválido'); return; }
+                    if(!email || !email.includes('@')) { await ipcAlert('Email inválido'); return; }
                     
                     saveAdmin.textContent = 'Salvando...';
                     saveAdmin.disabled = true;
@@ -1416,15 +1417,15 @@
                     try {
                         if(role === 'remove') {
                             await supabase.from('user_roles').delete().eq('email', email);
-                            alert('Removido!');
+                            await ipcAlert('Removido!');
                         } else {
                             await supabase.from('user_roles').upsert({ email, role }, { onConflict: 'email' });
-                            alert(' salvo!');
+                            await ipcAlert(' salvo!');
                         }
                         modalAdmin.style.display = 'none';
                         document.getElementById('inp-admin-email').value = '';
                     } catch(e) {
-                        alert('Erro: ' + e.message);
+                        await ipcAlert('Erro: ' + e.message);
                     } finally {
                         saveAdmin.textContent = 'Salvar';
                         saveAdmin.disabled = false;

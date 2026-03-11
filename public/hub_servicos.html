@@ -11,6 +11,7 @@
     
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/dialogs.js"></script>
 
     <style>
         /* Specific page overrides only */
@@ -789,7 +790,7 @@
         // Show top-level JS errors to user (no app-clock used)
         window.onerror = function(message, source, lineno, colno, error) {
             try {
-                alert('Erro de script na página: ' + message);
+                ipcAlert('Erro de script na página: ' + message).catch(()=>{});
             } catch (e) { /* ignore */ }
             return false;
         };
@@ -1183,7 +1184,7 @@
         spCreateBtn && spCreateBtn.addEventListener('click', async () => {
             try {
                 const count = parseInt(spCount.value, 10);
-                if (!count || count <= 0) { alert('Digite um número válido de pastas para criar.'); return; }
+                if (!count || count <= 0) { await ipcAlert('Digite um número válido de pastas para criar.'); return; }
                 spCreateBtn.disabled = true; spCreateBtn.textContent = 'Criando...';
                 spLogs.innerHTML = '';
                 spLogs.style.display = 'block';
@@ -1338,7 +1339,7 @@
                         if (process.platform === 'win32') {
                             try {
                                 const createRes = await require('electron').ipcRenderer.invoke('create-outlook-mail-html', { html: html, subject: plainSubject, to: recipients });
-                                if (createRes && createRes.ok) { try { alert('Aberto no Outlook com formatação.'); } catch(e){}; closeModal(); return; }
+                                if (createRes && createRes.ok) { try { await ipcAlert('Aberto no Outlook com formatação.'); } catch(e){}; closeModal(); return; }
                             } catch(e) { /* ignore and fallback */ }
                         }
                     } catch(e) { /* ignore */ }
@@ -1347,7 +1348,7 @@
                     try {
                         const res = await require('electron').ipcRenderer.invoke('open-external', mailto);
                         if (res && res.ok) {
-                            try { alert('Cliente de e-mail aberto.'); } catch(e){}
+                            try { await ipcAlert('Cliente de e-mail aberto.'); } catch(e){}
                             closeModal();
                             return;
                         }
@@ -1356,17 +1357,17 @@
                         const simpleMailto = `mailto:${recipients}?subject=${subject}&body=${simpleBody}`;
                         const res2 = await require('electron').ipcRenderer.invoke('open-external', simpleMailto);
                         if (res2 && res2.ok) {
-                            try { alert('Cliente de e-mail aberto com corpo simplificado (texto truncado).'); } catch(e){}
+                            try { await ipcAlert('Cliente de e-mail aberto com corpo simplificado (texto truncado).'); } catch(e){}
                             closeModal();
                             return;
                         }
-                        try { alert('Falha ao abrir cliente de e-mail. Verifique o aplicativo padrão para mailto.'); } catch(e){}
+                        try { await ipcAlert('Falha ao abrir cliente de e-mail. Verifique o aplicativo padrão para mailto.'); } catch(e){}
                     } catch(e) {
-                        try { alert('Erro ao tentar abrir cliente de e-mail. Verifique o console principal para detalhes.'); } catch(err){}
+                        try { await ipcAlert('Erro ao tentar abrir cliente de e-mail. Verifique o console principal para detalhes.'); } catch(err){}
                     }
                     closeModal();
                 } catch(err){
-                    try { alert('Não foi possível abrir o cliente de e-mail.'); } catch(e){}
+                    try { await ipcAlert('Não foi possível abrir o cliente de e-mail.'); } catch(e){}
                 }
             });
         })();
@@ -1916,7 +1917,7 @@
 
                         modalSettings.style.display = 'none';
                      } catch(e) {
-                         alert('Erro ao salvar: ' + e.message);
+                         await ipcAlert('Erro ao salvar: ' + e.message);
                      }
                 });
             }
@@ -2047,9 +2048,9 @@
             });
         }
 
-        function toggleTestMode() {
+        async function toggleTestMode() {
             isTestMode = !isTestMode;
-            alert(`MODO TESTE: ${isTestMode ? 'ATIVADO' : 'DESATIVADO'}`);
+            await ipcAlert(`MODO TESTE: ${isTestMode ? 'ATIVADO' : 'DESATIVADO'}`);
             if(isTestMode) document.body.classList.add('test-mode');
             else document.body.classList.remove('test-mode');
         }
@@ -2102,7 +2103,7 @@
                     const statusBadge = document.getElementById('role-desc');
 
                     if (!email || !email.includes('@')) {
-                        alert('Digite um email válido.');
+                        await ipcAlert('Digite um email válido.');
                         return;
                     }
 
@@ -2117,19 +2118,19 @@
                                 .delete()
                                 .eq('email', email);
                             if (error) throw error;
-                            alert(`Cargo removido de ${email}`);
+                            await ipcAlert(`Cargo removido de ${email}`);
                         } else {
                             const { error } = await supabase
                                 .from('user_roles')
                                 .upsert({ email: email, role: role }, { onConflict: 'email' });
                             
                             if (error) throw error;
-                            alert(`Sucesso! ${email} agora é ${role.toUpperCase()}`);
+                            await ipcAlert(`Sucesso! ${email} agora é ${role.toUpperCase()}`);
                         }
                         closeAdmin();
                         document.getElementById('inp-role-email').value = ''; // clear
                     } catch (e) {
-                         alert('Erro: ' + e.message);
+                         await ipcAlert('Erro: ' + e.message);
                     } finally {
                         btnSaveRole.disabled = false;
                         btnSaveRole.innerHTML = originalText;

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/dialogs.js"></script>
     <style>
         /* :root removed to inherit from theme.css */
 
@@ -331,7 +332,7 @@
             try {
                 let details = 'Mensagem: ' + message + '\nFonte: ' + source + ':' + lineno + ':' + colno;
                 if (error && error.stack) details += '\nStack:\n' + error.stack;
-                alert('Erro de script na página:\n' + details);
+                ipcAlert('Erro de script na página:\n' + details).catch(()=>{});
             } catch (e) { /* ignore */ }
             return false;
         };
@@ -528,7 +529,7 @@
                     console.log('extrator_projudi: btnSelectDir clicked');
                     if (!ipcRenderer || typeof ipcRenderer.invoke !== 'function') {
                         console.warn('ipcRenderer.invoke not available - cannot open directory dialog');
-                        alert('A seleção de pasta não está disponível neste contexto.');
+                        await ipcAlert('A seleção de pasta não está disponível neste contexto.');
                         return;
                     }
                     const dir = await ipcRenderer.invoke('dialog:openDirectory');
@@ -541,7 +542,7 @@
                     }
                 } catch (e) {
                     console.error('btnSelectDir error (extrator_projudi)', e);
-                    alert('Erro ao abrir seletor de pasta. Veja o console para mais detalhes.');
+                    await ipcAlert('Erro ao abrir seletor de pasta. Veja o console para mais detalhes.');
                 }
             });
             return true;
@@ -1075,7 +1076,7 @@
         if(btnCopyLog) btnCopyLog.onclick = () => {
             const logs = document.getElementById('logs') ? document.getElementById('logs').innerText : '';
             navigator.clipboard.writeText(logs);
-            alert('Logs copiados!');
+            await ipcAlert('Logs copiados!');
         };
         
         const btnDownLog = document.getElementById('btn-download-log');
