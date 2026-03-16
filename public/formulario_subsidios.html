@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subsídios Trabalhistas — Envio de Documentos</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f3f4f8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 64px;
+  }
+
+  .form-wrapper {
+    width: 100%;
+    max-width: 680px;
+  }
+
+  /* Header banner */
+  .form-header {
+    background: linear-gradient(135deg, #003087 0%, #005aaa 100%);
+    border-radius: 12px 12px 0 0;
+    padding: 32px 36px 28px;
+    color: #fff;
+  }
+  .form-header .logo-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 10px;
+  }
+  .form-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .form-header p {
+    font-size: 13.5px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.6;
+  }
+
+  /* Card body */
+  .form-body {
+    background: #fff;
+    border-radius: 0 0 12px 12px;
+    padding: 36px 36px 40px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  .form-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #003087;
+    margin: 28px 0 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .form-section-title:first-child { margin-top: 0; }
+
+  .field-group {
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 6px;
+  }
+  label .required {
+    color: #e53e3e;
+    margin-left: 2px;
+  }
+  label .optional {
+    font-weight: 400;
+    color: #6b7280;
+    font-size: 12px;
+    margin-left: 4px;
+  }
+  input[type="text"],
+  input[type="date"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #111827;
+    background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    appearance: none;
+  }
+  input[type="text"]:focus,
+  input[type="date"]:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #003087;
+    box-shadow: 0 0 0 3px rgba(0,48,135,0.1);
+  }
+  input::placeholder, textarea::placeholder { color: #9ca3af; }
+
+  textarea { resize: vertical; min-height: 100px; }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  .field-hint {
+    font-size: 11.5px;
+    color: #6b7280;
+    margin-top: 5px;
+    line-height: 1.4;
+  }
+
+  .row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* File upload */
+  .file-upload-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .file-upload-area:hover {
+    border-color: #003087;
+    background: #f0f4ff;
+  }
+  .file-upload-area input { display: none; }
+  .file-upload-area .icon { font-size: 28px; margin-bottom: 8px; }
+  .file-upload-area .label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #003087;
+    margin-bottom: 4px;
+  }
+  .file-upload-area .sublabel {
+    font-size: 11.5px;
+    color: #6b7280;
+  }
+  #file-list {
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: #374151;
+  }
+  #file-list .file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    margin-top: 5px;
+  }
+  #file-list .file-item .remove-file {
+    margin-left: auto;
+    cursor: pointer;
+    color: #9ca3af;
+    font-size: 16px;
+    line-height: 1;
+    border: none;
+    background: none;
+    padding: 0;
+  }
+  #file-list .file-item .remove-file:hover { color: #e53e3e; }
+
+  /* Submit */
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #003087 0%, #005aaa 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 28px;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.5px;
+  }
+  .btn-submit:hover { opacity: 0.92; transform: translateY(-1px); }
+  .btn-submit:active { transform: translateY(0); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* Success state */
+  #success-screen {
+    display: none;
+    text-align: center;
+    padding: 48px 24px;
+  }
+  #success-screen .check-icon {
+    width: 64px; height: 64px;
+    background: #dcfce7;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+    margin: 0 auto 20px;
+  }
+  #success-screen h2 { font-size: 20px; color: #111827; margin-bottom: 8px; }
+  #success-screen p { font-size: 14px; color: #6b7280; line-height: 1.6; }
+  #success-screen .btn-new {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 10px 24px;
+    background: #003087;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  /* Validation */
+  input.invalid, select.invalid, textarea.invalid {
+    border-color: #e53e3e;
+    box-shadow: 0 0 0 3px rgba(229,62,62,0.1);
+  }
+  .error-msg {
+    font-size: 11.5px;
+    color: #e53e3e;
+    margin-top: 4px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  /* CPF format */
+  .cpf-display { font-family: 'JetBrains Mono', 'Courier New', monospace; letter-spacing: 1px; }
+
+  footer {
+    margin-top: 24px;
+    font-size: 11.5px;
+    color: #9ca3af;
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 520px) {
+    .form-header, .form-body { padding-left: 20px; padding-right: 20px; }
+    .row-2col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="form-wrapper">
+  <div class="form-header">
+    <div class="logo-label">Jurídico Trabalhista · Neoenergia / Iberdrola</div>
+    <h1>Envio de Subsídio Trabalhista</h1>
+    <p>Use este formulário para enviar documentos, pedidos ou informações ao setor jurídico. Todos os campos marcados com <strong>*</strong> são obrigatórios.</p>
+  </div>
+
+  <div class="form-body">
+    <div id="form-content">
+
+      <!-- Seção 1: Identificação -->
+      <div class="form-section-title">Identificação</div>
+
+      <div class="field-group">
+        <label for="nome">Nome completo <span class="required">*</span></label>
+        <input type="text" id="nome" name="nome" placeholder="Ex.: João da Silva Souza" autocomplete="name" required>
+        <div class="error-msg" id="err-nome">Por favor, informe o nome completo.</div>
+      </div>
+
+      <div class="row-2col">
+        <div class="field-group">
+          <label for="cpf">CPF <span class="required">*</span></label>
+          <input type="text" id="cpf" name="cpf" class="cpf-display" placeholder="000.000.000-00" maxlength="14" required>
+          <div class="error-msg" id="err-cpf">CPF inválido.</div>
+        </div>
+        <div class="field-group">
+          <label for="area">Área / Setor <span class="required">*</span></label>
+          <select id="area" name="area" required>
+            <option value="" disabled selected>Selecione sua área...</option>
+            <option>RH</option>
+            <option>GSS</option>
+            <option>Folha</option>
+            <option>Remuneração</option>
+            <option>Organização</option>
+            <option>Plano de Saúde</option>
+          </select>
+          <div class="error-msg" id="err-area">Por favor, informe a área.</div>
+        </div>
+      </div>
+
+      <!-- Seção 2: Processo -->
+      <div class="form-section-title">Sobre o Processo</div>
+
+      <div class="row-2col">
+        <div class="field-group">
+          <label for="numero_processo">Número do processo <span class="optional">(se houver)</span></label>
+          <input type="text" id="numero_processo" name="numero_processo" placeholder="0000000-00.0000.0.00.0000">
+          <div class="field-hint">Deixe em branco se não souber ou não houver processo.</div>
+        </div>
+        <div class="field-group">
+          <label for="prazo">Prazo <span class="optional">(se houver)</span></label>
+          <input type="date" id="prazo" name="prazo">
+          <div class="field-hint">Data limite para o jurídico tratar este pedido.</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="tipo_documento">Tipo de documento <span class="required">*</span></label>
+        <select id="tipo_documento" name="tipo_documento" required>
+          <option value="" disabled selected>Selecione o tipo...</option>
+          <option>Contestação</option>
+          <option>Laudo Pericial</option>
+          <option>Petição Inicial</option>
+          <option>Recurso</option>
+          <option>Procuração</option>
+          <option>Acordo / Proposta de Acordo</option>
+          <option>Memorando / Comunicado Interno</option>
+          <option>Certidão / Documento Oficial</option>
+          <option>Outros</option>
+        </select>
+        <div class="error-msg" id="err-tipo">Por favor, selecione o tipo de documento.</div>
+      </div>
+
+      <!-- Seção 3: Detalhes -->
+      <div class="form-section-title">Detalhes do Pedido</div>
+
+      <div class="row-2col">
+        <div class="field-group">
+          <label for="comarca">Comarca <span class="optional">(se souber)</span></label>
+          <input type="text" id="comarca" name="comarca" placeholder="Ex.: Salvador, Feira de Santana...">
+          <div class="field-hint">Vara ou cidade onde o processo tramita.</div>
+        </div>
+        <div class="field-group" style="display:flex; align-items:flex-end;">
+          <!-- Responsável é preenchido internamente pelo jurídico no EXTRATJUD -->
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="observacoes">Descrição / Observações <span class="optional">(opcional)</span></label>
+        <textarea id="observacoes" name="observacoes" placeholder="Descreva o pedido, contexto relevante, ou qualquer informação que ajude o jurídico a entender a solicitação..."></textarea>
+      </div>
+
+      <!-- Seção 4: Anexos -->
+      <div class="form-section-title">Arquivos Anexos</div>
+
+      <div class="field-group">
+        <div class="file-upload-area" id="drop-area" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip">
+          <div class="icon">📎</div>
+          <div class="label">Clique para selecionar arquivos</div>
+          <div class="sublabel">PDF, Word, Excel, imagens ou ZIP · Máx. 10 MB por arquivo</div>
+        </div>
+        <div id="file-list"></div>
+        <div class="field-hint" style="margin-top:8px;">Você pode anexar múltiplos arquivos de uma vez.</div>
+      </div>
+
+      <button type="button" class="btn-submit" id="btn-enviar" onclick="submitForm()">
+        Enviar Pedido
+      </button>
+
+    </div>
+
+    <!-- Success screen -->
+    <div id="success-screen">
+      <div class="check-icon">✅</div>
+      <h2>Pedido enviado com sucesso!</h2>
+      <p>Seu pedido foi recebido pelo setor jurídico trabalhista.<br>
+         Nossa equipe irá analisá-lo e entrar em contato se necessário.</p>
+      <button class="btn-new" onclick="resetForm()">Enviar outro pedido</button>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Jurídico Contencioso Trabalhista · Neoenergia / Iberdrola<br>
+  Dúvidas? Entre em contato com o jurídico pelo Teams.
+</footer>
+
+<script>
+  // ── Supabase ──────────────────────────────────────────
+  const { createClient } = window.supabase;
+  const sbClient = createClient(
+    'https://lvicpvodestuhptsaqba.supabase.co',
+    'sb_publishable_swkWnnSxhlJfFKtUfBt4TQ_Yj1fbYd1'
+  );
+
+  // ── CPF mask ─────────────────────────────────────────
+  document.getElementById('cpf').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 9)       v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+    else if (v.length > 6)  v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    else if (v.length > 3)  v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+    this.value = v;
+  });
+
+  // ── Validate CPF ─────────────────────────────────────
+  function isValidCPF(cpf) {
+    const c = cpf.replace(/\D/g, '');
+    if (c.length !== 11 || /^(\d)\1+$/.test(c)) return false;
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += parseInt(c[i]) * (10 - i);
+    let r = (sum * 10) % 11;
+    if (r === 10 || r === 11) r = 0;
+    if (r !== parseInt(c[9])) return false;
+    sum = 0;
+    for (let i = 0; i < 10; i++) sum += parseInt(c[i]) * (11 - i);
+    r = (sum * 10) % 11;
+    if (r === 10 || r === 11) r = 0;
+    return r === parseInt(c[10]);
+  }
+
+  // ── File upload ───────────────────────────────────────
+  const fileInput  = document.getElementById('file-input');
+  const fileList   = document.getElementById('file-list');
+  const dropArea   = document.getElementById('drop-area');
+  let selectedFiles = [];
+
+  fileInput.addEventListener('change', () => addFiles(fileInput.files));
+
+  dropArea.addEventListener('dragover',  e => { e.preventDefault(); dropArea.style.borderColor = '#003087'; dropArea.style.background = '#f0f4ff'; });
+  dropArea.addEventListener('dragleave', e => { dropArea.style.borderColor = ''; dropArea.style.background = ''; });
+  dropArea.addEventListener('drop',      e => { e.preventDefault(); dropArea.style.borderColor = ''; dropArea.style.background = ''; addFiles(e.dataTransfer.files); });
+
+  function addFiles(files) {
+    for (const f of files) {
+      if (!selectedFiles.find(x => x.name === f.name && x.size === f.size)) {
+        selectedFiles.push(f);
+      }
+    }
+    renderFileList();
+  }
+
+  function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    renderFileList();
+  }
+
+  function renderFileList() {
+    fileList.innerHTML = selectedFiles.map((f, i) => `
+      <div class="file-item">
+        📄 <span>${f.name}</span>
+        <span style="color:#9ca3af; font-size:11px;">(${(f.size/1024).toFixed(0)} KB)</span>
+        <button class="remove-file" onclick="removeFile(${i})" title="Remover">×</button>
+      </div>
+    `).join('');
+  }
+
+  // ── Validation helpers ────────────────────────────────
+  function setError(fieldId, errId, show) {
+    const el  = document.getElementById(fieldId);
+    const err = document.getElementById(errId);
+    if (!el || !err) return;
+    el.classList.toggle('invalid', show);
+    err.classList.toggle('show', show);
+  }
+
+  function clearErrors() {
+    ['nome','cpf','area','tipo_documento'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('invalid');
+    });
+    document.querySelectorAll('.error-msg').forEach(e => e.classList.remove('show'));
+  }
+
+  // ── Submit ────────────────────────────────────────────
+  async function submitForm() {
+    clearErrors();
+    let valid = true;
+
+    const nome  = document.getElementById('nome').value.trim();
+    const cpf   = document.getElementById('cpf').value.trim();
+    const area  = document.getElementById('area').value.trim();
+    const tipo  = document.getElementById('tipo_documento').value;
+
+    if (!nome)              { setError('nome',  'err-nome',  true); valid = false; }
+    if (!isValidCPF(cpf))   { setError('cpf',   'err-cpf',   true); valid = false; }
+    if (!area)              { setError('area',  'err-area',  true); valid = false; }
+    if (!tipo)              { setError('tipo_documento', 'err-tipo', true); valid = false; }
+
+    if (!valid) {
+      document.querySelector('.invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const btn = document.getElementById('btn-enviar');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+      const numero = document.getElementById('numero_processo').value.trim() || null;
+      const prazo  = document.getElementById('prazo').value || null;
+      const obs    = document.getElementById('observacoes').value.trim() || null;
+      const comarca = document.getElementById('comarca').value.trim() || null;
+
+      // ── 1. Inserir registro no Supabase ──────────────
+      // Gera ID local para o caminho dos arquivos (sem precisar de SELECT com anon)
+      const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const cpfRaw   = cpf.replace(/\D/g, '');
+
+      const { error: insertError } = await sbClient
+        .from('subsidios_trabalhistas')
+        .insert({
+          nome_parte:      nome,
+          cpf:             cpf,
+          area:            area,
+          numero_processo: numero || '—',
+          tipo_documento:  tipo,
+          prazo:           prazo,
+          comarca:         comarca,
+          observacoes:     obs,
+          status:          'Novo',
+        });
+
+      if (insertError) throw insertError;
+
+      // ── 2. Upload de arquivos para Storage ───────────
+      if (selectedFiles.length > 0) {
+        btn.textContent = 'Enviando arquivos...';
+        for (const file of selectedFiles) {
+          const path = `${cpfRaw}/${uploadId}/${file.name}`;
+          const { error: uploadErr } = await sbClient.storage
+            .from('subsidios-arquivos')
+            .upload(path, file, { upsert: true });
+          if (uploadErr) console.warn('Aviso: erro ao enviar arquivo', file.name, uploadErr.message);
+        }
+      }
+
+      document.getElementById('form-content').style.display = 'none';
+      document.getElementById('success-screen').style.display = 'block';
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+      btn.textContent = 'Enviar Pedido';
+      alert('Erro ao enviar pedido: ' + (err.message || 'Verifique sua conexão e tente novamente.'));
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('form-content').style.display = '';
+    document.getElementById('success-screen').style.display = 'none';
+    document.getElementById('btn-enviar').disabled = false;
+    document.getElementById('btn-enviar').textContent = 'Enviar Pedido';
+    ['nome','cpf','area','numero_processo','observacoes','comarca'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('tipo_documento').value = '';
+    document.getElementById('prazo').value = '';
+    selectedFiles = [];
+    renderFileList();
+    clearErrors();
+  }
+</script>
+</body>
+</html>

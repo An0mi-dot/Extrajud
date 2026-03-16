@@ -1073,7 +1073,7 @@
 
         // --- Log Tools Logic ---
         const btnCopyLog = document.getElementById('btn-copy-log');
-        if(btnCopyLog) btnCopyLog.onclick = () => {
+        if(btnCopyLog) btnCopyLog.onclick = async () => {
             const logs = document.getElementById('logs') ? document.getElementById('logs').innerText : '';
             navigator.clipboard.writeText(logs);
             await ipcAlert('Logs copiados!');

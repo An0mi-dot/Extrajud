@@ -1990,20 +1990,33 @@
                 return;
             }
             currentUser = session.user;
+            console.log('[RBAC] Session User Email:', currentUser.email);
             
             // 2. Fetch Role
+            console.log('[RBAC] Consultando user_roles para email:', currentUser.email);
             const { data, error } = await supabase
                 .from('user_roles')
-                .select('role')
-                .eq('email', currentUser.email)
-                .single(); 
+                .select('cargo, ativo, created_at')
+                .eq('user_email', currentUser.email)
+                .single();
 
-            if (data) {
-                currentRole = data.role;
-                console.log('[RBAC] Role:', currentRole);
+            if (error) {
+                console.error('[RBAC] Erro ao buscar cargo:', error.message);
+                console.log('[RBAC] Verifique se existe registro em user_roles com email:', currentUser.email);
+                currentRole = null;
+            } else if (data) {
+                // Normalizar cargo para minúsculas (case-insensitive)
+                currentRole = data.cargo ? data.cargo.toLowerCase() : null;
+                console.log('[RBAC] ✓ Cargo encontrado:', currentRole);
+                console.log('[RBAC] ✓ Ativo:', data.ativo);
+                console.log('[RBAC] ✓ Criado em:', data.created_at);
+            } else {
+                console.warn('[RBAC] Nenhum resultado retornou (data é undefined)');
+                currentRole = null;
             }
 
             // 3. Apply Permissions
+            console.log('[RBAC] Aplicando permissões com cargo:', currentRole);
             applyPermissions();
         }
 
@@ -2075,13 +2088,13 @@
                     // Fetch existing roles to use as "known users"
                     const { data: users, error } = await supabase
                         .from('user_roles')
-                        .select('email, role');
+                        .select('user_email, cargo');
                     
                     if (users) {
                         users.forEach(u => {
                             const opt = document.createElement('option');
-                            opt.value = u.email;
-                            opt.label = `${u.role.toUpperCase()}`;
+                            opt.value = u.user_email;
+                            opt.label = `${u.cargo.toUpperCase()}`;
                             suggestionList.appendChild(opt);
                         });
                     }
@@ -2122,7 +2135,7 @@
                         } else {
                             const { error } = await supabase
                                 .from('user_roles')
-                                .upsert({ email: email, role: role }, { onConflict: 'email' });
+                                .upsert({ user_email: email, cargo: role }, { onConflict: 'user_email' });
                             
                             if (error) throw error;
                             await ipcAlert(`Sucesso! ${email} agora é ${role.toUpperCase()}`);

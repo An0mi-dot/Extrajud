@@ -345,6 +345,9 @@
             <button id="create-process" class="btn-primary" title="Registrar novo processo">
                 <i class="fa-solid fa-plus"></i> Novo Processo
             </button>
+            <button id="btn-admin-panel" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;" title="Gerenciar Cargos">
+                <i class="fa-solid fa-shield-halved"></i>
+            </button>
             <button id="btn-settings" class="btn-theme" title="Configurações">
                 <i class="fa-solid fa-gear"></i>
             </button>
@@ -632,77 +635,160 @@
                 <h2><i class="fa-solid fa-sliders"></i> Configurações</h2>
                 <button id="btn-close-settings" class="settings-close-btn">&times;</button>
             </div>
+            
             <div class="settings-modal-body">
                 <div class="settings-sidebar">
                     <button class="settings-tab active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
                     <button class="settings-tab" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
+                    <button class="settings-tab" data-tab="download"><i class="fa-solid fa-download"></i> Download</button>
                     <button class="settings-tab" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
                 </div>
+                
                 <div class="settings-content-area">
+                    
+                    <!-- ABAS DE CONTEÚDO -->
                     <div id="tab-geral" class="settings-tab-pane active">
                         <h3 class="settings-section-title">Aparência</h3>
                         <p class="settings-section-desc">Personalize o tema visual do aplicativo.</p>
+                        
                         <div class="theme-selector-group" style="display:flex; gap:10px; margin-bottom: 25px;">
-                            <button class="theme-option" data-theme="light"><i class="fa-solid fa-sun"></i> Claro</button>
-                            <button class="theme-option" data-theme="dark"><i class="fa-solid fa-moon"></i> Escuro</button>
-                            <button class="theme-option" data-theme="system"><i class="fa-solid fa-desktop"></i> Sistema</button>
+                            <button class="theme-option" data-theme="light" title="Claro">
+                                <i class="fa-solid fa-sun"></i> Claro
+                            </button>
+                            <button class="theme-option" data-theme="dark" title="Escuro">
+                                <i class="fa-solid fa-moon"></i> Escuro
+                            </button>
+                            <button class="theme-option" data-theme="system" title="Sistema">
+                                <i class="fa-solid fa-desktop"></i> Sistema
+                            </button>
                         </div>
+
                         <h3 class="settings-section-title">Comportamento da Janela</h3>
+                        <p class="settings-section-desc">Personalize como o Extratjud interage com seu desktop.</p>
+
                         <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
-                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                                 <input type="checkbox" id="chk-minimize-tray" style="width:16px; height:16px;">
-                                <span style="font-size:13px;">Minimizar para a bandeja ao fechar</span>
+                                <span style="font-size:13px; color:var(--text-color);">Minimizar para a bandeja ao fechar</span>
                             </label>
-                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                            
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                                 <input type="checkbox" id="chk-always-top" style="width:16px; height:16px;">
-                                <span style="font-size:13px;">Manter janela sempre no topo</span>
+                                <span style="font-size:13px; color:var(--text-color);">Manter janela sempre no topo</span>
                             </label>
                         </div>
+
                         <h3 class="settings-section-title" style="margin-top: 25px;">Notificações</h3>
+                        <p class="settings-section-desc">Alertas sobre o status das automações.</p>
+
                         <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
-                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                                 <input type="checkbox" id="chk-sound-finish" style="width:16px; height:16px;">
-                                <span style="font-size:13px;">Emitir som ao finalizar</span>
+                                <span style="font-size:13px; color:var(--text-color);">Emitir som ao finalizar</span>
                             </label>
-                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                            
+                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                                 <input type="checkbox" id="chk-notification-finish" style="width:16px; height:16px;">
-                                <span style="font-size:13px;">Notificação do Windows</span>
+                                <span style="font-size:13px; color:var(--text-color);">Notificação do Windows</span>
                             </label>
                         </div>
                     </div>
+
                     <div id="tab-logs" class="settings-tab-pane">
-                        <h3 class="settings-section-title">Gerenciamento de Logs</h3>
+                         <h3 class="settings-section-title">Gerenciamento de Logs</h3>
+                         <p class="settings-section-desc">Centralize os arquivos de registro para facilitar o suporte.</p>
+
                         <div class="settings-item">
                             <label class="settings-label">Diretório Global de Logs</label>
                             <div class="settings-input-group">
                                 <input type="text" id="inp-global-log" readonly placeholder="Selecione uma pasta..." class="settings-input">
                                 <button id="btn-sel-log-dir" class="settings-btn-icon"><i class="fa-solid fa-folder-open"></i></button>
                             </div>
+                            <small style="display:block; margin-top:5px; color:var(--text-secondary);">Todos os robôs salvarão seus relatórios de execução nesta pasta.</small>
                         </div>
                     </div>
+
+                    <div id="tab-download" class="settings-tab-pane">
+                        <div style="text-align:center; padding: 20px;">
+                            <img src="assets/logo2.png" style="height:70px; margin-bottom:15px; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.15));">
+                            <h3 style="margin:0 0 6px 0; color:var(--primary-color); font-size:22px;">EXTRATJUD</h3>
+                            <p style="margin:0 0 25px 0; color:var(--text-secondary); font-size:13px;">v<span class="app-version">?.?.?</span></p>
+
+                            <div style="background: rgba(var(--primary-rgb,16,185,129),0.05); border:1px solid rgba(var(--primary-rgb,16,185,129),0.15); border-radius:12px; padding:20px; margin-bottom:20px; text-align:left;">
+                                <p style="margin:0 0 15px 0; font-size:14px; color:var(--text-color);">Acesse o site oficial para baixar a versão mais recente, ver o changelog e acompanhar as atualizações.</p>
+                                <button onclick="require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" style="width:100%; padding:12px; background:var(--primary-color); color:#000; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px;">
+                                    <i class="fa-solid fa-globe"></i> Abrir Site Oficial
+                                </button>
+                                <button onclick="require('electron').shell.openExternal('https://github.com/An0mi-dot/Extrajud/releases')" style="width:100%; padding:12px; background:transparent; color:var(--text-color); border:1px solid var(--border-color); border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;">
+                                    <i class="fa-brands fa-github"></i> Ver Releases no GitHub
+                                </button>
+                            </div>
+
+                            <div style="font-size:12px; color:var(--text-secondary);">
+                                Desenvolvido por <strong>João Guilherme Almeida Viana</strong>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="tab-sobre" class="settings-tab-pane">
                         <div style="text-align:center; padding:10px 20px;">
                             <img src="assets/logo.png" style="height:80px; margin-bottom:15px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-                            <h3 style="margin:0; color:var(--primary-color); font-size:24px;">EXTRATJUD</h3>
-                            <p style="margin:5px 0; color:var(--text-secondary); font-family:'JetBrains Mono',monospace;">v<span id="settings-app-ver">?.?.?</span></p>
+                            <h3 style="margin:0; color:var(--primary-color); font-size: 24px;">EXTRATJUD</h3>
+                            <p style="margin:5px 0; color:var(--text-secondary); font-family: 'JetBrains Mono', monospace;">v<span id="settings-app-ver">?.?.?</span></p>
+                            
                             <hr style="margin:25px 0; border:0; border-top:1px solid var(--border-color);">
-                            <div style="text-align:left; font-size:13px; color:var(--text-secondary);">
-                                <p>Desenvolvido por <strong>João Guilherme Almeida Viana</strong><br>
-                                Aprendiz Administrativo | Jurídico Contencioso Cível</p>
+                            
+                            <div style="text-align:left; font-size:14px; color:var(--text-color); margin-bottom:25px; line-height: 1.6;">
+                                <h4 style="margin:0 0 12px 0; font-size:16px; color: var(--primary-color);">Sobre a Ferramenta</h4>
+                                <p style="margin-bottom:12px;">
+                                    O <strong>EXTRATJUD</strong> é uma solução corporativa de automação robótica de processos (RPA) desenvolvida para otimizar as operações do setor jurídico da Neoenergia Coelba.
+                                </p>
+                                <p style="margin-bottom:12px;">
+                                    <strong>Nota Técnica:</strong> O aplicativo não utiliza APIs oficiais dos tribunais, devido à indisponibilidade de acesso público a esses recursos. Em vez disso, a ferramenta automatiza processos manuais, utilizando Inteligência Artificial para executar a navegação e as tarefas repetitivas da forma mais rápida possível.
+                                </p>
+                                <p style="margin-bottom:12px;">
+                                    A ferramenta emprega tecnologias de navegação headless para interagir com portais judiciais de forma segura e eficiente, permitindo a extração massiva de dados, geração de relatórios gerenciais e auditoria com evidências documentais.
+                                </p>
                             </div>
-                            <div style="margin-top:20px; font-size:11px; color:#9ca3af; text-align:left; border-top:1px dashed var(--border-color); padding-top:15px;">
-                                <p style="font-weight:600; margin-bottom:5px;">Ambiente:</p>
-                                <ul style="columns:2; list-style:none; padding:0; margin:0;">
+
+                            <div style="background: rgba(var(--primary-rgb, 16, 185, 129), 0.05); border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 25px; border: 1px solid rgba(var(--primary-rgb, 16, 185, 129), 0.1);">
+                                <h4 style="margin:0 0 10px 0; font-size:14px; display:flex; align-items:center; gap:8px;">
+                                    <i class="fa-solid fa-code" style="color:var(--primary-color)"></i> Ficha Técnica
+                                </h4>
+                                <ul style="margin:0; padding-left:20px; font-size:13px; color:var(--text-secondary);">
+                                    <li><strong>Engine:</strong> Electron & Node.js</li>
+                                    <li><strong>Automação:</strong> Microsoft Playwright</li>
+                                    <li><strong>Interface:</strong> HTML5 / CSS3 (Custom Theme)</li>
+                                </ul>
+                            </div>
+
+                            <div style="text-align:left; font-size:13px; color:var(--text-secondary); margin-bottom:20px;">
+                                <p>
+                                    Desenvolvido por <strong>João Guilherme Almeida Viana</strong><br>
+                                    <span style="opacity:0.8; font-size:12px;">Aprendiz Administrativo | Jurídico Contencioso Cível</span><br>
+                                    <a href="mailto:joao.aviana@neoenergia.com" style="color:var(--primary-color); text-decoration:none;">joao.aviana@neoenergia.com</a>
+                                </p>
+                            </div>
+
+                            <div style="margin-top:20px; font-size:11px; color:#9ca3af; text-align:left; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                                <p style="font-weight:600; margin-bottom:5px;">Ambiente de Execução:</p>
+                                <ul style="columns: 2; list-style: none; padding: 0; margin: 0;">
                                     <li>Electron: <span id="env-electron">...</span></li>
                                     <li>Node: <span id="env-node">...</span></li>
                                     <li>Chrome: <span id="env-chrome">...</span></li>
                                     <li>OS: <span id="env-plat">...</span></li>
                                 </ul>
                             </div>
+                            
+                            <div style="margin-top:25px; font-size: 11px; color: #aaa; text-align: center;">
+                                &copy; 2026 Neoenergia Coelba. Todos os direitos reservados.
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
+
             <div class="settings-modal-footer">
                 <button id="btn-save-settings" class="settings-btn-primary"><i class="fa-solid fa-check"></i> Salvar Alterações</button>
             </div>
@@ -1081,7 +1167,7 @@
                 if (errMsg.includes('subsidios_trabalhistas') || errMsg.includes('schema cache') || (errMsg.includes('relation') && errMsg.includes('does not exist'))) {
                     errMsg = '⚠ Tabela não encontrada no Supabase. Execute o SQL em: docs/migrations/001_subsidios_trabalhistas.sql';
                 }
-                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:#ef4444; padding:16px;">${errMsg}<br><small style="color:var(--text-secondary); font-size:11px;">Supabase → SQL Editor → cole o arquivo docs/migrations/001_subsidios_trabalhistas.sql</small></td></tr>`;}
+                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:#ef4444; padding:16px;">${errMsg}<br><small style="color:var(--text-secondary); font-size:11px;">Supabase → SQL Editor → cole o arquivo docs/migrations/001_subsidios_trabalhistas.sql</small></td></tr>`;
             }
         }
 
@@ -1249,6 +1335,218 @@
         }
 
         document.querySelector('button[data-tab="painel"]')?.addEventListener('click', loadKPIs);
+    </script>
+
+    <!-- Modal de Gerenciar Cargos -->
+    <div id="modal-admin-roles" class="settings-modal-overlay">
+        <!-- Overlay will use display flex via JS -->
+        <div class="settings-modal-content" style="max-width: 480px; height: auto; min-height: 250px; overflow: visible;">
+            <div class="settings-modal-header" style="padding: 24px; border-bottom: none; background: transparent;">
+                <h2><i class="fa-solid fa-user-shield" style="color: var(--primary-color);"></i> &nbsp;Gerenciar Cargos</h2>
+                <button id="btn-close-admin" class="settings-close-btn">&times;</button>
+            </div>
+            
+            <div class="settings-modal-body" style="display: block; padding: 0 30px 20px;">
+                <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0; margin-bottom: 24px;">
+                    Selecione um usuário existente ou digite um novo email para atribuir permissões.
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-regular fa-envelope"></i> Email do Usuário</label>
+                    <input type="text" id="inp-role-email" class="form-input" list="user-list-suggestions" placeholder="Selecione ou digite..." autocomplete="off">
+                    <datalist id="user-list-suggestions">
+                        <!-- Populated by JS -->
+                    </datalist>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-id-badge"></i> Cargo</label>
+                    <div style="position: relative;">
+                        <select id="sel-role" class="form-input" style="appearance: none; cursor: pointer;">
+                            <option value="admin">Admin (Acesso Total)</option>
+                            <option value="tester">Tester (Modo Debug)</option>
+                            <option value="pastas">Pastas (SharePoint)</option>
+                            <option value="remove" style="color: #ef4444; font-weight: bold;">❌ REMOVER CARGO</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
+                    </div>
+                    <div id="role-desc" class="role-badge" style="display:none; margin-top: 8px;"></div>
+                </div>
+            </div>
+            
+            <div class="settings-modal-footer" style="padding: 20px 30px; background: var(--bg-color); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                <button id="btn-save-role" class="settings-btn-primary" style="padding: 10px 20px;">
+                    <i class="fa-solid fa-check"></i> Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './assets/supabaseClient.js';
+
+        let currentRole = null;
+
+        async function initRoles() {
+            // 1. Get Session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                console.warn('[RBAC] No session found.');
+                return;
+            }
+            currentUser = session.user;
+            console.log('[RBAC] Session User Email:', currentUser.email);
+            
+            // 2. Fetch Role
+            console.log('[RBAC] Consultando user_roles para email:', currentUser.email);
+            const { data, error } = await supabase
+                .from('user_roles')
+                .select('cargo, ativo, created_at')
+                .eq('user_email', currentUser.email)
+                .single();
+            
+            if (error) {
+                console.error('[RBAC] Erro ao buscar cargo:', error.message);
+                console.log('[RBAC] Verifique se existe registro em user_roles com email:', currentUser.email);
+                currentRole = null;
+            } else if (data) {
+                // Normalizar cargo para minúsculas (case-insensitive)
+                currentRole = data.cargo ? data.cargo.toLowerCase() : null;
+                console.log('[RBAC] ✓ Cargo encontrado:', currentRole);
+                console.log('[RBAC] ✓ Ativo:', data.ativo);
+                console.log('[RBAC] ✓ Criado em:', data.created_at);
+            } else {
+                console.warn('[RBAC] Nenhum resultado retornou (data é undefined)');
+                currentRole = null;
+            }
+
+            // 3. Apply Permissions
+            console.log('[RBAC] Aplicando permissões com cargo:', currentRole);
+            applyPermissions();
+        }
+
+        function applyPermissions() {
+            // Admin Panel Button
+            const btnAdmin = document.getElementById('btn-admin-panel');
+            if (btnAdmin) {
+                if (currentRole === 'admin') {
+                    btnAdmin.style.display = 'flex';
+                } else {
+                    btnAdmin.style.display = 'none';
+                }
+            }
+            
+            // F5+T Listener para Modo Teste
+            if (currentRole === 'admin' || currentRole === 'tester') {
+                setupTestModeListener();
+            }
+        }
+
+        // --- Event Listeners ---
+        function setupTestModeListener() {
+            let f5Flag = false, f5Timer = null;
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'F5') {
+                    f5Flag = true;
+                    if (f5Timer) clearTimeout(f5Timer);
+                    f5Timer = setTimeout(() => { f5Flag = false; }, 800);
+                }
+                if ((e.key === 't' || e.key === 'T') && f5Flag) toggleTestMode();
+            });
+        }
+
+        async function toggleTestMode() {
+            isTestMode = !isTestMode;
+            await ipcAlert(`MODO TESTE: ${isTestMode ? 'ATIVADO' : 'DESATIVADO'}`);
+            if(isTestMode) document.body.classList.add('test-mode');
+            else document.body.classList.remove('test-mode');
+        }
+
+        // --- Admin UI Logic ---
+        const btnAdmin = document.getElementById('btn-admin-panel');
+        const modalAdmin = document.getElementById('modal-admin-roles');
+        const btnCloseAdmin = document.getElementById('btn-close-admin');
+        const btnSaveRole = document.getElementById('btn-save-role');
+        const overlayAdmin = document.getElementById('modal-admin-roles');
+
+        if (btnAdmin && modalAdmin) {
+            btnAdmin.addEventListener('click', async () => {
+                modalAdmin.style.display = 'flex'; // Uses CSS flex to center
+                // Focus input
+                setTimeout(() => document.getElementById('inp-role-email')?.focus(), 100);
+                
+                // Populate suggestions
+                const suggestionList = document.getElementById('user-list-suggestions');
+                if (suggestionList) {
+                    suggestionList.innerHTML = ''; // clear
+                    // Fetch existing roles to use as "known users"
+                    const { data: users, error } = await supabase
+                        .from('user_roles')
+                        .select('user_email, cargo');
+                    
+                    if (users) {
+                        users.forEach(u => {
+                            const opt = document.createElement('option');
+                            opt.value = u.user_email;
+                            opt.label = `${u.cargo.toUpperCase()}`;
+                            suggestionList.appendChild(opt);
+                        });
+                    }
+                }
+            });
+            
+            const closeAdmin = () => modalAdmin.style.display = 'none';
+            if(btnCloseAdmin) btnCloseAdmin.addEventListener('click', closeAdmin);
+            
+            // Close on overlay click
+            overlayAdmin.addEventListener('click', (e) => {
+                if (e.target === overlayAdmin) closeAdmin();
+            });
+
+            if (btnSaveRole) {
+                btnSaveRole.addEventListener('click', async () => {
+                    const email = document.getElementById('inp-role-email').value;
+                    const role = document.getElementById('sel-role').value;
+                    const statusBadge = document.getElementById('role-desc');
+
+                    if (!email || !email.includes('@')) {
+                        await ipcAlert('Digite um email válido.');
+                        return;
+                    }
+
+                    const originalText = btnSaveRole.innerHTML;
+                    btnSaveRole.disabled = true;
+                    btnSaveRole.textContent = 'Salvando...';
+
+                    try {
+                        if (role === 'remove') {
+                            const { error } = await supabase
+                                .from('user_roles')
+                                .delete()
+                                .eq('email', email);
+                            if (error) throw error;
+                            await ipcAlert(`Cargo removido de ${email}`);
+                        } else {
+                            const { error } = await supabase
+                                .from('user_roles')
+                                .upsert({ user_email: email, cargo: role }, { onConflict: 'user_email' });
+                            
+                            if (error) throw error;
+                            await ipcAlert(`Sucesso! ${email} agora é ${role.toUpperCase()}`);
+                        }
+                        closeAdmin();
+                        document.getElementById('inp-role-email').value = ''; // clear
+                    } catch (e) {
+                         await ipcAlert('Erro: ' + e.message);
+                    } finally {
+                        btnSaveRole.disabled = false;
+                        btnSaveRole.innerHTML = originalText;
+                    }
+                });
+            }
+        }
+
+        initRoles();
     </script>
 
 </body>

@@ -936,7 +936,7 @@
             const logs = document.getElementById('logs') ? document.getElementById('logs').innerText : '';
             navigator.clipboard.writeText(logs);
             if(window.addLog) window.addLog('Logs copiados para area de transferência.', 'log-success'); 
-            else await ipcAlert('Copiado!');
+            else ipcAlert('Copiado!');
         };
         
         const btnDwn = document.getElementById('btn-download-log');

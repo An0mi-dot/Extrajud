@@ -1099,7 +1099,7 @@
             if (controls) {
                 controls.style.display = isTestMode ? 'flex' : 'none';
             }
-            await ipcAwait ipcAlert(isTestMode ? 'MODO TESTE ATIVADO: Permite excluir solicitações.' : 'Modo Teste Desativado.');
+            await ipcAlert(isTestMode ? 'MODO TESTE ATIVADO: Permite excluir solicitações.' : 'Modo Teste Desativado.');
             loadSolicitacoes();
         }
 
@@ -1205,7 +1205,11 @@
 
             if (error) {
                 console.error('Erro ao carregar:', error);
-                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:red;">Erro ao carregar dados.</td></tr>`;
+                let errMsg = error.message || String(error);
+                if (errMsg.includes('solicitacoes_preventivo') || errMsg.includes('schema cache') || (errMsg.includes('relation') && errMsg.includes('does not exist'))) {
+                    errMsg = '⚠ Tabela não encontrada no Supabase. Execute o SQL em: docs/migrations/003_solicitacoes_preventivo.sql';
+                }
+                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; color:#ef4444; padding:16px;">${errMsg}<br><small style="color:var(--text-secondary); font-size:11px;">Supabase → SQL Editor → cole o arquivo docs/migrations/003_solicitacoes_preventivo.sql</small></td></tr>`;
                 return;
             }
 
