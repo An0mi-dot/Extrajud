@@ -17,8 +17,7 @@ Hoje, quando alguém precisa enviar documentos ou pedidos (subsídios) para o se
 
 - 📥 **Acúmulo de e-mails:** a caixa de entrada fica sobrecarregada com dezenas de pedidos misturados com outros e-mails pessoais e profissionais, tornando difícil encontrar o que importa
 - 🏖️ **Risco de perda por ausência:** se a pessoa responsável estiver de férias, afastada ou em licença, o pedido pode ficar perdido na caixa de entrada por dias ou semanas sem que ninguém tome providências
-- 👤 **Dependência de uma única pessoa:** tudo depende de uma só pessoa verificar e-mails constantemente
-- 📂 **Falta de histórico centralizado:** não há um lugar único onde todos possam ver quais pedidos foram feitos, quais estão em andamento e quais já foram resolvidos
+-  **Falta de histórico centralizado:** não há um lugar único onde todos possam ver quais pedidos foram feitos, quais estão em andamento e quais já foram resolvidos
 - ⏱️ **Sem controle de prazo:** não há como saber facilmente se um pedido está atrasado ou urgente sem ler cada e-mail individualmente
 
 ---
@@ -43,7 +42,7 @@ Pessoa da empresa preenche um formulário
         ↓
 O pedido vai automaticamente para uma pasta no SharePoint
         ↓
-O jurídico recebe uma notificação no Teams ou por e-mail
+O EXTRATJUD exibe uma notificação do Windows para o jurídico
         ↓
 O analista responsável abre o EXTRATJUD e vê todos os pedidos organizados
         ↓
@@ -151,7 +150,7 @@ Para que possamos construir o sistema da forma certa, precisamos que a equipe re
 ### Sobre o processo interno do jurídico
 8. Quando um pedido chega, quem é o primeiro a receber e tratar? É sempre a mesma pessoa ou qualquer membro da equipe pode assumir?
 9. Como é decidido quem fica responsável por cada pedido? É por rodízio, por especialidade, por demanda?
-10. O grupo gostaria de receber uma **notificação no Microsoft Teams** quando chegasse um novo pedido? Ou prefere verificar no sistema periodicamente?
+10. O EXTRATJUD enviará uma **notificação do Windows** automaticamente quando chegar um novo pedido — o grupo prefere que ela apareça para todos os membros logados, ou somente para o responsável designado?
 11. É necessário que o sistema envie uma **confirmação automática** para quem enviou o pedido ("Seu pedido foi recebido e será analisado em breve")?
 12. Existe necessidade de **relatórios periódicos** (ex: relatório semanal de pedidos recebidos, em andamento e concluídos)?
 
@@ -177,19 +176,6 @@ Para que a equipe tenha noção do que já foi desenvolvido, o EXTRATJUD já con
 ✅ Alerta automático dos processos com prazo nos próximos 7 dias
 
 O que falta construir depende das respostas acima, principalmente: o formulário para quem envia, e a integração automática com o SharePoint e/ou Teams.
-
----
-
-## 8. Próximos Passos Sugeridos
-
-| # | Ação | Responsável |
-|---|------|-------------|
-| 1 | Reunião de alinhamento para responder as perguntas acima | Jurídico + João Guilherme |
-| 2 | Validar o layout do formulário que quem envia vai preencher | Jurídico |
-| 3 | Definir se a notificação será por Teams ou e-mail | Jurídico |
-| 4 | Verificar permissões no SharePoint para o novo fluxo | TI / Jurídico |
-| 5 | Desenvolvimento e testes do formulário e integração | João Guilherme |
-| 6 | Treinamento da equipe e divulgação do novo canal | Jurídico |
 
 ---
 

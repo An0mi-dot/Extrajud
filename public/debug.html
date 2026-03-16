@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXTRATJUD - Debug Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { padding: 0; margin: 0; background: var(--bg-color); color: var(--text-color); font-family: 'Poppins', sans-serif; }
+        
+        .debug-header {
+            background: var(--card-bg);
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .debug-header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-back:hover {
+            background: var(--surface-color);
+            transform: translateX(-2px);
+        }
+
+        .debug-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        
+        .section { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            padding: 24px; 
+            margin-bottom: 24px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: transform 0.2s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.04);
+        }
+
+        .section h2 { margin-top: 0; color: var(--primary-color); font-size: 18px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
+        
+        .output { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin: 15px 0; max-height: 300px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; }
+        
+        .status-ok { color: #10b981; }
+        .status-err { color: #ef4444; }
+        .status-warn { color: #f59e0b; }
+        
+        button.action-btn { padding: 10px 20px; background: var(--primary-color); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Poppins', sans-serif; margin-right: 10px; margin-bottom: 10px; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease; }
+        button.action-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(var(--primary-rgb, 16,185,129), 0.2); }
+        
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .info-box { background: var(--surface-color); border-left: 4px solid var(--primary-color); padding: 16px; border-radius: 8px; border-right: 1px solid var(--border-color); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
+        .info-box label { display: block; font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px; }
+        .info-box value { display: block; font-weight: 500; color: var(--text-color); word-break: break-all; font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+        
+        #admin-guard-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <!-- Admin Guard Overlay -->
+    <div id="admin-guard-overlay">
+        <div class="spinner"></div>
+        <h2 style="font-family: Poppins, sans-serif;">Verificando credenciais de Administrador...</h2>
+    </div>
+
+    <!-- Header -->
+    <div class="debug-header">
+        <h1><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-color);"></i> Painel de Diagnóstico</h1>
+        <button class="btn-back" onclick="window.history.back()"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+    </div>
+
+    <div class="debug-container">
+        <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 15px;">Visão avançada do sistema para diagnóstico de permissões (RLS), cache e estado do banco de dados.</p>
+
+        <!-- Seção: Informações do Usuário -->
+        <div class="section">
+            <h2><i class="fa-solid fa-user-astronaut"></i> Identidade & Sessão</h2>
+            <div style="margin-bottom: 20px;">
+                <button class="action-btn" onclick="debugGetSession()"><i class="fa-solid fa-arrows-rotate"></i> Recarregar Sessão</button>
+                <button class="action-btn" onclick="debugGetUserRole()"><i class="fa-solid fa-id-badge"></i> Verificar Cargo</button>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-box">
+                    <label>Email Autenticado</label>
+                    <value id="debug-email">—</value>
+                </div>
+                <div class="info-box">
+                    <label>ID Único (UUID)</label>
+                    <value id="debug-user-id">—</value>
+                </div>
+                <div class="info-box">
+                    <label>Cargo (Role)</label>
+                    <value id="debug-cargo">—</value>
+                </div>
+                <div class="info-box">
+                    <label>Status Botão Admin</label>
+                    <value id="debug-admin-btn">—</value>
+                </div>
+            </div>
+            
+            <div class="output" id="debug-session-output"></div>
+        </div>
+
+        <!-- Seção: Tabela subsidios_trabalhistas -->
+        <div class="section">
+            <h2><i class="fa-solid fa-database"></i> Tabela: subsidios_trabalhistas</h2>
+            <button class="action-btn" onclick="debugLoadProcessos()"><i class="fa-solid fa-spinner"></i> Carregar Processos</button>
+            <button class="action-btn" onclick="debugCountProcessos()"><i class="fa-solid fa-list"></i> Contar Registros</button>
+            
+            <div class="output" id="debug-processos-output"></div>
+        </div>
+
+        <!-- Seção: Tabela user_roles -->
+        <div class="section">
+            <h2><i class="fa-solid fa-users"></i> Tabela: user_roles</h2>
+            <button class="action-btn" onclick="debugLoadAllRoles()"><i class="fa-solid fa-list"></i> Ver Todos os Cargos</button>
+            <button class="action-btn" onclick="debugMyRole()"><i class="fa-solid fa-user-check"></i> Ver Meu Cargo</button>
+            
+            <div class="output" id="debug-roles-output"></div>
+        </div>
+
+        <!-- Seção: RLS Policies -->
+        <div class="section">
+            <h2><i class="fa-solid fa-lock"></i> RLS Policies</h2>
+            <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 15px;">
+                Se as queries acima retornarem erro "policies don't grant you the following permissions", 
+                pode ser um problema de Row Level Security (RLS).
+            </p>
+            <button class="action-btn" onclick="debugRLSStatus()"><i class="fa-solid fa-shield-check"></i> Verificar RLS</button>
+            <div class="output" id="debug-rls-output"></div>
+        </div>
+
+        <!-- Seção: Logs de Console -->
+        <div class="section">
+            <h2><i class="fa-solid fa-terminal"></i> Logs do Console</h2>
+            <button class="action-btn" onclick="debugClearLogs()"><i class="fa-solid fa-trash"></i> Limpar</button>
+            <div class="output" id="debug-console-logs"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './assets/supabaseClient.js';
+
+        window.debugLogs = [];
+
+        function log(msg, type = 'normal') {
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            const line = `[${timestamp}] ${msg}`;
+            window.debugLogs.push(line);
+            document.getElementById('debug-console-logs').textContent = window.debugLogs.join('\n');
+            console.log(line);
+        }
+
+        // Função para formatar output
+        function formatOutput(data, error) {
+            if (error) {
+                return `<span class="status-err">❌ ERRO: ${error.message || String(error)}</span>\n${JSON.stringify(error, null, 2)}`;
+            }
+            return `<span class="status-ok">✅ SUCESSO</span>\n${JSON.stringify(data, null, 2)}`;
+        }
+
+        // 1. Carregar Sessão
+        window.debugGetSession = async function() {
+            log('Carregando sessão do usuário...');
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                
+                if (session) {
+                    document.getElementById('debug-email').textContent = session.user.email || 'N/A';
+                    document.getElementById('debug-user-id').textContent = session.user.id || 'N/A';
+                    log(`✓ Sessão carregada: ${session.user.email}`);
+                } else {
+                    log('⚠ Nenhuma sessão ativa');
+                    document.getElementById('debug-email').textContent = 'Nenhuma sessão';
+                }
+                
+                document.getElementById('debug-session-output').innerHTML = formatOutput(session);
+            } catch(e) {
+                log(`✗ Erro ao carregar sessão: ${e.message}`);
+                document.getElementById('debug-session-output').innerHTML = formatOutput(null, e);
+            }
+        };
+
+        // 2. Carregar Cargo do Usuário
+        window.debugGetUserRole = async function() {
+            log('Carregando cargo do usuário...');
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    log('⚠ Nenhuma sessão encontrada');
+                    return;
+                }
+
+                const { data, error } = await supabase
+                    .from('user_roles')
+                    .select('cargo, ativo, created_at')
+                    .eq('user_email', session.user.email)
+                    .single();
+
+                if (error) {
+                    if (error.message.includes('retrieving')) {
+                        log(`⚠ Usuário não encontrado em user_roles. Insira um registro primeiro.`);
+                    } else {
+                        throw error;
+                    }
+                    document.getElementById('debug-cargo').textContent = 'Não encontrado';
+                } else if (data) {
+                    document.getElementById('debug-cargo').textContent = data.cargo || 'N/A';
+                    log(`✓ Cargo carregado: ${data.cargo}`);
+                }
+
+                document.getElementById('debug-roles-output').innerHTML = formatOutput(data, error);
+            } catch(e) {
+                log(`✗ Erro ao carregar cargo: ${e.message}`);
+                document.getElementById('debug-roles-output').innerHTML = formatOutput(null, e);
+            }
+        };
+
+        // 3. Carregar Processos
+        window.debugLoadProcessos = async function() {
+            log('Carregando processos da tabela subsidios_trabalhistas...');
+            try {
+                const { data, error } = await supabase
+                    .from('subsidios_trabalhistas')
+                    .select('*')
+                    .limit(5);
+
+                if (error) throw error;
+                
+                log(`✓ Processos carregados: ${data?.length || 0} registros`);
+                document.getElementById('debug-processos-output').innerHTML = formatOutput(data);
+            } catch(e) {
+                log(`✗ Erro: ${e.message}`);
+                document.getElementById('debug-processos-output').innerHTML = formatOutput(null, e);
+            }
+        };
+
+        // 4. Contar Registros
+        window.debugCountProcessos = async function() {
+            log('Contando registros em subsidios_trabalhistas...');
+            try {
+                const { count, error } = await supabase
+                    .from('subsidios_trabalhistas')
+                    .select('*', { count: 'exact', head: true });
+
+                if (error) throw error;
+                
+                log(`✓ Total de processos: ${count || 0}`);
+                document.getElementById('debug-processos-output').innerHTML = `<span class="status-ok">✅ Total de registros: ${count || 0}</span>`;
+            } catch(e) {
+                log(`✗ Erro ao contar: ${e.message}`);
+                document.getElementById('debug-processos-output').innerHTML = formatOutput(null, e);
+            }
+        };
+
+        // 5. Ver Todos os Cargos
+        window.debugLoadAllRoles = async function() {
+            log('Carregando todos os cargos de user_roles...');
+            try {
+                const { data, error } = await supabase
+                    .from('user_roles')
+                    .select('user_email, cargo, ativo, created_at')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                log(`✓ Cargos carregados: ${data?.length || 0} usuários`);
+                document.getElementById('debug-roles-output').innerHTML = formatOutput(data);
+            } catch(e) {
+                log(`✗ Erro: ${e.message}`);
+                document.getElementById('debug-roles-output').innerHTML = formatOutput(null, e);
+            }
+        };
+
+        // 6. Ver Meu Cargo
+        window.debugMyRole = async function() {
+            log('Buscando meu cargo...');
+            await window.debugGetUserRole();
+        };
+
+        // 7. Verificar Status de RLS
+        window.debugRLSStatus = async function() {
+            log('Verificando status de RLS...');
+            const output = `
+RLS Policies são regras de segurança que controlam quem pode ver/editar dados.
+
+Se você está vendo erro "policies don't grant you the following permissions", significa:
+1. Tabela tem RLS ativado
+2. Suas policies não permitem o acesso para você
+
+SOLUÇÕES:
+- Alterar as policies para permitir seu user_id
+- Or, desabilitar RLS temporariamente: ALTER TABLE table_name DISABLE ROW LEVEL SECURITY;
+
+PRÓXIMAS AÇÕES:
+1. Execute docs/migrations/DEBUG_QUERIES.sql no Supabase SQL Editor
+2. Veja os resultados das queries 6 e 7
+3. Se policies estão muito restritivas, adapte-as
+            `;
+            document.getElementById('debug-rls-output').textContent = output;
+            log('ℹ RLS diagnostics enviado');
+        };
+
+        // 8. Limpar Logs
+        window.debugClearLogs = function() {
+            window.debugLogs = [];
+            document.getElementById('debug-console-logs').textContent = '';
+            log('Logs limpos');
+        };
+
+        // Carregar sessão inicial
+        window.debugGetSession();
+
+        // 9. Admin Guard: Redireciona se não for admin
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                const { data: roleData } = await supabase
+                    .from('user_roles')
+                    .select('cargo')
+                    .eq('user_email', session.user.email)
+                    .single();
+                
+                if (!roleData || !roleData.cargo || roleData.cargo.toLowerCase() !== 'admin') {
+                    // Não é admin
+                    document.getElementById('admin-guard-overlay').innerHTML = `
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;"></i>
+                        <h2 style="font-family: Poppins, sans-serif; color: var(--text-color);">Acesso Restrito</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Você não tem permissão para acessar esta página.</p>
+                        <button class="action-btn" onclick="window.history.back()">Voltar em Segurança</button>
+                    `;
+                } else {
+                    // É admin, remove o overlay e permite acesso
+                    const overlay = document.getElementById('admin-guard-overlay');
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.style.display = 'none', 300);
+                }
+            } catch (e) {
+                console.error(e);
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

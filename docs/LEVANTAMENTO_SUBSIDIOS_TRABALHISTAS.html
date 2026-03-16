@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>Levantamento de Requisitos — Subsídios Trabalhistas</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 11pt;
+    color: #1a1a1a;
+    line-height: 1.7;
+    padding: 40px 60px;
+    max-width: 900px;
+    margin: auto;
+}
+h1 { font-size: 20pt; color: #003087; border-bottom: 3px solid #003087; padding-bottom: 6px; margin: 24px 0 8px; }
+h2 { font-size: 14pt; color: #003087; border-bottom: 1px solid #ccd; padding-bottom: 4px; margin: 20px 0 6px; }
+h3 { font-size: 12pt; color: #005aaa; margin: 14px 0 4px; }
+p  { margin: 6px 0; }
+hr { border: none; border-top: 1px solid #ddd; margin: 16px 0; }
+ul, ol { margin: 6px 0 6px 24px; }
+li { margin: 3px 0; }
+pre { background: #f4f4f4; border: 1px solid #ddd; border-radius: 4px; padding: 12px; font-size: 9pt; overflow-x: auto; margin: 8px 0; white-space: pre-wrap; }
+code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 9pt; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 10pt; }
+th { background: #003087; color: #fff; padding: 7px 10px; text-align: left; }
+td { border: 1px solid #ccc; padding: 6px 10px; }
+tr:nth-child(even) td { background: #f7f7f7; }
+strong { color: #111; }
+a { color: #005aaa; }
+@page { margin: 2cm; }
+</style>
+</head>
+<body>
+<h1>Levantamento de Requisitos — Subsídios Trabalhistas</h1>
+<p><strong>Projeto:</strong> EXTRATJUD — Módulo de Gestão de Subsídios Trabalhistas</p>
+<p><strong>Data:</strong> Março de 2026</p>
+<p><strong>Elaborado por:</strong> João Guilherme Almeida Viana — Jurídico Contencioso Cível</p>
+<br>
+<hr>
+<br>
+<h2>1. Contexto — O Problema Atual</h2>
+<br>
+<p>Hoje, quando alguém precisa enviar documentos ou pedidos (subsídios) para o setor jurídico trabalhista, o processo funciona assim:</p>
+<br>
+<li>A pessoa escreve um e-mail e envia para o responsável do jurídico</li>
+<li>O e-mail chega na caixa de entrada pessoal do advogado ou analista responsável</li>
+<li>Essa pessoa precisa ler, classificar e dar andamento ao pedido manualmente</li>
+<br>
+<p><strong>Isso gera os seguintes problemas:</strong></p>
+<br>
+<ul>
+<li>📥 <strong>Acúmulo de e-mails:</strong> a caixa de entrada fica sobrecarregada com dezenas de pedidos misturados com outros e-mails pessoais e profissionais, tornando difícil encontrar o que importa</li>
+<li>🏖️ <strong>Risco de perda por ausência:</strong> se a pessoa responsável estiver de férias, afastada ou em licença, o pedido pode ficar perdido na caixa de entrada por dias ou semanas sem que ninguém tome providências</li>
+<li><strong>Falta de histórico centralizado:</strong> não há um lugar único onde todos possam ver quais pedidos foram feitos, quais estão em andamento e quais já foram resolvidos</li>
+<li>⏱️ <strong>Sem controle de prazo:</strong> não há como saber facilmente se um pedido está atrasado ou urgente sem ler cada e-mail individualmente</li>
+</ul>
+<br>
+<hr>
+<br>
+<h2>2. O Que Queremos Resolver</h2>
+<br>
+<p>O objetivo é criar um <strong>canal organizado e centralizado</strong> para recebimento dos pedidos de subsídios, de forma que:</p>
+<br>
+<ul>
+<li>Qualquer pedido enviado fique registrado em um <strong>único lugar acessível pela equipe toda</strong>, não em e-mails pessoais</li>
+<li>Mesmo se a pessoa responsável estiver ausente, qualquer outro membro da equipe possa ver e tratar o pedido</li>
+<li>Exista um histórico claro de cada pedido: quando foi feito, por quem, qual o prazo, em que situação está</li>
+<li>O processo seja <strong>simples para quem envia</strong> (a pessoa não precisa instalar nenhum programa)</li>
+</ul>
+<br>
+<hr>
+<br>
+<h2>3. Como Funcionaria na Prática</h2>
+<br>
+<h3>Caminho proposto</h3>
+<br>
+<pre><code>
+Pessoa da empresa preenche um formulário 
+        ↓
+O pedido vai automaticamente para uma pasta no SharePoint
+        ↓
+O EXTRATJUD exibe uma notificação do Windows para o jurídico
+        ↓
+O analista responsável abre o EXTRATJUD e vê todos os pedidos organizados
+        ↓
+Atualiza o status (Em Análise, Em Andamento, Concluído...) conforme avança
+</code></pre>
+<br>
+<h3>Como a pessoa que envia usa o sistema</h3>
+<br>
+<p>A pessoa que envia o pedido não precisa instalar nada. Ela recebe um <strong>link</strong> (por e-mail ou Teams) que abre um formulário no navegador. Ela preenche as informações necessárias e clica em "Enviar". Pronto.</p>
+<br>
+<p>O formulário perguntaria apenas o que for essencial, por exemplo:</p>
+<ul>
+<li>Nome completo e área</li>
+<li>Número do processo (se houver)</li>
+<li>Tipo de documento que está enviando</li>
+<li>Prazo (se houver um prazo específico)</li>
+<li>Observações ou descrição do pedido</li>
+</ul>
+<br>
+<p>Após enviar, o pedido aparece automaticamente na pasta do SharePoint e no sistema do EXTRATJUD para o jurídico acompanhar.</p>
+<br>
+<h3>Como o jurídico usa o sistema</h3>
+<br>
+<p>Após receber a notificação, o analista abre o EXTRATJUD no computador e vê uma lista com todos os pedidos recebidos. Ele pode:</p>
+<ul>
+<li>Filtrar por status, área ou prazo</li>
+<li>Clicar em um pedido para ver todos os detalhes</li>
+<li>Atualizar o status (ex: "Em Andamento", "Aguardando Documentos", "Concluído")</li>
+<li>Ver um painel resumido mostrando quantos pedidos estão em aberto, atrasados ou concluídos</li>
+</ul>
+<br>
+<hr>
+<br>
+<h2>4. O Que Acontece com os E-mails Atuais</h2>
+<br>
+<p>Existem duas abordagens possíveis, e precisamos entender com a equipe qual faz mais sentido:</p>
+<br>
+<h3>Opção A — Manter o e-mail, mas criar o formulário como canal principal</h3>
+<p>Os e-mails continuam existindo normalmente. A equipe passa a <strong>orientar os remetentes</strong> a usar o formulário em vez de enviar e-mail. Com o tempo, os pedidos migram naturalmente para o novo sistema. Não há impacto imediato na forma como as pessoas trabalham.</p>
+<br>
+<p><strong>Vantagem:</strong> sem impacto operacional imediato, mudança gradual</p>
+<p><strong>Desvantagem:</strong> nos primeiros meses, pedidos podem continuar chegando por e-mail e pelo formulário ao mesmo tempo, gerando duplicidade</p>
+<br>
+<hr>
+<br>
+<h3>Opção B — Monitorar automaticamente os e-mails e mover para o sistema</h3>
+<p>O EXTRATJUD ficaria verificando a caixa de entrada automaticamente. Quando chegasse um e-mail identificado como pedido de subsídio, ele seria registrado no sistema e removido do e-mail.</p>
+<br>
+<p><strong>Vantagem:</strong> transição automática, sem precisar mudar o hábito de quem envia</p>
+<p><strong>Desvantagem:</strong> requer autorização especial do setor de TI da empresa para acessar as caixas de e-mail corporativas; mais complexo de implementar e manter; risco de identificar erroneamente um e-mail comum como pedido</p>
+<br>
+<hr>
+<br>
+<p><strong>Nossa recomendação inicial é a Opção A</strong>, por ser mais segura, mais simples e não depender de aprovações de TI. A Opção B pode ser avaliada em uma segunda etapa, se a equipe sentir necessidade.</p>
+<br>
+<hr>
+<br>
+<h2>6. Organização por Pessoa (CPF) no SharePoint</h2>
+<br>
+<p>Cada pessoa envolvida em um processo trabalhista é <strong>única</strong>, e o CPF é o identificador mais confiável para isso. Pode haver duas pessoas chamadas "João Silva" em processos diferentes — o CPF resolve a ambiguidade.</p>
+<br>
+<h3>Como funcionaria a estrutura de pastas</h3>
+<br>
+<p>A pasta raiz de Subsídios no SharePoint seria organizada assim:</p>
+<br>
+<pre><code>
+Subsídios/
+├── 441.234.567-89 — João Silva/
+│   ├── Contestação — 0001234-56.2024.5.05.0001
+│   └── Laudo Pericial — 0009876-11.2025.5.05.0033
+├── 123.456.789-00 — Maria Souza/
+│   └── Inicial — 0002345-78.2024.5.05.0002
+└── ...
+</code></pre>
+<br>
+<ul>
+<li>O nome da pasta combina <strong>CPF + Nome da parte</strong> para facilitar a leitura humana sem perder a precisão</li>
+<li>Quando chega um novo subsídio para um CPF que já tem pasta, o arquivo vai direto para a pasta existente</li>
+<li>Se o CPF nunca apareceu antes, o sistema <strong>cria a pasta automaticamente</strong> antes de colocar o arquivo</li>
+<li>Um mesmo CPF nunca terá duas pastas, independente de variações de grafia no nome</li>
+</ul>
+<br>
+<h3>O que isso resolve</h3>
+<br>
+<ul>
+<li>Dois "João Silva" com CPFs diferentes terão pastas separadas — sem risco de mistura</li>
+<li>O jurídico pode abrir a pasta de um CPF específico e ver todos os subsídios daquela pessoa em um só lugar</li>
+<li>Facilita auditorias e buscas futuras</li>
+</ul>
+<br>
+<h3>Pergunta adicional para a equipe</h3>
+<br>
+<ul>
+<li>O CPF já é informado atualmente nos e-mails de pedido? Ou precisaria ser incluído como campo obrigatório no novo formulário?</li>
+<li>Quando não houver CPF (ex: pessoa jurídica), qual seria o critério de agrupamento? CNPJ? Razão Social?</li>
+</ul>
+<br>
+<hr>
+<br>
+<h2>6. Perguntas para Alinhamento</h2>
+<br>
+<p>Para que possamos construir o sistema da forma certa, precisamos que a equipe responda as seguintes perguntas:</p>
+<br>
+<h3>Sobre quem envia os pedidos</h3>
+<li>Quais áreas ou setores da empresa costumam enviar esses pedidos? (Ex: RH, Operações, Facilities...)</li>
+<li>Quantos pedidos, em média, são recebidos por semana?</li>
+<li>Essas pessoas têm acesso ao SharePoint hoje? Conseguem abrir links do Teams?</li>
+<li>Existe alguma urgência específica (pedidos que precisam de resposta em menos de 24h)?</li>
+<br>
+<h3>Sobre o conteúdo dos pedidos</h3>
+<li>Além do número do processo e tipo de documento, quais outras informações são importantes constar no pedido?</li>
+<li>Os pedidos geralmente vêm acompanhados de arquivos (documentos, PDFs)? Se sim, qual o tamanho máximo esperado?</li>
+<li>Há alguma categorização específica que a equipe usa hoje (ex: por tipo de ação trabalhista, por comarca, por empresa contratada)?</li>
+<br>
+<h3>Sobre o processo interno do jurídico</h3>
+<li>Quando um pedido chega, quem é o primeiro a receber e tratar? É sempre a mesma pessoa ou qualquer membro da equipe pode assumir?</li>
+<li>Como é decidido quem fica responsável por cada pedido? É por rodízio, por especialidade, por demanda?</li>
+<li>O EXTRATJUD enviará uma <strong>notificação do Windows</strong> automaticamente quando chegar um novo pedido — o grupo prefere que ela apareça para todos os membros logados, ou somente para o responsável designado?</li>
+<li>É necessário que o sistema envie uma <strong>confirmação automática</strong> para quem enviou o pedido ("Seu pedido foi recebido e será analisado em breve")?</li>
+<li>Existe necessidade de <strong>relatórios periódicos</strong> (ex: relatório semanal de pedidos recebidos, em andamento e concluídos)?</li>
+<br>
+<h3>Sobre o SharePoint</h3>
+<li>A pasta de Subsídios no SharePoint já está organizada de alguma forma? Existe uma estrutura de subpastas por tipo, ano ou área?</li>
+<li>Além da equipe do jurídico trabalhista, outras pessoas precisam ter acesso para visualizar os pedidos no SharePoint?</li>
+<br>
+<h3>Sobre segurança e acesso</h3>
+<li>Quem pode <strong>ver</strong> todos os pedidos? Somente o jurídico, ou também quem enviou consegue acompanhar o status do próprio pedido?</li>
+<li>Há necessidade de <strong>sigilo</strong> em algum tipo de pedido (ex: pedidos que somente o advogado responsável pode ver)?</li>
+<br>
+<hr>
+<br>
+<h2>7. O Que Já Está Pronto</h2>
+<br>
+<p>Para que a equipe tenha noção do que já foi desenvolvido, o EXTRATJUD já conta com:</p>
+<br>
+<p>✅ Um módulo de "Subsídios Trabalhistas" com cadastro de processos, listagem com filtros e painel de acompanhamento</p>
+<p>✅ Integração com banco de dados para armazenamento dos pedidos</p>
+<p>✅ Botão de acesso direto à pasta de Subsídios no SharePoint (<code>JUD-GERNCIACOELBA</code>)</p>
+<p>✅ Controle de status por processo (Novo, Em Análise, Em Andamento, Aguardando Documentos, Concluído, Cancelado)</p>
+<p>✅ Painel com indicadores: total de processos, em andamento, com prazo vencido, aguardando documentos</p>
+<p>✅ Alerta automático dos processos com prazo nos próximos 7 dias</p>
+<br>
+<p>O que falta construir depende das respostas acima, principalmente: o formulário para quem envia, e a integração automática com o SharePoint e/ou Teams.</p>
+<br>
+<hr>
+<br>
+<p><em>Este documento é um rascunho de levantamento e está aberto a ajustes conforme as discussões com a equipe.</em></p>
+<br>
+</body>
+</html>
