@@ -1,0 +1,244 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXTRATJUD - Inicializando...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/theme.css?v=20260317">
+    <script src="assets/theme.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .init-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            text-align: center;
+            padding: 40px;
+            max-width: 500px;
+        }
+
+        .logo-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: var(--primary-color);
+            animation: pulse-init 2s infinite;
+        }
+
+        @keyframes pulse-init {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 35px rgba(16, 185, 129, 0.4);
+            }
+        }
+
+        .init-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--text-color);
+        }
+
+        .init-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+            min-height: 20px;
+        }
+
+        .error-message {
+            display: none;
+            background-color: #fecaca;
+            color: #991b1b;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: left;
+            border-left: 4px solid #dc2626;
+            width: 100%;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .error-message strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="init-container">
+        <div class="logo-circle">
+            <i class="fas fa-plug"></i>
+        </div>
+        
+        <div>
+            <h1 class="init-title">EXTRATJUD</h1>
+            <p class="init-subtitle">Inicializando...</p>
+        </div>
+
+        <div class="loader"></div>
+
+        <p class="status-text" id="status">Conectando...</p>
+
+        <div class="error-message" id="error-message">
+            <strong>Erro:</strong>
+            <span id="error-text"></span>
+        </div>
+    </div>
+
+    <!-- Supabase Client -->
+    <script type="module">
+        import { supabase } from './assets/supabaseClient.js';
+        
+        const statusEl = document.getElementById('status');
+        const errorMessageEl = document.getElementById('error-message');      
+        const errorTextEl = document.getElementById('error-text');
+
+        async function initializeApp() {
+            try {
+                if (!supabase) {
+                    throw new Error('Supabase n�o foi carregado corretamente');
+                }
+
+                statusEl.textContent = 'Identificando dispositivo...';
+
+                // 1. Obter machine identifier do backend (via IPC)
+                if (typeof window.ipcRenderer === 'undefined') {
+                    throw new Error('IPC Renderer n�o dispon�vel');
+                }
+
+                const machineId = await window.ipcRenderer.invoke('get-machine-id');
+                console.log('[Init] Machine ID:', machineId.substring(0, 16) + '...');
+
+                if (!machineId) {
+                    throw new Error('Falha ao identificar dispositivo');
+                }
+
+                statusEl.textContent = 'Registrando no servidor...';
+
+                // 2. Chamar fun��o RPC para registrar/buscar usu�rio
+                console.log('[Init] Chamando RPC register_machine_user...');
+                const { data, error } = await supabase.rpc('register_machine_user', {
+                    p_machine_identifier: machineId,
+                    p_app_code: 'A'
+                });
+
+                if (error) {
+                    console.error('[Init] Erro RPC:', error);
+                    throw error;
+                }
+
+                console.log('[Init] Resposta RPC:', data);
+
+                if (!data || !data[0]) {
+                    throw new Error('Resposta do servidor inv�lida');
+                }
+
+                const userUuid = data[0].user_uuid;
+                const isNew = data[0].is_new;
+
+                statusEl.textContent = isNew ? 'Novo usu�rio!' : 'Bem-vindo!';
+
+                // 3. Armazenar UUID localmente
+                localStorage.setItem('user_uuid', userUuid);
+                localStorage.setItem('machine_id', machineId);
+                localStorage.setItem('registered_at', new Date().toISOString());
+
+                console.log('[Init] ? Dispositivo registrado:', {
+                    uuid: userUuid,
+                    isNew: isNew
+                });
+
+                // 4. Redirecionar para o Hub Principal
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+
+            } catch (error) {
+                console.error('[Init] ERRO:', error);
+                
+                errorTextEl.textContent = error.message || 'Erro desconhecido';
+                errorMessageEl.classList.add('show');
+                statusEl.textContent = 'Erro!';
+
+                // Retry ap�s 5 segundos
+                setTimeout(() => {
+                    console.log('[Init] Recarregando...');
+                    window.location.reload();
+                }, 5000);
+            }
+        }
+
+        // Iniciar quando p�gina carregar
+        window.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Timeout de seguran�a (20 segundos)
+        setTimeout(() => {
+            if (!localStorage.getItem('user_uuid')) {
+                errorTextEl.textContent = 'Conex�o demorou muito. Recarregando...';
+                errorMessageEl.classList.add('show');
+                statusEl.textContent = 'Timeout!';
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        }, 20000);
+    </script>
+</body>
+</html>
+

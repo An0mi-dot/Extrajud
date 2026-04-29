@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<title>Levantamento de Requisitos — Subsídios Trabalhistas</title>
+<title>Levantamento de Requisitos � Subs�dios Trabalhistas</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,150 +36,150 @@ a { color: #005aaa; }
 </style>
 </head>
 <body>
-<h1>Levantamento de Requisitos — Subsídios Trabalhistas</h1>
-<p><strong>Projeto:</strong> EXTRATJUD — Módulo de Gestão de Subsídios Trabalhistas</p>
-<p><strong>Data:</strong> Março de 2026</p>
-<p><strong>Elaborado por:</strong> João Guilherme Almeida Viana — Jurídico Contencioso Cível</p>
+<h1>Levantamento de Requisitos � Subs�dios Trabalhistas</h1>
+<p><strong>Projeto:</strong> EXTRATJUD � M�dulo de Gest�o de Subs�dios Trabalhistas</p>
+<p><strong>Data:</strong> Mar�o de 2026</p>
+<p><strong>Elaborado por:</strong> Jo�o Guilherme Almeida Viana � Jur�dico Contencioso C�vel</p>
 <br>
 <hr>
 <br>
-<h2>1. Contexto — O Problema Atual</h2>
+<h2>1. Contexto � O Problema Atual</h2>
 <br>
-<p>Hoje, quando alguém precisa enviar documentos ou pedidos (subsídios) para o setor jurídico trabalhista, o processo funciona assim:</p>
+<p>Hoje, quando algu�m precisa enviar documentos ou pedidos (subs�dios) para o setor jur�dico trabalhista, o processo funciona assim:</p>
 <br>
-<li>A pessoa escreve um e-mail e envia para o responsável do jurídico</li>
-<li>O e-mail chega na caixa de entrada pessoal do advogado ou analista responsável</li>
+<li>A pessoa escreve um e-mail e envia para o respons�vel do jur�dico</li>
+<li>O e-mail chega na caixa de entrada pessoal do advogado ou analista respons�vel</li>
 <li>Essa pessoa precisa ler, classificar e dar andamento ao pedido manualmente</li>
 <br>
 <p><strong>Isso gera os seguintes problemas:</strong></p>
 <br>
 <ul>
-<li>📥 <strong>Acúmulo de e-mails:</strong> a caixa de entrada fica sobrecarregada com dezenas de pedidos misturados com outros e-mails pessoais e profissionais, tornando difícil encontrar o que importa</li>
-<li>🏖️ <strong>Risco de perda por ausência:</strong> se a pessoa responsável estiver de férias, afastada ou em licença, o pedido pode ficar perdido na caixa de entrada por dias ou semanas sem que ninguém tome providências</li>
-<li><strong>Falta de histórico centralizado:</strong> não há um lugar único onde todos possam ver quais pedidos foram feitos, quais estão em andamento e quais já foram resolvidos</li>
-<li>⏱️ <strong>Sem controle de prazo:</strong> não há como saber facilmente se um pedido está atrasado ou urgente sem ler cada e-mail individualmente</li>
+<li>?? <strong>Ac�mulo de e-mails:</strong> a caixa de entrada fica sobrecarregada com dezenas de pedidos misturados com outros e-mails pessoais e profissionais, tornando dif�cil encontrar o que importa</li>
+<li>??? <strong>Risco de perda por aus�ncia:</strong> se a pessoa respons�vel estiver de f�rias, afastada ou em licen�a, o pedido pode ficar perdido na caixa de entrada por dias ou semanas sem que ningu�m tome provid�ncias</li>
+<li><strong>Falta de hist�rico centralizado:</strong> n�o h� um lugar �nico onde todos possam ver quais pedidos foram feitos, quais est�o em andamento e quais j� foram resolvidos</li>
+<li>?? <strong>Sem controle de prazo:</strong> n�o h� como saber facilmente se um pedido est� atrasado ou urgente sem ler cada e-mail individualmente</li>
 </ul>
 <br>
 <hr>
 <br>
 <h2>2. O Que Queremos Resolver</h2>
 <br>
-<p>O objetivo é criar um <strong>canal organizado e centralizado</strong> para recebimento dos pedidos de subsídios, de forma que:</p>
+<p>O objetivo � criar um <strong>canal organizado e centralizado</strong> para recebimento dos pedidos de subs�dios, de forma que:</p>
 <br>
 <ul>
-<li>Qualquer pedido enviado fique registrado em um <strong>único lugar acessível pela equipe toda</strong>, não em e-mails pessoais</li>
-<li>Mesmo se a pessoa responsável estiver ausente, qualquer outro membro da equipe possa ver e tratar o pedido</li>
-<li>Exista um histórico claro de cada pedido: quando foi feito, por quem, qual o prazo, em que situação está</li>
-<li>O processo seja <strong>simples para quem envia</strong> (a pessoa não precisa instalar nenhum programa)</li>
+<li>Qualquer pedido enviado fique registrado em um <strong>�nico lugar acess�vel pela equipe toda</strong>, n�o em e-mails pessoais</li>
+<li>Mesmo se a pessoa respons�vel estiver ausente, qualquer outro membro da equipe possa ver e tratar o pedido</li>
+<li>Exista um hist�rico claro de cada pedido: quando foi feito, por quem, qual o prazo, em que situa��o est�</li>
+<li>O processo seja <strong>simples para quem envia</strong> (a pessoa n�o precisa instalar nenhum programa)</li>
 </ul>
 <br>
 <hr>
 <br>
-<h2>3. Como Funcionaria na Prática</h2>
+<h2>3. Como Funcionaria na Pr�tica</h2>
 <br>
 <h3>Caminho proposto</h3>
 <br>
 <pre><code>
-Pessoa da empresa preenche um formulário 
-        ↓
+Pessoa da empresa preenche um formul�rio 
+        ?
 O pedido vai automaticamente para uma pasta no SharePoint
-        ↓
-O EXTRATJUD exibe uma notificação do Windows para o jurídico
-        ↓
-O analista responsável abre o EXTRATJUD e vê todos os pedidos organizados
-        ↓
-Atualiza o status (Em Análise, Em Andamento, Concluído...) conforme avança
+        ?
+O EXTRATJUD exibe uma notifica��o do Windows para o jur�dico
+        ?
+O analista respons�vel abre o EXTRATJUD e v� todos os pedidos organizados
+        ?
+Atualiza o status (Em An�lise, Em Andamento, Conclu�do...) conforme avan�a
 </code></pre>
 <br>
 <h3>Como a pessoa que envia usa o sistema</h3>
 <br>
-<p>A pessoa que envia o pedido não precisa instalar nada. Ela recebe um <strong>link</strong> (por e-mail ou Teams) que abre um formulário no navegador. Ela preenche as informações necessárias e clica em "Enviar". Pronto.</p>
+<p>A pessoa que envia o pedido n�o precisa instalar nada. Ela recebe um <strong>link</strong> (por e-mail ou Teams) que abre um formul�rio no navegador. Ela preenche as informa��es necess�rias e clica em "Enviar". Pronto.</p>
 <br>
-<p>O formulário perguntaria apenas o que for essencial, por exemplo:</p>
+<p>O formul�rio perguntaria apenas o que for essencial, por exemplo:</p>
 <ul>
-<li>Nome completo e área</li>
-<li>Número do processo (se houver)</li>
-<li>Tipo de documento que está enviando</li>
-<li>Prazo (se houver um prazo específico)</li>
-<li>Observações ou descrição do pedido</li>
+<li>Nome completo e �rea</li>
+<li>N�mero do processo (se houver)</li>
+<li>Tipo de documento que est� enviando</li>
+<li>Prazo (se houver um prazo espec�fico)</li>
+<li>Observa��es ou descri��o do pedido</li>
 </ul>
 <br>
-<p>Após enviar, o pedido aparece automaticamente na pasta do SharePoint e no sistema do EXTRATJUD para o jurídico acompanhar.</p>
+<p>Ap�s enviar, o pedido aparece automaticamente na pasta do SharePoint e no sistema do EXTRATJUD para o jur�dico acompanhar.</p>
 <br>
-<h3>Como o jurídico usa o sistema</h3>
+<h3>Como o jur�dico usa o sistema</h3>
 <br>
-<p>Após receber a notificação, o analista abre o EXTRATJUD no computador e vê uma lista com todos os pedidos recebidos. Ele pode:</p>
+<p>Ap�s receber a notifica��o, o analista abre o EXTRATJUD no computador e v� uma lista com todos os pedidos recebidos. Ele pode:</p>
 <ul>
-<li>Filtrar por status, área ou prazo</li>
+<li>Filtrar por status, �rea ou prazo</li>
 <li>Clicar em um pedido para ver todos os detalhes</li>
-<li>Atualizar o status (ex: "Em Andamento", "Aguardando Documentos", "Concluído")</li>
-<li>Ver um painel resumido mostrando quantos pedidos estão em aberto, atrasados ou concluídos</li>
+<li>Atualizar o status (ex: "Em Andamento", "Aguardando Documentos", "Conclu�do")</li>
+<li>Ver um painel resumido mostrando quantos pedidos est�o em aberto, atrasados ou conclu�dos</li>
 </ul>
 <br>
 <hr>
 <br>
 <h2>4. O Que Acontece com os E-mails Atuais</h2>
 <br>
-<p>Existem duas abordagens possíveis, e precisamos entender com a equipe qual faz mais sentido:</p>
+<p>Existem duas abordagens poss�veis, e precisamos entender com a equipe qual faz mais sentido:</p>
 <br>
-<h3>Opção A — Manter o e-mail, mas criar o formulário como canal principal</h3>
-<p>Os e-mails continuam existindo normalmente. A equipe passa a <strong>orientar os remetentes</strong> a usar o formulário em vez de enviar e-mail. Com o tempo, os pedidos migram naturalmente para o novo sistema. Não há impacto imediato na forma como as pessoas trabalham.</p>
+<h3>Op��o A � Manter o e-mail, mas criar o formul�rio como canal principal</h3>
+<p>Os e-mails continuam existindo normalmente. A equipe passa a <strong>orientar os remetentes</strong> a usar o formul�rio em vez de enviar e-mail. Com o tempo, os pedidos migram naturalmente para o novo sistema. N�o h� impacto imediato na forma como as pessoas trabalham.</p>
 <br>
-<p><strong>Vantagem:</strong> sem impacto operacional imediato, mudança gradual</p>
-<p><strong>Desvantagem:</strong> nos primeiros meses, pedidos podem continuar chegando por e-mail e pelo formulário ao mesmo tempo, gerando duplicidade</p>
-<br>
-<hr>
-<br>
-<h3>Opção B — Monitorar automaticamente os e-mails e mover para o sistema</h3>
-<p>O EXTRATJUD ficaria verificando a caixa de entrada automaticamente. Quando chegasse um e-mail identificado como pedido de subsídio, ele seria registrado no sistema e removido do e-mail.</p>
-<br>
-<p><strong>Vantagem:</strong> transição automática, sem precisar mudar o hábito de quem envia</p>
-<p><strong>Desvantagem:</strong> requer autorização especial do setor de TI da empresa para acessar as caixas de e-mail corporativas; mais complexo de implementar e manter; risco de identificar erroneamente um e-mail comum como pedido</p>
+<p><strong>Vantagem:</strong> sem impacto operacional imediato, mudan�a gradual</p>
+<p><strong>Desvantagem:</strong> nos primeiros meses, pedidos podem continuar chegando por e-mail e pelo formul�rio ao mesmo tempo, gerando duplicidade</p>
 <br>
 <hr>
 <br>
-<p><strong>Nossa recomendação inicial é a Opção A</strong>, por ser mais segura, mais simples e não depender de aprovações de TI. A Opção B pode ser avaliada em uma segunda etapa, se a equipe sentir necessidade.</p>
+<h3>Op��o B � Monitorar automaticamente os e-mails e mover para o sistema</h3>
+<p>O EXTRATJUD ficaria verificando a caixa de entrada automaticamente. Quando chegasse um e-mail identificado como pedido de subs�dio, ele seria registrado no sistema e removido do e-mail.</p>
+<br>
+<p><strong>Vantagem:</strong> transi��o autom�tica, sem precisar mudar o h�bito de quem envia</p>
+<p><strong>Desvantagem:</strong> requer autoriza��o especial do setor de TI da empresa para acessar as caixas de e-mail corporativas; mais complexo de implementar e manter; risco de identificar erroneamente um e-mail comum como pedido</p>
 <br>
 <hr>
 <br>
-<h2>6. Organização por Pessoa (CPF) no SharePoint</h2>
+<p><strong>Nossa recomenda��o inicial � a Op��o A</strong>, por ser mais segura, mais simples e n�o depender de aprova��es de TI. A Op��o B pode ser avaliada em uma segunda etapa, se a equipe sentir necessidade.</p>
 <br>
-<p>Cada pessoa envolvida em um processo trabalhista é <strong>única</strong>, e o CPF é o identificador mais confiável para isso. Pode haver duas pessoas chamadas "João Silva" em processos diferentes — o CPF resolve a ambiguidade.</p>
+<hr>
+<br>
+<h2>6. Organiza��o por Pessoa (CPF) no SharePoint</h2>
+<br>
+<p>Cada pessoa envolvida em um processo trabalhista � <strong>�nica</strong>, e o CPF � o identificador mais confi�vel para isso. Pode haver duas pessoas chamadas "Jo�o Silva" em processos diferentes � o CPF resolve a ambiguidade.</p>
 <br>
 <h3>Como funcionaria a estrutura de pastas</h3>
 <br>
-<p>A pasta raiz de Subsídios no SharePoint seria organizada assim:</p>
+<p>A pasta raiz de Subs�dios no SharePoint seria organizada assim:</p>
 <br>
 <pre><code>
-Subsídios/
-├── 441.234.567-89 — João Silva/
-│   ├── Contestação — 0001234-56.2024.5.05.0001
-│   └── Laudo Pericial — 0009876-11.2025.5.05.0033
-├── 123.456.789-00 — Maria Souza/
-│   └── Inicial — 0002345-78.2024.5.05.0002
-└── ...
+Subs�dios/
++-- 441.234.567-89 � Jo�o Silva/
+�   +-- Contesta��o � 0001234-56.2024.5.05.0001
+�   +-- Laudo Pericial � 0009876-11.2025.5.05.0033
++-- 123.456.789-00 � Maria Souza/
+�   +-- Inicial � 0002345-78.2024.5.05.0002
++-- ...
 </code></pre>
 <br>
 <ul>
-<li>O nome da pasta combina <strong>CPF + Nome da parte</strong> para facilitar a leitura humana sem perder a precisão</li>
-<li>Quando chega um novo subsídio para um CPF que já tem pasta, o arquivo vai direto para a pasta existente</li>
+<li>O nome da pasta combina <strong>CPF + Nome da parte</strong> para facilitar a leitura humana sem perder a precis�o</li>
+<li>Quando chega um novo subs�dio para um CPF que j� tem pasta, o arquivo vai direto para a pasta existente</li>
 <li>Se o CPF nunca apareceu antes, o sistema <strong>cria a pasta automaticamente</strong> antes de colocar o arquivo</li>
-<li>Um mesmo CPF nunca terá duas pastas, independente de variações de grafia no nome</li>
+<li>Um mesmo CPF nunca ter� duas pastas, independente de varia��es de grafia no nome</li>
 </ul>
 <br>
 <h3>O que isso resolve</h3>
 <br>
 <ul>
-<li>Dois "João Silva" com CPFs diferentes terão pastas separadas — sem risco de mistura</li>
-<li>O jurídico pode abrir a pasta de um CPF específico e ver todos os subsídios daquela pessoa em um só lugar</li>
+<li>Dois "Jo�o Silva" com CPFs diferentes ter�o pastas separadas � sem risco de mistura</li>
+<li>O jur�dico pode abrir a pasta de um CPF espec�fico e ver todos os subs�dios daquela pessoa em um s� lugar</li>
 <li>Facilita auditorias e buscas futuras</li>
 </ul>
 <br>
 <h3>Pergunta adicional para a equipe</h3>
 <br>
 <ul>
-<li>O CPF já é informado atualmente nos e-mails de pedido? Ou precisaria ser incluído como campo obrigatório no novo formulário?</li>
-<li>Quando não houver CPF (ex: pessoa jurídica), qual seria o critério de agrupamento? CNPJ? Razão Social?</li>
+<li>O CPF j� � informado atualmente nos e-mails de pedido? Ou precisaria ser inclu�do como campo obrigat�rio no novo formul�rio?</li>
+<li>Quando n�o houver CPF (ex: pessoa jur�dica), qual seria o crit�rio de agrupamento? CNPJ? Raz�o Social?</li>
 </ul>
 <br>
 <hr>
@@ -189,49 +189,49 @@ Subsídios/
 <p>Para que possamos construir o sistema da forma certa, precisamos que a equipe responda as seguintes perguntas:</p>
 <br>
 <h3>Sobre quem envia os pedidos</h3>
-<li>Quais áreas ou setores da empresa costumam enviar esses pedidos? (Ex: RH, Operações, Facilities...)</li>
-<li>Quantos pedidos, em média, são recebidos por semana?</li>
-<li>Essas pessoas têm acesso ao SharePoint hoje? Conseguem abrir links do Teams?</li>
-<li>Existe alguma urgência específica (pedidos que precisam de resposta em menos de 24h)?</li>
+<li>Quais �reas ou setores da empresa costumam enviar esses pedidos? (Ex: RH, Opera��es, Facilities...)</li>
+<li>Quantos pedidos, em m�dia, s�o recebidos por semana?</li>
+<li>Essas pessoas t�m acesso ao SharePoint hoje? Conseguem abrir links do Teams?</li>
+<li>Existe alguma urg�ncia espec�fica (pedidos que precisam de resposta em menos de 24h)?</li>
 <br>
-<h3>Sobre o conteúdo dos pedidos</h3>
-<li>Além do número do processo e tipo de documento, quais outras informações são importantes constar no pedido?</li>
-<li>Os pedidos geralmente vêm acompanhados de arquivos (documentos, PDFs)? Se sim, qual o tamanho máximo esperado?</li>
-<li>Há alguma categorização específica que a equipe usa hoje (ex: por tipo de ação trabalhista, por comarca, por empresa contratada)?</li>
+<h3>Sobre o conte�do dos pedidos</h3>
+<li>Al�m do n�mero do processo e tipo de documento, quais outras informa��es s�o importantes constar no pedido?</li>
+<li>Os pedidos geralmente v�m acompanhados de arquivos (documentos, PDFs)? Se sim, qual o tamanho m�ximo esperado?</li>
+<li>H� alguma categoriza��o espec�fica que a equipe usa hoje (ex: por tipo de a��o trabalhista, por comarca, por empresa contratada)?</li>
 <br>
-<h3>Sobre o processo interno do jurídico</h3>
-<li>Quando um pedido chega, quem é o primeiro a receber e tratar? É sempre a mesma pessoa ou qualquer membro da equipe pode assumir?</li>
-<li>Como é decidido quem fica responsável por cada pedido? É por rodízio, por especialidade, por demanda?</li>
-<li>O EXTRATJUD enviará uma <strong>notificação do Windows</strong> automaticamente quando chegar um novo pedido — o grupo prefere que ela apareça para todos os membros logados, ou somente para o responsável designado?</li>
-<li>É necessário que o sistema envie uma <strong>confirmação automática</strong> para quem enviou o pedido ("Seu pedido foi recebido e será analisado em breve")?</li>
-<li>Existe necessidade de <strong>relatórios periódicos</strong> (ex: relatório semanal de pedidos recebidos, em andamento e concluídos)?</li>
+<h3>Sobre o processo interno do jur�dico</h3>
+<li>Quando um pedido chega, quem � o primeiro a receber e tratar? � sempre a mesma pessoa ou qualquer membro da equipe pode assumir?</li>
+<li>Como � decidido quem fica respons�vel por cada pedido? � por rod�zio, por especialidade, por demanda?</li>
+<li>O EXTRATJUD enviar� uma <strong>notifica��o do Windows</strong> automaticamente quando chegar um novo pedido � o grupo prefere que ela apare�a para todos os membros logados, ou somente para o respons�vel designado?</li>
+<li>� necess�rio que o sistema envie uma <strong>confirma��o autom�tica</strong> para quem enviou o pedido ("Seu pedido foi recebido e ser� analisado em breve")?</li>
+<li>Existe necessidade de <strong>relat�rios peri�dicos</strong> (ex: relat�rio semanal de pedidos recebidos, em andamento e conclu�dos)?</li>
 <br>
 <h3>Sobre o SharePoint</h3>
-<li>A pasta de Subsídios no SharePoint já está organizada de alguma forma? Existe uma estrutura de subpastas por tipo, ano ou área?</li>
-<li>Além da equipe do jurídico trabalhista, outras pessoas precisam ter acesso para visualizar os pedidos no SharePoint?</li>
+<li>A pasta de Subs�dios no SharePoint j� est� organizada de alguma forma? Existe uma estrutura de subpastas por tipo, ano ou �rea?</li>
+<li>Al�m da equipe do jur�dico trabalhista, outras pessoas precisam ter acesso para visualizar os pedidos no SharePoint?</li>
 <br>
-<h3>Sobre segurança e acesso</h3>
-<li>Quem pode <strong>ver</strong> todos os pedidos? Somente o jurídico, ou também quem enviou consegue acompanhar o status do próprio pedido?</li>
-<li>Há necessidade de <strong>sigilo</strong> em algum tipo de pedido (ex: pedidos que somente o advogado responsável pode ver)?</li>
-<br>
-<hr>
-<br>
-<h2>7. O Que Já Está Pronto</h2>
-<br>
-<p>Para que a equipe tenha noção do que já foi desenvolvido, o EXTRATJUD já conta com:</p>
-<br>
-<p>✅ Um módulo de "Subsídios Trabalhistas" com cadastro de processos, listagem com filtros e painel de acompanhamento</p>
-<p>✅ Integração com banco de dados para armazenamento dos pedidos</p>
-<p>✅ Botão de acesso direto à pasta de Subsídios no SharePoint (<code>JUD-GERNCIACOELBA</code>)</p>
-<p>✅ Controle de status por processo (Novo, Em Análise, Em Andamento, Aguardando Documentos, Concluído, Cancelado)</p>
-<p>✅ Painel com indicadores: total de processos, em andamento, com prazo vencido, aguardando documentos</p>
-<p>✅ Alerta automático dos processos com prazo nos próximos 7 dias</p>
-<br>
-<p>O que falta construir depende das respostas acima, principalmente: o formulário para quem envia, e a integração automática com o SharePoint e/ou Teams.</p>
+<h3>Sobre seguran�a e acesso</h3>
+<li>Quem pode <strong>ver</strong> todos os pedidos? Somente o jur�dico, ou tamb�m quem enviou consegue acompanhar o status do pr�prio pedido?</li>
+<li>H� necessidade de <strong>sigilo</strong> em algum tipo de pedido (ex: pedidos que somente o advogado respons�vel pode ver)?</li>
 <br>
 <hr>
 <br>
-<p><em>Este documento é um rascunho de levantamento e está aberto a ajustes conforme as discussões com a equipe.</em></p>
+<h2>7. O Que J� Est� Pronto</h2>
+<br>
+<p>Para que a equipe tenha no��o do que j� foi desenvolvido, o EXTRATJUD j� conta com:</p>
+<br>
+<p>? Um m�dulo de "Subs�dios Trabalhistas" com cadastro de processos, listagem com filtros e painel de acompanhamento</p>
+<p>? Integra��o com banco de dados para armazenamento dos pedidos</p>
+<p>? Bot�o de acesso direto � pasta de Subs�dios no SharePoint (<code>JUD-GERNCIACOELBA</code>)</p>
+<p>? Controle de status por processo (Novo, Em An�lise, Em Andamento, Aguardando Documentos, Conclu�do, Cancelado)</p>
+<p>? Painel com indicadores: total de processos, em andamento, com prazo vencido, aguardando documentos</p>
+<p>? Alerta autom�tico dos processos com prazo nos pr�ximos 7 dias</p>
+<br>
+<p>O que falta construir depende das respostas acima, principalmente: o formul�rio para quem envia, e a integra��o autom�tica com o SharePoint e/ou Teams.</p>
+<br>
+<hr>
+<br>
+<p><em>Este documento � um rascunho de levantamento e est� aberto a ajustes conforme as discuss�es com a equipe.</em></p>
 <br>
 </body>
 </html>

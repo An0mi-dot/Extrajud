@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -351,29 +351,7 @@
                 </div>
             </a>
 
-            <!-- Módulo 2: Helpdesk (Novo Hub) -->
-            <a href="hub_solicitacoes.html" class="hub-card">
-                <div class="icon-circle">
-                    <i class="fa-solid fa-folder-tree"></i>
-                </div>
-                <div class="card-title">Fluxo</div>
-                <div class="card-desc">
-                    Gestão de demandas jurídicas, ofícios e solicitações internas.
-                </div>
-            </a>
-
-            <!-- Módulo 3: Subsídios Trabalhistas -->
-            <a href="hub_subsidios.html" class="hub-card">
-                <div class="icon-circle">
-                    <i class="fa-solid fa-gavel"></i>
-                </div>
-                <div class="card-title">Subsídios</div>
-                <div class="card-desc">
-                    Gestão de subsídios trabalhistas e acompanhamento de processos no SharePoint.
-                </div>
-            </a>
-
-            <!-- Módulo 4: Site / Downloads -->
+            <!-- Módulo 2: Site / Downloads -->
             <a href="#" onclick="event.preventDefault(); require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" class="hub-card">
                 <div class="icon-circle">
                     <i class="fa-solid fa-globe"></i>
@@ -384,14 +362,14 @@
                 </div>
             </a>
 
-            <!-- Módulo: Debug Console (Admin) -->
-            <a href="debug.html" class="hub-card" style="border: 1px dashed var(--border-color); opacity: 0.8;">
+            <!-- Módulo: Serviços Extras -->
+            <a href="sharepoint_create.html" class="hub-card">
                 <div class="icon-circle">
-                    <i class="fa-solid fa-bug"></i>
+                    <i class="fa-solid fa-folder-plus"></i>
                 </div>
-                <div class="card-title">Debug</div>
+                <div class="card-title">Serviços Extras</div>
                 <div class="card-desc">
-                    Console de diagnóstico para verificar autenticação e permissões (Admin).
+                    Ferramentas de apoio e criação de pastas em lote.
                 </div>
             </a>
         </div>
@@ -420,43 +398,6 @@
         @keyframes update-pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(1.3); }
-        }
-        /* Profile Modal Styles */
-        /* Override default modal behavior which is flex-row */
-        #modal-profile .settings-modal-body {
-            display: block; /* Force block layout */
-            flex-direction: column; /* Just in case */
-            overflow-y: auto; /* Allow scrolling */
-        }
-        
-        .profile-tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-        .profile-tab {
-            padding: 12px 20px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-        .profile-tab:hover {
-            color: var(--primary-color);
-            background: rgba(0,0,0,0.02);
-        }
-        .profile-tab.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-        }
-        .profile-section {
-            display: none;
-            animation: fadeIn 0.3s ease-out;
-        }
-        .profile-section.active {
-            display: block;
         }
         .form-group {
             margin-bottom: 16px;
@@ -490,110 +431,6 @@
             margin-top: 4px;
         }
     </style>
-
-    <!-- Profile Edit Modal -->
-    <div id="modal-profile" class="settings-modal-overlay">
-        <div class="settings-modal-content" style="max-width: 500px; width: 90%;">
-            <div class="settings-modal-header">
-                <h2><i class="fa-solid fa-user-gear"></i> Configurações de Conta</h2>
-                <button id="btn-close-profile" class="settings-close-btn">&times;</button>
-            </div>
-            
-            <div class="settings-modal-body" style="padding: 0;">
-                <div class="profile-tabs">
-                    <div class="profile-tab active" onclick="switchTab('tab-general')">Geral</div>
-                    <div class="profile-tab" onclick="switchTab('tab-security')">Segurança</div>
-                    <div class="profile-tab" onclick="switchTab('tab-accounts')">Central de Contas</div>
-                </div>
-
-                <div style="padding: 20px;">
-                    <!-- General Tab -->
-                    <div id="tab-general" class="profile-section active">
-                        <div style="display: flex; gap: 20px; align-items: flex-start;">
-                            <div style="text-align: center;">
-                                <div class="profile-avatar" style="width: 80px; height: 80px; margin: 0 auto 10px; font-size: 32px;" id="modal-avatar-preview">?</div>
-                                <input type="file" id="inp-avatar-file" accept="image/*" style="display: none;">
-                                <button class="settings-btn-primary" style="font-size: 11px; padding: 4px 8px; background: var(--text-secondary); width: 100%;" onclick="document.getElementById('inp-avatar-file').click()">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i> Upload Foto
-                                </button>
-                                <div id="avatar-loading" style="display:none; font-size:10px; color:var(--text-secondary); margin-top:5px;">Processando...</div>
-                            </div>
-                            <div style="flex: 1;">
-                                <div class="form-group">
-                                    <label class="form-label">Nome de Exibição</label>
-                                    <input type="text" id="inp-full-name" class="form-input" placeholder="Seu nome completo">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">URL do Avatar (Opcional)</label>
-                                    <input type="text" id="inp-avatar-url" class="form-input" placeholder="https://exemplo.com/foto.jpg">
-                                    <div class="form-helper">Ou link direto da imagem</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Security Tab -->
-                    <div id="tab-security" class="profile-section">
-                        <div class="form-group">
-                            <label class="form-label">Email Cadastrado</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="email" id="inp-email" class="form-input" readonly style="background: rgba(0,0,0,0.05); cursor: not-allowed;">
-                                <button id="btn-change-email" class="settings-btn-primary" style="font-size: 12px; white-space: nowrap;">Alterar</button>
-                            </div>
-                            <div class="form-helper">Para alterar o email, será enviado um link de confirmação para o novo endereço.</div>
-                        </div>
-
-                        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
-
-                        <div class="form-group">
-                            <label class="form-label">Senha</label>
-                            <p style="font-size: 13px; color: var(--text-color); margin-bottom: 10px;">
-                                Você pode solicitar um link para redefinir sua senha.
-                            </p>
-                            <button id="btn-reset-password" class="settings-btn-primary" style="background: var(--warning-color, #f59e0b);">
-                                <i class="fa-solid fa-key"></i> Enviar Email de Redefinição
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Central de Contas Tab -->
-                    <div id="tab-accounts" class="profile-section">
-                        <div style="background: rgba(var(--primary-rgb, 16,185,129), 0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin: 0 0 10px 0;">Conta Atual</h4>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div id="account-current-avatar" style="width: 32px; height: 32px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">?</div>
-                                <div>
-                                    <div id="account-current-name" style="font-weight: 600; font-size: 14px;">Usuário</div>
-                                    <div id="account-current-email" style="font-size: 12px; color: var(--text-secondary);">email@exemplo.com</div>
-                                </div>
-                                <div style="margin-left: auto; font-size: 11px; font-weight: bold; color: var(--primary-color); background: rgba(var(--primary-rgb), 0.1); padding: 2px 6px; border-radius: 4px;">ATIVA</div>
-                            </div>
-                        </div>
-
-                        <h4 style="font-size: 14px; margin-bottom: 10px;">Ações da Conta</h4>
-                        
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <button class="settings-btn-primary" onclick="window.switchAccount()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-color); display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                <i class="fa-solid fa-user-plus"></i> Usar Outra Conta
-                            </button>
-                            
-                            <button class="settings-btn-primary" onclick="localStorage.clear(); window.location.href='login.html';" style="background: var(--error-color, #ef4444); color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
-                            </button>
-                        </div>
-                        
-                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 20px; text-align: center;">
-                            Para adicionar uma nova conta, saia da atual e faça login com as novas credenciais.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="settings-modal-footer">
-                <button id="btn-save-profile" class="settings-btn-primary"><i class="fa-solid fa-check"></i> Salvar Alterações</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Settings Modal (New) -->
     <div id="modal-settings" class="settings-modal-overlay">
@@ -773,23 +610,9 @@
 
     <!-- Scripts Logic -->
     <script type="module">
-        import { supabase } from './assets/supabaseClient.js';
         const { ipcRenderer } = require('electron');
 
-        // Switch Account Logic
-        window.switchAccount = async () => {
-            try {
-                // Find Supabase token key
-                const sessionKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-                if(sessionKey) {
-                    sessionStorage.setItem('backup_session_key', sessionKey);
-                    sessionStorage.setItem('backup_session_val', localStorage.getItem(sessionKey));
-                }
-            } catch(e) { console.error('Backup session failed', e); }
-            
-            localStorage.clear();
-            window.location.href = 'login.html?from=switch_account';
-        };
+        
 
         // --- User Global Context ---
         let userData = null;
@@ -955,28 +778,7 @@
                 };
             }
 
-            // 2. Load User
-            try {
-                // Try Supabase Session first to get latest token/data
-                const sessionRes = await supabase.auth.getSession();
-                if (sessionRes && sessionRes.data && sessionRes.data.session) {
-                     userData = sessionRes.data.session.user;
-                     // Enhance with Role
-                       const { data: roleData } = await supabase.from('user_roles').select('cargo').eq('user_email', userData.email).single();
-                       if (roleData && roleData.cargo) userData.role = roleData.cargo.toLowerCase();
-                     // Push to main process cache
-                     ipcRenderer.send('update-user-cache', userData);
-                } else {
-                    // Fallback to Main Process Cache if offline or session missing
-                    userData = await ipcRenderer.invoke('get-current-user');
-                }
-                
-                if (userData) {
-                    initUserInterface(userData);
-                }
-            } catch (e) {
-                console.error('User load error', e);
-            }
+            // 2. Load User - Disabled (no auth)
 
             // 3. Save Profile Logic
             if (btnSaveProfile) {
@@ -988,7 +790,6 @@
                     btnSaveProfile.textContent = 'Salvando...';
                     
                     try {
-                        const { data, error } = await supabase.auth.updateUser({
                             data: { full_name: newName, avatar_url: newAvatar }
                         });
 
@@ -998,7 +799,6 @@
                         userData = data.user;
                         
                         // Fetch Role from DB to ensure security context is complete
-                        const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', userData.id).single();
                         if (roleData) userData.role = roleData.role;
 
                         ipcRenderer.send('update-user-cache', userData);
@@ -1134,15 +934,12 @@
                         const fileName = `${user.id}-${Math.random()}.${fileExt}`;
                         const filePath = `${fileName}`;
                         
-                        // 1. Upload to Supabase Storage 'avatars' bucket
-                        const { error: uploadError } = await supabase.storage
                             .from('avatars')
                             .upload(filePath, file);
 
                         if (uploadError) throw uploadError;
 
                         // 2. Get Public URL
-                        const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
                         const publicUrl = data.publicUrl;
 
                         // 3. Update User Metadata
@@ -1174,7 +971,6 @@
                     btnChangeEmail.disabled = true;
 
                     try {
-                        const { error } = await supabase.auth.updateUser({ email: newEmail });
                         if (error) throw error;
                         await ipcAlert(`Um email de confirmação foi enviado para ${newEmail} e para o seu email atual.`);
                     } catch (e) {
@@ -1195,7 +991,6 @@
                     btnResetPass.disabled = true;
 
                     try {
-                        const { error } = await supabase.auth.resetPasswordForEmail(user.email);
                         if (error) throw error;
                         await ipcAlert('Email enviado! Verifique sua caixa de entrada.');
                     } catch (e) {
@@ -1375,84 +1170,10 @@
         </div>
     </div>
 
-    <!-- RBAC & Admin Script -->
-    <script type="module">
-        import { supabase } from './assets/supabaseClient.js';
-
-        // Wait for DOM
-        window.addEventListener('DOMContentLoaded', async () => {
-            const btnAdmin = document.getElementById('btn-admin-config');
-            const modalAdmin = document.getElementById('modal-admin-logic');
-            const closeAdmin = document.getElementById('btn-close-admin-logic');
-            const saveAdmin = document.getElementById('btn-admin-save');
-            
-            // Check Role
-            const { data: { session } } = await supabase.auth.getSession();
-            if(session) {
-                const { data: roleData } = await supabase
-                    .from('user_roles')
-                    .select('cargo')
-                    .eq('user_email', session.user.email)
-                    .single();
-
-                if(roleData && roleData.cargo && roleData.cargo.toLowerCase() === 'admin') {
-                    if(btnAdmin) btnAdmin.style.display = 'flex';
-                }
-            }
-
-            if(btnAdmin) {
-                btnAdmin.onclick = async () => {
-                    if(modalAdmin) modalAdmin.style.display = 'flex';
-                    
-                    // Populate Datalist
-                    const dl = document.getElementById('admin-users-list');
-                    if(dl) {
-                        dl.innerHTML = '';
-                        const { data: users } = await supabase.from('user_roles').select('*');
-                        if(users) {
-                            users.forEach(u => {
-                                const op = document.createElement('option');
-                                op.value = u.email;
-                                op.label = u.role.toUpperCase();
-                                dl.appendChild(op);
-                            });
-                        }
-                    }
-                };
-            }
-
-            if(closeAdmin) closeAdmin.onclick = () => modalAdmin.style.display = 'none';
-            if(modalAdmin) modalAdmin.onclick = (e) => { if(e.target === modalAdmin) modalAdmin.style.display = 'none'; };
-
-            if(saveAdmin) {
-                saveAdmin.onclick = async () => {
-                    const email = document.getElementById('inp-admin-email').value;
-                    const role = document.getElementById('sel-admin-role').value;
-                    
-                    if(!email || !email.includes('@')) { await ipcAlert('Email inválido'); return; }
-                    
-                    saveAdmin.textContent = 'Salvando...';
-                    saveAdmin.disabled = true;
-                    
-                    try {
-                        if(role === 'remove') {
-                            await supabase.from('user_roles').delete().eq('email', email);
-                            await ipcAlert('Removido!');
-                        } else {
-                            await supabase.from('user_roles').upsert({ email, role }, { onConflict: 'email' });
-                            await ipcAlert(' salvo!');
-                        }
-                        modalAdmin.style.display = 'none';
-                        document.getElementById('inp-admin-email').value = '';
-                    } catch(e) {
-                        await ipcAlert('Erro: ' + e.message);
-                    } finally {
-                        saveAdmin.textContent = 'Salvar';
-                        saveAdmin.disabled = false;
-                    }
-                };
-            }
-        });
-    </script>
 </body>
 </html>
+
+
+
+
+

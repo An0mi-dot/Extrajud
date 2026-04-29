@@ -674,8 +674,8 @@ function createWindow() {
     }
   } catch (e) { console.error('loadingWindow create error', e); }
 
-  // Load login screen instead of main app
-  mainWindow.loadFile(path.join(__dirname, 'public', 'login.html'));
+// Load main app instead of login screen
+  mainWindow.loadFile(path.join(__dirname, 'public', 'index.html'));
   
   // Close behavior: Minimize to Tray if enabled
   mainWindow.on('close', (event) => {

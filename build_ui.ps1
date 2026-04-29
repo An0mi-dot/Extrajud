@@ -1,0 +1,1 @@
+$content = Get-Content -Raw -Path "build_ui.js"; $content = $content -replace "^const fs(?:.|\n)*?const html = ``\r?\n?", ""; $content = $content -replace "``\r?\n?fs\.writeFileSync(?:.|\n)*", ""; [System.IO.File]::WriteAllText("C:\Users\B624140\Desktop\PROG\EXTRATJUD\public\formulario_subsidios.html", $content, [System.Text.Encoding]::UTF8)
