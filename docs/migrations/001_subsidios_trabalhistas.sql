@@ -8,6 +8,7 @@ create table if not exists subsidios_trabalhistas (
     numero_processo  text,
     nome_parte       text,
     cpf              text,
+    email            text,
     comarca          text,
     area             text,
     tipo_documento   text,

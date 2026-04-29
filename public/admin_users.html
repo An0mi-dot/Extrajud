@@ -1,0 +1,622 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXTRATJUD - Admin: Gerenciar Usu�rios</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/theme.css?v=20260317">
+    <script src="assets/theme.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .admin-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--text-color);
+        }
+
+        .btn-back {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-back:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .admin-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .admin-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #0a9860;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Users Table */
+        .users-table-container {
+            grid-column: 1 / -1;
+            overflow-x: auto;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .users-table th {
+            background: rgba(0,0,0,0.02);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .users-table tr:hover {
+            background: rgba(16,185,129,0.03);
+        }
+
+        .uuid-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background: rgba(16,185,129,0.1);
+            color: var(--primary-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+
+        .machine-id-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            background: rgba(128,128,128,0.1);
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+
+        .status-active {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .status-inactive {
+            color: #ef4444;
+            opacity: 0.7;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-action {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-action:hover {
+            background: #0a9860;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .error-message {
+            background: #fecaca;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-modal:hover {
+            background: rgba(16,185,129,0.1);
+            border-color: var(--primary-color);
+        }
+
+        .btn-modal.danger {
+            background: #fecaca;
+            color: #991b1b;
+            border-color: #dc2626;
+        }
+
+        .btn-modal.danger:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .admin-content {
+                grid-template-columns: 1fr;
+            }
+
+            .users-table {
+                font-size: 12px;
+            }
+
+            .users-table th,
+            .users-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title"><i class="fas fa-users-cog"></i> Gerenciar Usu?rios</h1>
+            <button class="btn-back" onclick="window.location.href='index.html'">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </button>
+        </div>
+
+        <div id="message-container"></div>
+
+        <div class="admin-content">
+            <!-- Section: Reatribuir UUID -->
+            <div class="admin-section">
+                <div class="section-title">
+                    <i class="fas fa-link"></i> Reatribuir UUID
+                </div>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">
+                    Reatribua o UUID de um usu�rio para uma nova m�quina/identificador.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">UUID do Usu�rio</label>
+                    <input type="text" id="inp-old-uuid" class="form-input" placeholder="ex: 550e8400-e29b-41d4-a716-446655440000" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Novo Machine Identifier (SHA256)</label>
+                    <input type="text" id="inp-new-machine-id" class="form-input" placeholder="ex: ff6b6b86a..." />
+                </div>
+                <button class="btn-primary" onclick="reatribuirUUID()">
+                    <i class="fas fa-exchange-alt"></i> Reatribuir
+                </button>
+            </div>
+
+            <!-- Section: Buscar Usu�rio -->
+            <div class="admin-section">
+                <div class="section-title">
+                    <i class="fas fa-search"></i> Buscar Usu�rio
+                </div>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">
+                    Procure um usu�rio pelo UUID ou Machine ID.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">UUID ou Machine ID</label>
+                    <input type="text" id="inp-search" class="form-input" placeholder="Procure..." />
+                </div>
+                <button class="btn-primary" onclick="buscarUsuario()">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="admin-section users-table-container">
+            <div class="section-title">
+                <i class="fas fa-list"></i> Todos os Usu�rios
+            </div>
+            <div id="loading" class="loading">Carregando usu�rios...</div>
+            <table class="users-table" id="users-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Apelido / Nome</th>
+                        <th>UUID</th>
+                        <th>Machine ID</th>
+                        <th>Primeiro Acesso</th>
+                        <th>?ltimo Acesso</th>
+                        <th>Cargos</th>
+                        <th>Status</th>
+                        <th>A??es</th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal para Reatribuir UUID -->
+    <div id="modal-reatribuir" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Confirmar Reatribui??o</div>
+            <p id="modal-message">Deseja reatribuir este UUID?</p>
+            <div class="modal-buttons">
+                <button class="btn-modal" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-modal danger" onclick="confirmarReatribuicao()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './assets/supabaseClient.js';
+        window.supabase = supabase;
+    </script>
+    <script>
+        let usuariosCache = [];
+        let pendingReatribuicao = null;
+
+        async function carregarUsuarios() {
+            try {
+                const { data, error } = await supabase
+                    .from('v_users_with_roles')
+                    .select('*')
+                    .order('last_login', { ascending: false });
+
+                if (error) throw error;
+
+                usuariosCache = data || [];
+                renderizarTabela(usuariosCache);
+                esconderLoading();
+            } catch (error) {
+                console.error('Erro ao carregar usu�rios:', error);
+                mostrarErro('Erro ao carregar usu�rios: ' + error.message);
+            }
+        }
+
+        function renderizarTabela(usuarios) {
+            const tbody = document.getElementById('users-tbody');
+            tbody.innerHTML = '';
+
+            if (usuarios.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">Nenhum usu�rio encontrado</td></tr>';
+                return;
+            }
+
+                        usuarios.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong style="color: var(--primary-color);">${user.employee_name || 'Sem Apelido'}</strong></td>
+                    <td><span class="uuid-badge" title="${user.user_uuid}">${user.user_uuid.substring(0,8)}...</span></td>
+                    <td><span class="machine-id-badge" title="${user.machine_identifier}">${user.machine_identifier.substring(0,8)}...</span></td>
+                    <td><small>${new Date(user.first_seen).toLocaleDateString('pt-BR')}</small></td>
+                    <td><small>${new Date(user.last_login).toLocaleString('pt-BR')}</small></td>
+                    <td><small>${user.cargos || 'Nenhum'}</small></td>
+                    <td>
+                        <span class="${user.user_ativo ? 'status-active' : 'status-inactive'}">
+                            ${user.user_ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action" onclick="editarNomeUsuario('${user.user_uuid}', '${user.employee_name || ''}')" title="Editar Apelido">
+                                <i class="fas fa-id-card"></i> Renomear
+                            </button>
+                            <button class="btn-action" onclick="editarUsuario('${user.user_uuid}')">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-action btn-danger" onclick="desativarUsuario('${user.user_uuid}')">
+                                <i class="fas fa-ban"></i> Desativar
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('users-table').style.display = 'table';
+        }
+
+        async function reatribuirUUID() {
+            const oldUuid = document.getElementById('inp-old-uuid').value.trim();
+            const newMachineId = document.getElementById('inp-new-machine-id').value.trim();
+
+            if (!oldUuid || !newMachineId) {
+                mostrarErro('Preencha todos os campos');
+                return;
+            }
+
+            pendingReatribuicao = { oldUuid, newMachineId };
+            document.getElementById('modal-reatribuir').classList.add('active');
+        }
+
+        async function confirmarReatribuicao() {
+            if (!pendingReatribuicao) return;
+
+            const { oldUuid, newMachineId } = pendingReatribuicao;
+
+            try {
+                // Chamar fun��o RPC para reatribuir
+                const { data, error } = await supabase.rpc('update_user_uuid_manual', {
+                    p_old_uuid: oldUuid,
+                    p_new_machine_identifier: newMachineId
+                });
+
+                if (error) throw error;
+
+                mostrarSucesso('UUID reatribu�do com sucesso!');
+                document.getElementById('inp-old-uuid').value = '';
+                document.getElementById('inp-new-machine-id').value = '';
+                fecharModal();
+                
+                // Recarregar tabela
+                await carregarUsuarios();
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarErro('Erro ao reatribuir UUID: ' + error.message);
+            }
+        }
+
+        async function buscarUsuario() {
+            const search = document.getElementById('inp-search').value.trim();
+            if (!search) {
+                renderizarTabela(usuariosCache);
+                return;
+            }
+
+            const filtered = usuariosCache.filter(u =>
+                u.user_uuid.toLowerCase().includes(search.toLowerCase()) ||
+                u.machine_identifier.toLowerCase().includes(search.toLowerCase())
+            );
+
+            renderizarTabela(filtered);
+        }
+
+        async function desativarUsuario(uuid) {
+            if (!confirm('Desativar este usu�rio?')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('users_auto')
+                    .update({ ativo: false })
+                    .eq('user_uuid', uuid);
+
+                if (error) throw error;
+
+                mostrarSucesso('Usu�rio desativado!');
+                await carregarUsuarios();
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarErro('Erro ao desativar: ' + error.message);
+            }
+        }
+
+        function editarUsuario(uuid) {
+            const user = usuariosCache.find(u => u.user_uuid === uuid);
+            if (user) {
+                document.getElementById('inp-old-uuid').value = uuid;
+                document.getElementById('inp-new-machine-id').focus();
+                document.querySelector('.admin-section').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-reatribuir').classList.remove('active');
+            pendingReatribuicao = null;
+        }
+
+        function esconderLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+                async function editarNomeUsuario(uuid, currentName) {
+            const newName = prompt('Digite o apelido/nome f?cil para identificar esta m?quina:', currentName || '');
+            if (newName !== null && newName.trim() !== currentName) {
+                try {
+                    const { error } = await supabase
+                        .from('users_auto')
+                        .update({ employee_name: newName.trim() })
+                        .eq('user_uuid', uuid);
+                    
+                    if (error) throw error;
+                    mostrarSucesso('Nome/Apelido atualizado!');
+                    carregarUsuarios();
+                } catch (e) {
+                    mostrarErro('Erro ao atualizar nome: ' + e.message);
+                }
+            }
+        }
+
+        function mostrarErro(msg) {
+            const container = document.getElementById('message-container');
+            container.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${msg}</div>`;
+        }
+
+        function mostrarSucesso(msg) {
+            const container = document.getElementById('message-container');
+            container.innerHTML = `<div class="success-message"><i class="fas fa-check-circle"></i> ${msg}</div>`;
+            setTimeout(() => { container.innerHTML = ''; }, 3000);
+        }
+
+        // Carregar dados quando a p�gina abrir
+        window.addEventListener('load', carregarUsuarios);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
