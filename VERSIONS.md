@@ -208,3 +208,16 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 292cd14
 - Notes: feat: dialogs nativos do SO - substituir alert/confirm por ipcAlert/ipcConfirm em todos os modulos
+## v2.1.9 - 2026-05-19
+
+- Commit: 2b99b3c
+- Notes: refactor: reestruturação completa da UI (Design System v3.0)
+
+- Novo design system com cores slate/blue (#2563eb)
+- Tipografia Inter em todas as páginas
+- Layout unificado sidebar + main-area nos extratores
+- Componentes compartilhados: terminal, status-bar, modal, settings
+- Novo ícone do app (>_ prompt azul em quadrado branco)
+- Site de download reestruturado com estética do app
+- Removido debug UI e welcome overlay
+- Todas as funcionalidades de bots preservadas
