@@ -1,26 +1,57 @@
-node_modules/
-dist/
-out/
-build/
-.env
-.DS_Store
+# Logs
 *.log
+*.txt
+electron-*.txt
+output*.txt
+pje_last_run.json
+test-results/
+full-index.txt
+temp_*.txt
 
-# Generated pages and helper HTML (archived in branch archive/pre-cleanup)
-paginas_html/
+# Node (local + global)
+node_modules/
+node_bin/              # Node.js local (não versionar)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
+# Tests
+*.test.js
+*.spec.js
+*.test.ts
+*.spec.ts
+test-results/
+tests/unit/
+Analysis.ipynb
 
-Relatorios_PJE/
+# OS
+.DS_Store
+Thumbs.db
 
-# User specific and secrets
-modelos/
-note/
-backup/
-Ex/
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Env/DB
+.env
+.env.local
+.env.*.local
+.supabase/
+
+# Builds
+dist/
+build/
+out/
+
+# Backups/Temp
+Backups/supabaseClient.js
+Backups/*.html (keep READMEs)
+
+# Models (binários grandes)
+docs/models/*.xlsx
+docs/models/*.xls
+
+# Scripts temp
 *.tmp
-credentials.json
-token.json
-
-
-notes/
-anotacoes/

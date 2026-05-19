@@ -1,8 +1,9 @@
-# Extrajud — Automação Projudi (Citações / Intimações)
+# EXTRATJUD — Automação de Portais Judiciais
 
-**Última atualização:** 2026-02-24
+**Versão:** 2.1.7 | **Status:** Produção  
+**Última atualização:** 11 de Maio de 2026 (Cleanup & Reorganização)
 
-Este repositório contém uma aplicação desktop (Electron) que automatiza a extração de dados em portais judiciais (p.ex. Projudi), gera planilhas Excel com os dados encontrados e cria PDFs com evidências (screenshots) das páginas visitadas.
+Aplicação Electron para automação de extração de dados em portais judiciais (Projudi, PJE), geração de Excel com dados estruturados e PDFs com evidências (screenshots).
 
 ---
 

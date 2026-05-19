@@ -84,14 +84,16 @@ function skipCurrentStep(eventSender) {
 }
 const log = (eventSender, msg, tech = null, type = 'info') => {
     // Para o console do terminal, imprime apenas a mensagem
-    console.log(`[${type.toUpperCase()}] ${msg}`);
+    console.log(`[${type.toUpperCase()}]${tech ? ` [${tech}]` : ''} ${msg}`);
     
     // Para o Frontend, envia o objeto completo
     if (eventSender) {
         eventSender.send('log-message', {
             msg: msg,
             tech: tech || 'Function execution trace...',
-            type: type
+            type: type,
+            source: 'automation-service',
+            timestamp: new Date().toISOString()
         });
     }
 
