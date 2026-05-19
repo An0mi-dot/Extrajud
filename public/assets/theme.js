@@ -1,121 +1,53 @@
 const themeConfig = {
-    // Sistema de trocas de tema
-    // Configurações e estado
-    
     init() {
         const saved = localStorage.getItem('theme-preference') || 'system';
         this.apply(saved);
-        
-        // Listeners for system changes
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         if (mediaQuery.addEventListener) {
-            mediaQuery.addEventListener('change', e => {
-                if (this.current() === 'system') {
-                    // Re-apply to let CSS take over or explicit set?
-                    this.apply('system');
-                }
-            });
+            mediaQuery.addEventListener('change', () => { if (this.current() === 'system') this.apply('system'); });
         }
     },
-
-    current() {
-        return localStorage.getItem('theme-preference') || 'system';
-    },
-
+    current() { return localStorage.getItem('theme-preference') || 'system'; },
     cycle() {
         const current = this.current();
-        let next = 'light';
-        if (current === 'light') next = 'dark';
-        else if (current === 'dark') next = 'system';
-        
+        let next = current === 'light' ? 'dark' : current === 'dark' ? 'system' : 'light';
         this.apply(next);
         return next;
     },
-
     apply(mode) {
         localStorage.setItem('theme-preference', mode);
         const root = document.documentElement;
-        
-        let targetTheme = mode;
-        if (mode === 'system') {
-            targetTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        
-        // Always remove explicit attribute first
+        let target = mode === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : mode;
         root.removeAttribute('data-theme');
-
-        if (targetTheme === 'dark') {
-            root.setAttribute('data-theme', 'dark');
-        } else {
-            root.setAttribute('data-theme', 'light');
-        }
-
-        // Atualiza UI se houver botões
+        root.setAttribute('data-theme', target);
         this.updateUI();
     },
-
     updateUI() {
         const mode = this.current();
-        const iconClass = mode === 'light' ? 'fa-sun' : (mode === 'dark' ? 'fa-moon' : 'fa-desktop');
-        const title = mode === 'light' ? 'Claro' : (mode === 'dark' ? 'Escuro' : 'Sistema');
-
-        // Update settings modal buttons (.theme-option) - GENERIC
-        document.querySelectorAll('.theme-option').forEach(btn => {
-            const btnMode = btn.getAttribute('data-theme');
-            if (btnMode === mode) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-
-        document.querySelectorAll('.theme-toggle-btn i').forEach(icon => {
-            icon.className = `fa-solid ${iconClass}`;
-        });
-        
-        document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
-            btn.title = `Tema: ${title}`;
+        document.querySelectorAll('.theme-btn, .theme-option').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-theme') === mode);
         });
     }
 };
 
-// Expose globally
 window.themeConfig = themeConfig;
 
 document.addEventListener('DOMContentLoaded', async () => {
     themeConfig.init();
-    
-    // Auto-update Version Texts
     try {
         if (typeof require !== 'undefined') {
             const { ipcRenderer } = require('electron');
             const v = await ipcRenderer.invoke('get-app-version');
             if (v) {
-                document.querySelectorAll('.app-version, .version-tag, .version-info, .settings-ver-text, #settings-app-ver').forEach(el => {
-                   const txt = el.textContent.trim().toLowerCase();
-                   if (txt.startsWith('ver ')) el.textContent = 'ver ' + v;
-                   else if (txt.startsWith('v') && !txt.startsWith('var')) el.textContent = 'v' + v;
-                   else if (txt.startsWith('version ')) el.textContent = 'Version ' + v;
-                   else el.textContent = v;
+                document.querySelectorAll('.app-version, .version-tag, .version-info, #app-version, #settings-app-ver').forEach(el => {
+                    if (el.tagName === 'SPAN' || el.classList.contains('version-tag')) el.textContent = v;
+                    else if (el.classList.contains('app-version')) el.textContent = v;
                 });
             }
         }
-    } catch(e) { console.error('Version auto-update error', e); }
+    } catch(e) {}
 
-    // Bind click events for main toggle
-    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            themeConfig.cycle();
-        });
-    });
-
-    // Bind click events for settings modal options (generic handler)
-    document.querySelectorAll('.theme-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-           const mode = btn.getAttribute('data-theme');
-           themeConfig.apply(mode);
-        });
+    document.querySelectorAll('.theme-btn, .theme-option').forEach(btn => {
+        btn.addEventListener('click', () => { themeConfig.apply(btn.getAttribute('data-theme')); });
     });
 });
-

@@ -17,7 +17,14 @@ const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, webContents } = 
         try {
             const msg = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
             if (mainWindow && !mainWindow.isDestroyed()) {
-                mainWindow.webContents.send('log-message', { msg, type: level === 'error' ? 'error' : 'info', tech: 'main' });
+          mainWindow.webContents.send('log-message', {
+            msg,
+            type: level === 'error' ? 'error' : (level === 'warn' ? 'warn' : 'info'),
+            tech: 'main-process console bridge',
+            source: 'main',
+            timestamp: new Date().toISOString(),
+            details: args.length > 1 ? args.map(a => typeof a === 'string' ? a : JSON.stringify(a, null, 2)).join('\n') : ''
+          });
             }
         } catch (_) {}
     }
@@ -629,7 +636,7 @@ function createWindow() {
     width: 1000, // Initial size for login (can be smaller if desired, but 1000 is fine)
     height: 750,
     autoHideMenuBar: true,
-    icon: path.join(__dirname, 'public', 'assets', 'logo2.png'),
+    icon: path.join(__dirname, 'public', 'assets', 'icon.ico'),
     webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -739,7 +746,7 @@ app.whenReady().then(async () => {
 
   try {
       // Tray Setup
-      const iconPath = path.join(__dirname, 'public', 'assets', 'logo2.png');
+      const iconPath = path.join(__dirname, 'public', 'assets', 'icon.ico');
       appTray = new Tray(iconPath);
       appTray.setToolTip('Extratjud');
       

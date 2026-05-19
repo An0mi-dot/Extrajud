@@ -1,379 +1,210 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criar Pastas - Sharepoint</title>
+    <title>EXTRATJUD - Criar Pastas SharePoint</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Theme & Global Assets -->
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
     <script src="assets/dialogs.js"></script>
-
+    <script src="assets/terminal-logger.js"></script>
     <style>
-        /* :root variables handled by theme.css */
-        
-        body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            opacity: 0;
-            transition: opacity 0.4s ease-in-out;
-        }
-
+        body { margin: 0; display: flex; height: 100vh; overflow: hidden; opacity: 0; transition: opacity 0.3s ease; }
         body.loaded { opacity: 1; }
+        .main-area { flex: 1; display: flex; flex-direction: column; padding: 16px 20px; gap: 12px; min-width: 0; }
 
-        /* Sidebar similar to extrator_projudi */
-        .sidebar {
-            width: 280px;
-            background-color: var(--card-bg);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            gap: 15px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.02);
-            z-index: 10;
-            overflow-y: auto;
-        }
-
-        /* Typography */
-        h1, h2, h3, .brand {
-            font-family: 'Rajdhani', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .brand {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .btn-back {
-            background: none;
-            border: 1px solid var(--border-color);
-            color: #666;
-            padding: 8px 12px;
-            font-size: 13px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-back:hover {
-            background-color: #f8f9fa;
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 15px;
-        }
-
-        .label-section {
-            font-size: 11px;
-            font-weight: 700;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        button.btn-action {
-            border: none;
+        .preview-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
             padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-family: 'Inter', sans-serif;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.85rem;
         }
-        
-        button.btn-action:active { transform: scale(0.98); }
-        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        #btnStart { background-color: var(--primary-color); color: white; }
-        #btnStart:hover:not(:disabled) { background-color: var(--primary-hover); }
-
-        #btnStop { background-color: white; color: var(--danger-color); border: 1px solid var(--danger-color); }
-        #btnStop:hover:not(:disabled) { background-color: #fff5f5; }
-
-        .btn-mini {
-            padding: 6px 10px; font-size: 12px; border-radius: 4px; border:1px solid #ddd; background:#f9f9f9; cursor:pointer;
-        }
-        
-        /* Inputs specific */
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        .input-std { padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
-
-        /* Universal Loader */
-        #universal-loader {
-            display: none; 
+        .loader-toast {
+            display: none;
             position: fixed;
-            top: 20px;
+            top: 16px;
             right: 20px;
-            background-color: var(--card-bg);
-            padding: 10px 20px;
-            border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 10px 16px;
+            box-shadow: var(--shadow-lg);
             z-index: 9999;
             align-items: center;
-            gap: 12px;
-            border: 1px solid var(--border-color);
-            border-left: 4px solid var(--primary-color);
-            animation: slideIn 0.3s ease-out;
+            gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
         }
-        #universal-loader.active { display: flex; }
+        .loader-toast.active { display: flex; }
 
-        .spinner-ring {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(16, 185, 129, 0.2); 
+        .loader-toast-spinner {
+            width: 16px; height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
             border-radius: 50%;
-            border-top-color: var(--primary-color);
             animation: spin 0.8s linear infinite;
         }
-
-        .loader-text {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            gap: 15px;
-            min-width: 0;
-        }
-
-        .info-card {
-            background: #fff;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            font-size: 13px;
-            color: #555;
-            line-height: 1.5;
-        }
-        
-        .badge-fixed {
-            background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 11px; display:inline-block; margin-top:5px;
-        }
-
-        /* Preview Box */
-        .preview-box {
-            background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; max-height: 150px; overflow-y: auto; font-size: 13px; 
-        }
-        .preview-item { padding: 5px 0; border-bottom: 1px solid #f0f0f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-        /* Logs Console */
-        .logs-wrapper {
-            flex: 1;
-            background-color: #1e1e1e !important; /* Force dark bg */
-            border-radius: 10px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            color: #d4d4d4 !important; /* Force light text */
-            border: 1px solid #333;
-        }
-
-        .logs-header {
-            background-color: #2d2d2d !important;
-            padding: 8px 15px;
-            border-bottom: 1px solid #444;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .dots { display: flex; gap: 6px; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; }
-        .red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
-        
-        .log-title-text { color: #aaa; font-size: 12px; font-family: 'Inter', sans-serif; margin-left:10px;}
-
-        #logs {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            background-color: #1e1e1e !important;
-            color: #d4d4d4 !important;
-            line-height: 1.5;
-            white-space: pre-wrap;
-        }
-
-        .log-entry { margin-bottom: 4px; padding-left: 8px; border-left: 3px solid transparent; }
-        .log-info { border-left-color: #3b82f6; }
-        .log-success { border-left-color: #10b981; color: #a7f3d0; }
-        .log-warning { border-left-color: #f59e0b; color: #fde68a; }
-        .log-error { border-left-color: #ef4444; color: #fca5a5; }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none; justify-content: center; align-items: center; z-index: 1000;
-        }
-        .modal-content {
-            background: white; padding: 25px; border-radius: 12px; width: 450px;
-            box-shadow: 0 20px 25px rgba(0,0,0,0.1);
-        }
-        .modal-title { font-size: 18px; margin-bottom: 10px; }
-        .modal-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
-
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div id="universal-loader">
-        <div class="spinner-ring"></div>
+    <div id="universal-loader" class="loader-toast">
+        <div class="loader-toast-spinner"></div>
         <div class="loader-text">Processando...</div>
     </div>
 
     <div class="sidebar">
-        <div class="brand">
-            <i class="fas fa-folder-plus"></i> CRIAR PASTAS
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-folder-plus" style="color: var(--primary);"></i>
+            <span class="sidebar-brand-text">Criar Pastas</span>
         </div>
-        
-        <button class="btn-back" onclick="window.history.back()">
-            <i class="fas fa-arrow-left"></i> Voltar ao Hub
-        </button>
-        <button id="btn-settings" class="btn-back" style="margin-top: 5px;">
-             <i class="fa-solid fa-gear" style="margin-right: 6px;"></i> Configurações
+
+        <button class="sidebar-back-btn" id="btn-back">
+            <i class="fa-solid fa-arrow-left"></i> Voltar ao Hub
         </button>
 
-        <div class="control-group">
-            <div class="label-section">Automação</div>
-            <button id="btnStart" class="btn-action">
-                <i class="fas fa-play"></i> INICIAR (ABRIR EDGE)
-            </button>
-            <button id="btnStop" class="btn-action" style="display:none;">
-                <i class="fas fa-stop"></i> PARAR
-            </button>
+        <div class="sidebar-section-label">Automação</div>
+        <div class="flex flex-col gap-2">
+            <button id="btnStart" class="btn btn-primary w-full"><i class="fa-solid fa-play"></i> Iniciar (Abrir Edge)</button>
+            <button id="btnStop" class="btn btn-danger w-full" style="display:none;"><i class="fa-solid fa-stop"></i> Parar</button>
         </div>
 
-        <div class="control-group">
-            <div class="label-section">Pasta Fixa</div>
-            <div style="font-size:11px; color:#555; line-height:1.4;">
-                JUD COELBA - Documentos - OFÍCIOS (Ano Atual)
-            </div>
-        </div>
+        <div class="sidebar-section-label">Pasta Fixa</div>
+        <div class="text-xs text-muted">JUD COELBA - Documentos - OFÍCIOS (Ano Atual)</div>
 
-        <div class="control-group" style="margin-top:auto;">
-            <div class="label-section">Credenciais (Microsoft)</div>
-            <div style="font-size:11px; color:#888; margin-bottom:5px;">Selecione ou adicione um e-mail para pré-preenchimento.</div>
-            
-            <div class="input-group">
-                <select id="emailSelect" class="input-std" style="display:none;"></select>
-                <div style="display:flex; gap:5px;">
-                    <input id="emailInput" class="input-std" type="email" placeholder="Novo email..." style="width:100%;">
-                    <button id="emailAddBtn" class="btn-mini"><i class="fas fa-plus"></i></button>
-                </div>
+        <div style="margin-top: auto;">
+            <div class="sidebar-section-label">E-mail Microsoft</div>
+            <div class="text-xs text-muted mb-2">Selecione ou adicione um e-mail.</div>
+            <select id="emailSelect" class="input mb-2" style="display:none;"></select>
+            <div class="flex gap-2">
+                <input id="emailInput" class="input" type="email" placeholder="Novo email...">
+                <button id="emailAddBtn" class="btn btn-ghost btn-sm"><i class="fa-solid fa-plus"></i></button>
             </div>
         </div>
     </div>
 
-    <div class="main-content">
-        <div class="alert-box">
-            <strong>COMO USAR:</strong> Clique em Iniciar. O robô abrirá o SharePoint. Faça login (se necessário). Aguarde o preview das pastas e confirme a quantidade.
+    <div class="main-area">
+        <div class="alert alert-info">
+            <i class="fa-solid fa-circle-info"></i>
+            <div><strong>Como usar:</strong> Clique em Iniciar. O robô abrirá o SharePoint. Faça login se necessário. Aguarde o preview e confirme a quantidade.</div>
         </div>
-        
-        <!-- Preview Section -->
-        <div style="display:flex; flex-direction:column; gap:5px;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                 <div class="label-section" style="color:#555;">PREVIEW DO DIRETÓRIO</div>
-                 <div style="font-size:11px; color:#888;" id="status-text">Aguardando início...</div>
+
+        <div>
+            <div class="flex justify-between items-center mb-2">
+                <span class="sidebar-section-label" style="color:var(--text-secondary);">PREVIEW DO DIRETÓRIO</span>
+                <span class="text-xs text-muted" id="status-text">Aguardando início...</span>
             </div>
             <div id="preview" class="preview-box">
-                <em style="color:#999; padding:10px; display:block;">Nenhum conteúdo carregado ainda.</em>
+                <em class="text-muted">Nenhum conteúdo carregado.</em>
             </div>
         </div>
 
-        <div class="logs-wrapper">
-            <div class="logs-header">
-                <div style="display:flex; align-items:center;">
-                    <div class="dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
-                    <span class="log-title-text">TERMINAL DE EXECUÇÃO</span>
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <div class="terminal-dot red"></div>
+                    <div class="terminal-dot yellow"></div>
+                    <div class="terminal-dot green"></div>
                 </div>
-                <button id="btnCopyLog" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Copiar Log">
-                    <i class="fas fa-copy"></i>
-                </button>
+                <span class="terminal-title">CONSOLE SHAREPOINT</span>
+                <button id="btnCopyLog" class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:0.7rem;"><i class="fa-solid fa-copy"></i></button>
             </div>
-            <div id="logs"></div>
+            <div class="terminal-body" id="logs"></div>
         </div>
     </div>
 
-    <!-- Modal Create Config -->
+    <!-- Dynamic Modal -->
     <div id="dynamicModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-title">Criar Pastas Sequenciais</div>
-            <div id="modalBody">
-                <div id="modalPreview" style="max-height:140px; overflow:auto; border:1px solid #eee; padding:8px; border-radius:6px; margin-bottom:15px; font-size:13px; color:#555; background:#fafafa;"></div>
-                
-                <div style="display:flex; align-items:center; gap:10px; background:#f0f9ff; padding:15px; border-radius:8px;">
-                     <i class="fas fa-plus-circle" style="color:var(--primary-color);"></i>
-                     <div style="flex:1; font-weight:600; font-size:14px;">Quantas novas pastas criar?</div>
-                     <input id="modalCount" type="number" min="1" value="3" style="width:60px; padding:8px; border:1px solid #ccc; border-radius:4px; text-align:center; font-weight:bold;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Criar Pastas Sequenciais</h3>
+                <button class="modal-close" id="modalCloseX">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalPreview" class="preview-box mb-3" style="max-height:120px;"></div>
+                <div class="alert alert-info">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <div style="flex:1; font-weight:600;">Quantas novas pastas criar?</div>
+                    <input id="modalCount" type="number" min="1" value="3" class="input" style="width:70px; text-align:center; font-weight:700;">
                 </div>
             </div>
-            <div class="modal-actions">
-                <button id="modalCancel" class="btn-action btn-secondary" style="background:#eee; color:#333;">Cancelar</button>
-                <button id="modalConfirm" class="btn-action" style="background:var(--primary-color); color:#fff;">Confirmar Criação</button>
+            <div class="modal-footer">
+                <button id="modalCancel" class="btn btn-ghost">Cancelar</button>
+                <button id="modalConfirm" class="btn btn-primary">Confirmar Criação</button>
             </div>
         </div>
     </div>
 
-    <!-- Login Wait Modal -->
+    <!-- Login Modal -->
     <div id="loginModal" class="modal-overlay">
-        <div class="modal-content" style="text-align:center; width:350px;">
-            <div style="font-size:40px; color:#3b82f6; margin-bottom:15px;">
-                <i class="fas fa-user-lock"></i>
+        <div class="modal">
+            <div class="modal-body" style="text-align:center; padding:32px;">
+                <div style="font-size:2.5rem; color:var(--primary); margin-bottom:12px;"><i class="fa-solid fa-user-lock"></i></div>
+                <h3 style="margin:0 0 8px;">Aguardando Login</h3>
+                <p class="text-sm">Realize o login da Microsoft na janela do navegador que foi aberta.</p>
+                <div class="flex gap-2" style="justify-content:center; margin-top:20px;">
+                    <button id="loginCancel" class="btn btn-ghost">Cancelar</button>
+                    <button id="loginDone" class="btn btn-primary">Login Concluído</button>
+                </div>
             </div>
-            <div class="modal-title">Aguardando Login</div>
-            <p style="font-size:14px; color:#666; line-height:1.5;">
-                Por favor, realize o login da Microsoft na janela do navegador que foi aberta.
-            </p>
-            <div class="modal-actions" style="justify-content:center; margin-top:25px;">
-                <button id="loginCancel" class="btn-action btn-secondary" style="background:#eee; color:#333;">Cancelar</button>
-                <button id="loginDone" class="btn-action" style="background:#3b82f6; color:white;">Login Concluído</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="settings-overlay">
+        <div class="settings-modal">
+            <div class="settings-header">
+                <h2><i class="fa-solid fa-sliders"></i> Configurações</h2>
+                <button class="modal-close" id="btn-close-settings">&times;</button>
+            </div>
+            <div class="settings-body">
+                <div class="settings-nav">
+                    <button class="settings-nav-btn active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
+                    <button class="settings-nav-btn" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
+                    <button class="settings-nav-btn" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
+                </div>
+                <div class="settings-content">
+                    <div id="tab-geral" class="settings-pane active">
+                        <h4 class="settings-section-title">Aparência</h4>
+                        <p class="settings-section-desc">Personalize o tema visual.</p>
+                        <div class="theme-selector">
+                            <button class="theme-btn" data-theme="light"><i class="fa-solid fa-sun"></i> Claro</button>
+                            <button class="theme-btn" data-theme="dark"><i class="fa-solid fa-moon"></i> Escuro</button>
+                            <button class="theme-btn" data-theme="system"><i class="fa-solid fa-desktop"></i> Sistema</button>
+                        </div>
+                        <h4 class="settings-section-title">Comportamento</h4>
+                        <div class="flex flex-col gap-2">
+                            <label class="checkbox-label"><input type="checkbox" id="chk-minimize-tray"> Minimizar para bandeja ao fechar</label>
+                            <label class="checkbox-label"><input type="checkbox" id="chk-always-top"> Manter sempre no topo</label>
+                        </div>
+                    </div>
+                    <div id="tab-logs" class="settings-pane">
+                        <h4 class="settings-section-title">Gerenciamento de Logs</h4>
+                        <div class="flex gap-2 flex-wrap">
+                            <button id="btn-copy-log" class="btn btn-ghost btn-sm"><i class="fa-regular fa-copy"></i> Copiar</button>
+                            <button id="btn-download-log" class="btn btn-ghost btn-sm"><i class="fa-solid fa-download"></i> Baixar .txt</button>
+                        </div>
+                    </div>
+                    <div id="tab-sobre" class="settings-pane">
+                        <div style="text-align:center;">
+                            <h3 style="margin:0; color:var(--primary);">EXTRATJUD</h3>
+                            <p class="text-sm font-mono text-muted">v<span id="settings-app-ver">?.?.?</span></p>
+                            <p class="text-xs text-muted mt-4 font-mono">Electron: <span id="env-electron">...</span> | Node: <span id="env-node">...</span> | OS: <span id="env-plat">...</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-footer">
+                <button id="btn-save-settings" class="btn btn-primary"><i class="fa-solid fa-check"></i> Salvar</button>
             </div>
         </div>
     </div>
@@ -385,577 +216,148 @@
         const btnStart = document.getElementById('btnStart');
         const btnStop = document.getElementById('btnStop');
         const logArea = document.getElementById('logs');
-        const btnCopyLog = document.getElementById('btnCopyLog');
         const previewEl = document.getElementById('preview');
-
-        // Modals
         const dynamicModal = document.getElementById('dynamicModal');
-        const modalConfirmBtn = document.getElementById('modalConfirm');
-        const modalCancelBtn = document.getElementById('modalCancel');
-        const modalPreview = document.getElementById('modalPreview');
-        const modalCount = document.getElementById('modalCount');
-
         const loginModal = document.getElementById('loginModal');
-        const loginDoneBtn = document.getElementById('loginDone');
-        const loginCancelBtn = document.getElementById('loginCancel');
-
-        // --- Page Transitions ---
-        window.addEventListener('DOMContentLoaded', () => { document.body.classList.add('loaded'); });
-        document.querySelector('.btn-back').addEventListener('click', (e) => {
-            e.preventDefault();
-            document.body.classList.remove('loaded');
-            setTimeout(() => { window.location.href = 'hub_servicos.html'; }, 400); 
-        });
-
         let currentSession = null;
         let fullLogs = [];
 
-        // Logs
+        window.addEventListener('DOMContentLoaded', () => { document.body.classList.add('loaded'); loadEmails(); });
+        document.getElementById('btn-back').addEventListener('click', (e) => { e.preventDefault(); document.body.style.opacity = '0'; setTimeout(() => { window.location.href = 'hub_servicos.html'; }, 300); });
+
         function addLog(msg, typeClass) {
+            const normalized = window.extrajudTerminalLogger
+                ? window.extrajudTerminalLogger.normalize(msg, { typeClass, source: 'sharepoint-create' })
+                : (typeof msg === 'string' ? { msg, type: (typeClass || 'info').replace(/^log-/, ''), source: 'sharepoint-create', timestamp: new Date().toISOString() } : { msg: msg.msg || '', tech: msg.tech || '', type: msg.type || 'info', source: msg.source || 'sharepoint-create', timestamp: msg.timestamp || new Date().toISOString() });
+
             const div = document.createElement('div');
-            div.className = `log-entry ${typeClass}`;
-            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            div.className = `log-entry ${normalized.type}`;
+            div.innerHTML = window.extrajudTerminalLogger ? window.extrajudTerminalLogger.render(normalized) : normalized.msg;
             logArea.appendChild(div);
             logArea.scrollTop = logArea.scrollHeight;
-            fullLogs.push({msg, type: typeClass});
+            fullLogs.push(normalized);
         }
 
-        if(btnCopyLog) {
-            btnCopyLog.onclick = () => {
-                const txt = fullLogs.map(l => l.msg).join('\\n');
-                navigator.clipboard.writeText(txt);
-            };
-        }
+        function showLoading(msg) { const el = document.getElementById('universal-loader'); if(el) { el.querySelector('.loader-text').textContent = msg || 'Processando...'; el.classList.add('active'); } }
+        function hideLoading() { const el = document.getElementById('universal-loader'); if(el) el.classList.remove('active'); }
+        function resetState() { currentSession = null; btnStop.style.display = 'none'; btnStart.style.display = 'flex'; btnStart.disabled = false; hideLoading(); }
 
-        // Email Credentials Logic
+        // Email
         const emailSelect = document.getElementById('emailSelect');
         const emailInput = document.getElementById('emailInput');
         const emailAddBtn = document.getElementById('emailAddBtn');
+        function loadEmails() { try { const list = JSON.parse(localStorage.getItem('sp-emails') || '[]'); if (!Array.isArray(list) || list.length === 0) { emailSelect.style.display = 'none'; return; } emailSelect.innerHTML = list.map(e => `<option value="${e}">${e}</option>`).join(''); emailSelect.style.display = 'block'; } catch(e) {} }
+        function saveEmail(e) { if (!e || !e.includes('@')) return; const list = JSON.parse(localStorage.getItem('sp-emails') || '[]'); if (!list.includes(e)) { list.unshift(e); localStorage.setItem('sp-emails', JSON.stringify(list.slice(0,20))); } loadEmails(); emailSelect.value = e; }
+        emailAddBtn?.addEventListener('click', () => { const val = emailInput.value.trim(); if(val) { saveEmail(val); emailInput.value = ''; } });
 
-        function loadEmails() {
-            try {
-                const list = JSON.parse(localStorage.getItem('sp-emails') || '[]');
-                if (!Array.isArray(list) || list.length === 0) {
-                    emailSelect.style.display = 'none';
-                    return;
-                }
-                emailSelect.innerHTML = list.map(e => `<option value="${e}">${e}</option>`).join('');
-                emailSelect.style.display = 'block';
-            } catch(e) {}
-        }
-        function saveEmail(e) {
-            if (!e || !e.includes('@')) return;
-            const list = JSON.parse(localStorage.getItem('sp-emails') || '[]');
-            if (!list.includes(e)) { 
-                list.unshift(e); 
-                localStorage.setItem('sp-emails', JSON.stringify(list.slice(0,20))); 
-            }
-            loadEmails();
-            emailSelect.value = e; 
-        }
-
-        if(emailAddBtn) {
-            emailAddBtn.addEventListener('click', () => {
-                const val = (emailInput.value||'').trim();
-                if(val) { saveEmail(val); emailInput.value = ''; }
-            });
-        }
-        loadEmails();
-
-        // Main Actions
         btnStart.addEventListener('click', async () => {
-            addLog('Iniciando sessão Sharepoint...', 'log-info');
+            addLog('Iniciando sessão SharePoint...', 'info');
             btnStart.disabled = true;
             showLoading('Iniciando SharePoint...');
-
             try {
                 const selectedEmail = (emailSelect.style.display !== 'none' && emailSelect.value) ? emailSelect.value : (emailInput.value ? emailInput.value.trim() : null);
                 const res = await ipcRenderer.invoke('sharepoint:start-session', { url: DEFAULT_SP_URL, email: selectedEmail });
-                
                 hideLoading();
-
-                if (!res || !res.ok) { 
-                    addLog('Falha ao iniciar: ' + (res?.error || 'Unknown'), 'log-error'); 
-                    btnStart.disabled = false;
-                    return; 
-                }
-                
-                currentSession = res.sessionId; 
-                addLog(`Sessão iniciada [${currentSession}]. Browser aberto.`, 'log-success');
-                btnStart.style.display = 'none';
-                btnStop.style.display = 'flex';
-                
+                if (!res?.ok) { addLog('Falha: ' + (res?.error || 'Unknown'), 'error'); btnStart.disabled = false; return; }
+                currentSession = res.sessionId;
+                addLog(`Sessão iniciada [${currentSession}].`, 'success');
+                btnStart.style.display = 'none'; btnStop.style.display = 'flex';
                 if(selectedEmail) saveEmail(selectedEmail);
-
-            } catch(e) { 
-                hideLoading();
-                addLog('Erro fatal: ' + e.message, 'log-error'); 
-                btnStart.disabled = false;
-            }
+            } catch(e) { hideLoading(); addLog('Erro: ' + e.message, 'error'); btnStart.disabled = false; }
         });
 
         btnStop.addEventListener('click', async () => {
             if(!currentSession) return;
-            addLog('Cancelando sessão...', 'log-warning');
+            addLog('Cancelando sessão...', 'warning');
             showLoading('Cancelando...');
-            try {
-                await ipcRenderer.invoke('sharepoint:cancel-session', { sessionId: currentSession });
-                addLog('Sessão encerrada.', 'log-info');
-            } catch(e) { addLog('Erro ao cancelar: ' + e.message, 'log-error'); }
-            
+            try { await ipcRenderer.invoke('sharepoint:cancel-session', { sessionId: currentSession }); addLog('Sessão encerrada.', 'info'); } catch(e) { addLog('Erro ao cancelar: ' + e.message, 'error'); }
             resetState();
         });
 
-        function resetState() {
-            currentSession = null;
-            btnStop.style.display = 'none';
-            btnStart.style.display = 'flex';
-            btnStart.disabled = false;
-            hideLoading();
-        }
+        document.getElementById('btnCopyLog').onclick = () => { navigator.clipboard.writeText(fullLogs.map(l => l.msg).join('\n')); };
 
-        // --- Loader Helpers ---
-        function showLoading(msg) {
-            const el = document.getElementById('universal-loader');
-            if(el) {
-                el.querySelector('.loader-text').innerText = msg || 'Processando...';
-                el.classList.add('active');
-            }
-        }
-        function hideLoading() {
-            const el = document.getElementById('universal-loader');
-            if(el) el.classList.remove('active');
-        }
-
-        // Logic flow events
-        ipcRenderer.on('sharepoint:waiting-for-login', () => {
-             addLog('Necessário login manual.', 'log-warning');
-             loginModal.style.display = 'flex';
-        });
-
-        ipcRenderer.on('sharepoint:login-completed', () => {
-            addLog('Login detectado/concluído.', 'log-success');
-            loginModal.style.display = 'none';
-        });
+        ipcRenderer.on('sharepoint:waiting-for-login', () => { addLog('Necessário login manual.', 'warning'); loginModal.classList.add('active'); });
+        ipcRenderer.on('sharepoint:login-completed', () => { addLog('Login detectado.', 'success'); loginModal.classList.remove('active'); });
 
         ipcRenderer.on('sharepoint:prompt-create', (ev, payload) => {
-             // Show count modal
-             if(payload && payload.previewHTML) {
-                 previewEl.innerHTML = payload.previewHTML; // update main preview
-                 modalPreview.innerHTML = payload.previewHTML; // update modal preview
-             } else if (payload && payload.preview) {
-                 // Fallback: generate HTML from raw preview data
-                 let folders = [];
-                 if (Array.isArray(payload.preview.items)) {
-                     folders = payload.preview.items.filter(i => i.isFolder).map(i => i.name);
-                 } else if (Array.isArray(payload.preview.folders)) {
-                     folders = payload.preview.folders.map(f => f.name);
-                 }
-                 
-                 // Sort numerically if possible
-                 folders.sort((a,b) => {
-                     const na = parseInt(a); const nb = parseInt(b);
-                     if (!isNaN(na) && !isNaN(nb)) return na - nb;
-                     return a.localeCompare(b);
-                 });
-
-                 if (folders.length > 0) {
-                     // Determine last folder if numeric
-                     let lastMsg = "";
-                     const last = folders[folders.length-1];
-                     if (/^\d+$/.test(last)) {
-                        lastMsg = `<div style="margin-top:5px; font-size:12px; color:#166534; background:#f0fdf4; padding:4px; border-radius:4px;">Última pasta: <b>${last}</b></div>`;
-                        // Update default count
-                        // (Optional: logic to auto-increment input could go here, but user asked for display)
-                     }
-
-                     const html = `
-                         <div style="margin-bottom:8px; font-weight:bold; color:#333;">
-                            ${folders.length} pastas encontradas no destino:
-                         </div>
-                         ${lastMsg}
-                         <ul style="margin:5px 0 0 0; padding-left:20px; color:#555; max-height:100px; overflow-y:auto;">
-                            ${folders.map(f => `<li>${f}</li>`).join('')}
-                         </ul>`;
-                     previewEl.innerHTML = html;
-                     modalPreview.innerHTML = html;
-                 } else {
-                     const html = `<div style="padding:10px; color:#999; font-style:italic;">Nenhuma pasta encontrada (Diretório vazio). A contagem iniciará de 1.</div>`;
-                     previewEl.innerHTML = html;
-                     modalPreview.innerHTML = html;
-                }
-             }
-
-             addLog('Preview carregado. Solicitando confirmação...', 'log-info');
-             dynamicModal.style.display = 'flex';
+            if(payload?.previewHTML) { previewEl.innerHTML = payload.previewHTML; document.getElementById('modalPreview').innerHTML = payload.previewHTML; }
+            else if (payload?.preview) {
+                let folders = [];
+                if (Array.isArray(payload.preview.items)) folders = payload.preview.items.filter(i => i.isFolder).map(i => i.name);
+                else if (Array.isArray(payload.preview.folders)) folders = payload.preview.folders.map(f => f.name);
+                folders.sort((a,b) => { const na = parseInt(a); const nb = parseInt(b); if (!isNaN(na) && !isNaN(nb)) return na - nb; return a.localeCompare(b); });
+                if (folders.length > 0) {
+                    const last = folders[folders.length-1];
+                    const lastMsg = /^\d+$/.test(last) ? `<div class="text-xs mt-2" style="color:var(--success);">Última pasta: <b>${last}</b></div>` : '';
+                    const html = `<div style="font-weight:600; margin-bottom:6px;">${folders.length} pastas encontradas:</div><ul style="margin:0; padding-left:18px; max-height:80px; overflow-y:auto;">${folders.map(f => `<li>${f}</li>`).join('')}</ul>${lastMsg}`;
+                    previewEl.innerHTML = html; document.getElementById('modalPreview').innerHTML = html;
+                } else { previewEl.innerHTML = '<em class="text-muted">Nenhuma pasta encontrada. Contagem iniciará de 1.</em>'; document.getElementById('modalPreview').innerHTML = previewEl.innerHTML; }
+            }
+            addLog('Preview carregado. Solicitando confirmação...', 'info');
+            dynamicModal.classList.add('active');
         });
 
-        // Modal Confirm
-        modalConfirmBtn.onclick = async () => {
-            const count = parseInt(modalCount.value, 10);
+        document.getElementById('modalConfirm').onclick = async () => {
+            const count = parseInt(document.getElementById('modalCount').value, 10);
             if(!count || count < 1) return;
-            
-            dynamicModal.style.display = 'none';
-            addLog(`Criando ${count} pastas...`, 'log-info');
+            dynamicModal.classList.remove('active');
+            addLog(`Criando ${count} pastas...`, 'info');
             showLoading(`Criando ${count} pastas...`);
-            
             try {
                 const res = await ipcRenderer.invoke('sharepoint:create-session', { sessionId: currentSession, count });
-                if(res && res.ok) {
-                    addLog('Sucesso! Pastas criadas.', 'log-success');
-                    addLog(JSON.stringify(res.result), 'log-info');
-                } else {
-                    addLog('Falha na criação: ' + res?.error, 'log-error');
-                }
-            } catch(e) { addLog('Erro: ' + e.message, 'log-error'); }
-            
+                if(res?.ok) { addLog('Sucesso! Pastas criadas.', 'success'); addLog(JSON.stringify(res.result), 'info'); }
+                else addLog('Falha: ' + res?.error, 'error');
+            } catch(e) { addLog('Erro: ' + e.message, 'error'); }
             resetState();
         };
 
-        modalCancelBtn.onclick = () => {
-            dynamicModal.style.display = 'none';
-            addLog('Operação cancelada pelo usuário.', 'log-warning');
-            resetState(); // assume cancelling creation ends session or resets
-        };
+        document.getElementById('modalCancel').onclick = () => { dynamicModal.classList.remove('active'); addLog('Operação cancelada.', 'warning'); resetState(); };
+        document.getElementById('modalCloseX').onclick = () => { dynamicModal.classList.remove('active'); };
+        document.getElementById('loginDone').onclick = () => { loginModal.classList.remove('active'); ipcRenderer.send('sharepoint:login-action', { sessionId: currentSession, action: 'done' }); };
+        document.getElementById('loginCancel').onclick = () => { loginModal.classList.remove('active'); btnStop.click(); };
 
-        // Login Modal Actions
-        loginDoneBtn.onclick = () => {
-            loginModal.style.display = 'none';
-            ipcRenderer.send('sharepoint:login-action', { sessionId: currentSession, action: 'done' });
-        };
-        
-        loginCancelBtn.onclick = () => {
-            loginModal.style.display = 'none';
-            // Trigger stop
-            btnStop.click(); 
-        };
-
-        // Listen for internal logs from the main process!
         ipcRenderer.on('log-message', (event, data) => {
-            if (data && data.msg) {
-                let typeClass = 'log-info';
-                if (data.type === 'warn') typeClass = 'log-warning';
-                else if (data.type === 'error') typeClass = 'log-error';
-                else if (data.type === 'success') typeClass = 'log-success';
-                
-                // Exibe as mensagens internamente geradas
-                addLog(data.msg, typeClass);
-
-                // Update Loader Text if active
+            if (data?.msg) {
+                let cls = 'info';
+                if (data.type === 'warn') cls = 'warning';
+                else if (data.type === 'error') cls = 'error';
+                else if (data.type === 'success') cls = 'success';
+                addLog(data, cls);
                 const loaderEl = document.getElementById('universal-loader');
-                if(loaderEl && loaderEl.classList.contains('active')) {
-                    const shortMsg = data.msg.length > 50 ? data.msg.substring(0,50) + '...' : data.msg;
-                    loaderEl.querySelector('.loader-text').innerText = shortMsg;
-                }
+                if(loaderEl?.classList.contains('active')) { loaderEl.querySelector('.loader-text').textContent = data.msg.length > 50 ? data.msg.substring(0,50) + '...' : data.msg; }
             }
         });
 
-    </script>
-    <!-- Settings Modal -->
-    <div id="modal-settings" class="settings-modal-overlay">
-        <div class="settings-modal-content">
-            <div class="settings-modal-header">
-                <h2><i class="fa-solid fa-sliders"></i> Configurações</h2>
-                <button id="btn-close-settings" class="settings-close-btn">&times;</button>
-            </div>
-            
-            <div class="settings-modal-body">
-                <div class="settings-sidebar">
-                    <button class="settings-tab active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
-                    <button class="settings-tab" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
-                    <button class="settings-tab" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
-                </div>
-                
-                <div class="settings-content-area">
-                    
-                    <!-- ABAS DE CONTEÚDO -->
-                    <div id="tab-geral" class="settings-tab-pane active">
-                        <h3 class="settings-section-title">Aparência</h3>
-                        <p class="settings-section-desc">Personalize o tema visual do aplicativo.</p>
-
-                        <div class="theme-selector-group" style="display:flex; gap:10px; margin-bottom: 25px;">
-                            <button class="theme-option" data-theme="light" title="Claro">
-                                <i class="fa-solid fa-sun" style="font-size:18px;"></i> Claro
-                            </button>
-                            <button class="theme-option" data-theme="dark" title="Escuro">
-                                <i class="fa-solid fa-moon" style="font-size:18px;"></i> Escuro
-                            </button>
-                            <button class="theme-option" data-theme="system" title="Sistema">
-                                <i class="fa-solid fa-desktop" style="font-size:18px;"></i> Sistema
-                            </button>
-                        </div>
-                        
-                        <h3 class="settings-section-title">Comportamento da Janela</h3>
-                        <p class="settings-section-desc">Personalize como o Extratjud interage com seu desktop.</p>
-
-                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-minimize-tray" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Minimizar para a bandeja ao fechar</span>
-                            </label>
-                            
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-always-top" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Manter janela sempre no topo</span>
-                            </label>
-                        </div>
-
-                        <h3 class="settings-section-title" style="margin-top: 25px;">Notificações</h3>
-                        <p class="settings-section-desc">Alertas sobre o status das automações.</p>
-
-                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-sound-finish" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Emitir som ao finalizar</span>
-                            </label>
-                            
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-notification-finish" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Notificação do Windows</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div id="tab-logs" class="settings-tab-pane">
-                         <h3 class="settings-section-title">Gerenciamento de Logs</h3>
-                         <p class="settings-section-desc">Exporte ou limpe o histórico de operações.</p>
-                         
-                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                             <button id="btn-copy-log" class="btn-mini"><i class="fa-regular fa-copy"></i> Copiar Tudo</button>
-                             <button id="btn-download-log" class="btn-mini"><i class="fa-solid fa-download"></i> Baixar .txt</button>
-                             <button id="btn-clear-log" class="btn-mini" style="color:var(--danger-color); border-color:var(--danger-color);"><i class="fa-solid fa-trash"></i> Limpar Console</button>
-                         </div>
-                    </div>
-
-                    <div id="tab-sobre" class="settings-tab-pane">
-                        <div style="text-align:center; padding:10px 20px;">
-                            <img src="assets/logo.png" style="height:80px; margin-bottom:15px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-                            <h3 style="margin:0; color:var(--primary-color); font-size: 24px;">EXTRATJUD</h3>
-                            <p style="margin:5px 0; color:var(--text-secondary); font-family: 'JetBrains Mono', monospace;">v<span id="settings-app-ver">?.?.?</span></p>
-                            
-                            <hr style="margin:25px 0; border:0; border-top:1px solid var(--border-color);">
-                            
-                            <div style="text-align:left; font-size:14px; color:var(--text-color); margin-bottom:25px; line-height: 1.6;">
-                                <h4 style="margin:0 0 12px 0; font-size:16px; color: var(--primary-color);">Sobre a Ferramenta</h4>
-                                <p style="margin-bottom:12px;">
-                                    O <strong>EXTRATJUD</strong> é uma solução corporativa de automação robótica de processos (RPA) desenvolvida para otimizar as operações do setor jurídico da Neoenergia Coelba.
-                                </p>
-                                <p style="margin-bottom:12px;">
-                                    <strong>Nota Técnica:</strong> O aplicativo não utiliza APIs oficiais dos tribunais, devido à indisponibilidade de acesso público a esses recursos. Em vez disso, a ferramenta automatiza processos manuais, utilizando Inteligência Artificial para executar a navegação e as tarefas repetitivas da forma mais rápida possível.
-                                </p>
-                                <p style="margin-bottom:12px;">
-                                    A ferramenta emprega tecnologias de navegação headless para interagir com portais judiciais de forma segura e eficiente, permitindo a extração massiva de dados, geração de relatórios gerenciais e auditoria com evidências documentais.
-                                </p>
-                            </div>
-
-                            <div style="background: rgba(var(--primary-rgb, 16, 185, 129), 0.05); border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 25px; border: 1px solid rgba(var(--primary-rgb, 16, 185, 129), 0.1);">
-                                <h4 style="margin:0 0 10px 0; font-size:14px; display:flex; align-items:center; gap:8px;">
-                                    <i class="fa-solid fa-code" style="color:var(--primary-color)"></i> Ficha Técnica
-                                </h4>
-                                <ul style="margin:0; padding-left:20px; font-size:13px; color:var(--text-secondary);">
-                                    <li><strong>Engine:</strong> Electron & Node.js</li>
-                                    <li><strong>Automação:</strong> Microsoft Playwright</li>
-                                    <li><strong>Interface:</strong> HTML5 / CSS3 (Custom Theme)</li>
-                                </ul>
-                            </div>
-
-                            <div style="text-align:left; font-size:13px; color:var(--text-secondary); margin-bottom:20px;">
-                                <p>
-                                    Desenvolvido por <strong>João Guilherme Almeida Viana</strong><br>
-                                    <span style="opacity:0.8; font-size:12px;">Aprendiz Administrativo | Jurídico Contencioso Cível</span><br>
-                                    <a href="mailto:joao.aviana@neoenergia.com" style="color:var(--primary-color); text-decoration:none;">joao.aviana@neoenergia.com</a>
-                                </p>
-                            </div>
-
-                            <div style="margin-top:20px; font-size:11px; color:#9ca3af; text-align:left; border-top: 1px dashed var(--border-color); padding-top: 15px;">
-                                <p style="font-weight:600; margin-bottom:5px;">Ambiente de Execução:</p>
-                                <ul style="columns: 2; list-style: none; padding: 0; margin: 0;">
-                                    <li>Electron: <span id="env-electron">...</span></li>
-                                    <li>Node: <span id="env-node">...</span></li>
-                                    <li>Chrome: <span id="env-chrome">...</span></li>
-                                    <li>OS: <span id="env-plat">...</span></li>
-                                </ul>
-                            </div>
-                            
-                            <div style="margin-top:25px; font-size: 11px; color: #aaa; text-align: center;">
-                                &copy; 2026 Neoenergia Coelba. Todos os direitos reservados.
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-            
-            <div class="settings-modal-footer">
-                <button id="btn-save-settings" class="settings-btn-primary"><i class="fa-solid fa-check"></i> Salvar Alterações</button>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // --- Settings Modal Logic ---
-        // Ensure ipcRenderer is available
-        let ipcSettings = null;
-        try { const { ipcRenderer } = require('electron'); ipcSettings = ipcRenderer; } catch(e) {}
-
-        const modalSettings = document.getElementById('modal-settings');
-        const btnSettings = document.getElementById('btn-settings');
-        const btnCloseSettings = document.getElementById('btn-close-settings');
-        
-        if(btnSettings) {
-            btnSettings.onclick = () => {
-                modalSettings.style.display = 'flex';
-                loadSettings();
-            };
-        }
-        
-        if(btnCloseSettings) {
-            btnCloseSettings.onclick = () => modalSettings.style.display = 'none';
-        }
-        
-        // Close on outside click
-        window.addEventListener('click', (e) => {
-            if (e.target === modalSettings) modalSettings.style.display = 'none';
-        });
-
-        // Tabs Logic
-        document.querySelectorAll('.settings-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.settings-tab-pane').forEach(p => p.classList.remove('active'));
-                
-                tab.classList.add('active');
-                const target = tab.getAttribute('data-tab');
-                document.getElementById('tab-' + target).classList.add('active');
+        // Settings
+        (function(){
+            const modal = document.getElementById('modal-settings');
+            if (!modal) return;
+            document.getElementById('btn-close-settings')?.addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+            modal.querySelectorAll('.settings-nav-btn').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    modal.querySelectorAll('.settings-nav-btn').forEach(t => t.classList.remove('active'));
+                    modal.querySelectorAll('.settings-pane').forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    const pane = document.getElementById('tab-' + tab.dataset.tab);
+                    if (pane) pane.classList.add('active');
+                });
             });
-        });
-
-        // Theme Logic
-        if(window.themeConfig) themeConfig.init(); 
-        document.querySelectorAll('.theme-option').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const theme = btn.getAttribute('data-theme');
-                if(window.themeConfig) themeConfig.apply(theme);
-                updateThemeUI();
+            modal.querySelectorAll('.theme-btn').forEach(btn => { btn.addEventListener('click', () => { if (window.themeConfig) window.themeConfig.apply(btn.dataset.theme); }); });
+            document.getElementById('btn-save-settings')?.addEventListener('click', async () => {
+                try {
+                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    await ipcRenderer.invoke('set-general-config', { minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false, alwaysOnTop: document.getElementById('chk-always-top')?.checked || false, soundFinish: document.getElementById('chk-sound-finish')?.checked || false, notificationFinish: document.getElementById('chk-notification-finish')?.checked || false });
+                    modal.classList.remove('active');
+                } catch(e) {}
             });
+        })();
+
+        document.getElementById('btn-copy-log')?.addEventListener('click', () => { navigator.clipboard.writeText(fullLogs.map(l => l.msg).join('\n')); });
+        document.getElementById('btn-download-log')?.addEventListener('click', () => {
+            const blob = new Blob([fullLogs.map(l => l.msg).join('\n')], { type: 'text/plain' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sharepoint_log_${Date.now()}.txt`; a.click();
         });
-
-        function updateThemeUI() {
-            if(!window.themeConfig) return;
-            const current = themeConfig.current();
-            document.querySelectorAll('.theme-option').forEach(btn => {
-                const t = btn.getAttribute('data-theme');
-                if(t === current) btn.classList.add('active');
-                else btn.classList.remove('active');
-            });
-        }
-        updateThemeUI();
-
-        // Checkbox persistence
-        const chkAlwaysTop      = document.getElementById('chk-always-top');
-        const chkMinimizeTray   = document.getElementById('chk-minimize-tray');
-        const chkSound          = document.getElementById('chk-sound-finish');
-        const chkNotification   = document.getElementById('chk-notification-finish');
-        const btnSaveSettings   = document.getElementById('btn-save-settings');
-
-        async function loadSettings() {
-             // Load from IPC primarily for consistency
-             if (ipcSettings) {
-                 try {
-                     const genConfig = await ipcSettings.invoke('get-general-config');
-                     if(chkAlwaysTop)      chkAlwaysTop.checked    = genConfig.alwaysOnTop;
-                     if(chkMinimizeTray)   chkMinimizeTray.checked = genConfig.minimizeToTray;
-                     if(chkSound)          chkSound.checked        = genConfig.soundFinish;
-                     if(chkNotification)   chkNotification.checked = genConfig.notificationFinish;
-
-                     // Populate version & environment info
-                     const ver = await ipcSettings.invoke('get-app-version') || '?.?.?';
-                     const vEl = document.getElementById('settings-app-ver');
-                     if(vEl) vEl.textContent = ver;
-
-                     const envNode = document.getElementById('env-node');
-                     if (envNode) envNode.textContent = process.versions.node;
-                     const envElec = document.getElementById('env-electron');
-                     if (envElec) envElec.textContent = process.versions.electron;
-                     const envChrome = document.getElementById('env-chrome');
-                     if (envChrome) envChrome.textContent = process.versions.chrome;
-                     const envPlat = document.getElementById('env-plat');
-                     if (envPlat) envPlat.textContent = process.platform + ' (' + process.arch + ')';
-
-                 } catch(e) {
-                     // Fallback to local storage if IPC fails or not implemented fully
-                     console.warn('IPC Config Load Failed, using localStorage', e);
-                     loadSettingsLocal();
-                 }
-             } else {
-                 loadSettingsLocal();
-             }
-             updateThemeUI();
-        }
-
-        function loadSettingsLocal() {
-             if(chkAlwaysTop)      chkAlwaysTop.checked    = localStorage.getItem('cfg-always-top') === 'true';
-             if(chkMinimizeTray)   chkMinimizeTray.checked = localStorage.getItem('cfg-minimize-tray') === 'true';
-             if(chkSound)          chkSound.checked        = localStorage.getItem('cfg-sound') === 'true';
-             if(chkNotification)   chkNotification.checked = localStorage.getItem('cfg-notification-finish') === 'true';
-        }
-
-        // Save Logic
-        if(btnSaveSettings) {
-            btnSaveSettings.onclick = async () => {
-                const config = {
-                    minimizeToTray: chkMinimizeTray ? chkMinimizeTray.checked : false,
-                    alwaysOnTop: chkAlwaysTop ? chkAlwaysTop.checked : false,
-                    soundFinish: chkSound ? chkSound.checked : false,
-                    notificationFinish: chkNotification ? chkNotification.checked : false
-                };
-
-                // Local Backup
-                localStorage.setItem('cfg-always-top', config.alwaysOnTop);
-                localStorage.setItem('cfg-minimize-tray', config.minimizeToTray);
-                localStorage.setItem('cfg-sound', config.soundFinish);
-                localStorage.setItem('cfg-notification-finish', config.notificationFinish);
-
-                // IPC Save
-                if (ipcSettings) {
-                    try {
-                        await ipcSettings.invoke('set-general-config', config);
-                    } catch(e) {
-                        console.error('Failed to save via IPC', e);
-                    }
-                }
-                
-                modalSettings.style.display = 'none';
-            };
-        }
-
-        // --- Log Tools Logic ---
-        // Hooking to buttons
-        const btnCpy = document.getElementById('btn-copy-log');
-        if(btnCpy) btnCpy.onclick = () => {
-            const logs = document.getElementById('logs') ? document.getElementById('logs').innerText : '';
-            navigator.clipboard.writeText(logs);
-            if(window.addLog) window.addLog('Logs copiados para area de transferência.', 'log-success'); 
-            else ipcAlert('Copiado!');
-        };
-        
-        const btnDwn = document.getElementById('btn-download-log');
-        if(btnDwn) btnDwn.onclick = () => {
-            const logs = document.getElementById('logs') ? document.getElementById('logs').innerText : '';
-            const blob = new Blob([logs], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url;
-            a.download = `sharepoint_logs_${Date.now()}.txt`;
-            a.click();
-        };
-
-        const btnClr = document.getElementById('btn-clear-log');
-        if(btnClr) btnClr.onclick = () => {
-            const l = document.getElementById('logs');
-            if(l) l.innerHTML = '';
-            if(window.addLog) window.addLog('Logs limpos.', 'log-info');
-        };
-
     </script>
 </body>
 </html>

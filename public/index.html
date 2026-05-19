@@ -4,1176 +4,415 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EXTRATJUD - Hub Principal</title>
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Theme -->
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
     <script src="assets/dialogs.js"></script>
-
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            overflow-y: auto;
         }
 
-        .main-container {
-            text-align: center;
-            max-width: 900px;
-            width: 100%;
-            padding: 20px;
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        .brand-main {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 56px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            /* Gradient Text */
-            background: linear-gradient(135deg, var(--primary-color) 0%, #34d399 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-        }
-        
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 18px;
-            margin-bottom: 60px;
-            font-weight: 500;
-            opacity: 0.8;
-        }
-
-        .cards-grid {
+        .hub-container {
+            flex: 1;
             display: flex;
-            gap: 40px;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            flex-wrap: wrap;
+            padding: 40px 24px;
+        }
+
+        .hub-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .hub-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0 0 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .hub-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 960px;
+            width: 100%;
         }
 
         .hub-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 50px 40px;
-            width: 280px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px 24px;
             text-decoration: none;
             color: inherit;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            transition: all var(--transition-slow);
+            cursor: pointer;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-            cursor: pointer;
+            gap: 16px;
         }
 
         .hub-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 50px rgba(16,185,129,0.12);
-            border-color: rgba(16,185,129,0.3);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
         }
 
-        .icon-circle {
-            width: 80px;
-            height: 80px;
-            background: rgba(16,185,129,0.08);
-            border-radius: 50%;
+        .hub-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--primary-light);
+            color: var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 24px;
-            font-size: 32px;
-            color: var(--primary-color);
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 1.25rem;
+            transition: all var(--transition-base);
         }
 
-        .hub-card:hover .icon-circle {
-            transform: scale(1.15) rotate(5deg);
-            background: var(--primary-color);
+        .hub-card:hover .hub-card-icon {
+            background: var(--primary);
             color: #fff;
         }
 
-        .card-title {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .hub-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin: 0;
         }
 
-        .card-desc {
-            font-size: 14px;
+        .hub-card:hover .hub-card-title {
+            color: var(--primary);
+        }
+
+        .hub-card-desc {
+            font-size: 0.85rem;
             color: var(--text-secondary);
             line-height: 1.5;
+            margin: 0;
+        }
+
+        .hub-card-arrow {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all var(--transition-base);
+        }
+
+        .hub-card:hover .hub-card-arrow {
+            color: var(--primary);
+            gap: 10px;
         }
 
         .version-tag {
             position: fixed;
-            bottom: 20px;
+            bottom: 16px;
             right: 20px;
-            font-family: monospace;
-            font-size: 12px;
-            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
             opacity: 0.5;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body>
+<body class="fade-in">
 
-    <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes float {
-            0% { transform: translateY(0px); opacity: 0; }
-            50% { opacity: 0.8; }
-            100% { transform: translateY(-100px); opacity: 0; }
-        }
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #ffffff;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 2s linear infinite; /* Slower spin */
-            margin: 40px auto;
-        }
-        .particle {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: float 4s infinite linear;
-        }
-
-        /* Debug Button Styles */
-        #debug-fab {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background: #ef4444; /* Red to indicate debug */
-            color: white;
-            border-radius: 50%;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 100000;
-            display: none; /* Hidden by default */
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 20px;
-            transition: transform 0.2s;
-        }
-        #debug-fab:hover { transform: scale(1.1); }
-        
-        #debug-menu {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            width: 200px;
-            z-index: 100000;
-            display: none;
-            overflow: hidden;
-        }
-        .debug-item {
-            padding: 12px 16px;
-            font-size: 14px;
-            color: #333;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-            transition: background 0.1s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .debug-item:last-child { border-bottom: none; }
-        .debug-item:hover { background: #f5f5f5; }
-    </style>
-
-    <!-- Debug UI -->
-    <button id="debug-fab" title="Menu de Teste"><i class="fa-solid fa-bug"></i></button>
-    <div id="debug-menu">
-        <div class="debug-item" id="btn-force-welcome">
-            <i class="fa-solid fa-play-circle" style="color:#059669;"></i> Forçar Welcome
+    <div class="topbar">
+        <div class="topbar-brand">
+            <i class="fa-solid fa-terminal" style="color: var(--primary);"></i>
+            EXTRATJUD
+        </div>
+        <div class="topbar-actions">
+            <button id="btn-update-notify" class="btn btn-ghost btn-icon btn-sm" style="display:none;" title="Nova versão disponível">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+            </button>
+            <button id="btn-open-settings" class="btn btn-ghost btn-icon btn-sm" title="Configurações">
+                <i class="fa-solid fa-gear"></i>
+            </button>
         </div>
     </div>
 
-    <div id="welcome-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#059669; z-index:99999; flex-direction:column; justify-content:center; align-items:center; color:white; text-align:center; overflow:hidden; transition: opacity 0.8s ease-out, filter 0.8s ease-out;">
-        <!-- Particles Container -->
-        <div id="particles-area" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+    <div class="hub-container">
+        <div class="hub-header">
+            <h1 class="hub-title">Hub Principal</h1>
+            <p class="hub-subtitle">Selecione o módulo de trabalho</p>
+        </div>
 
-        <div style="z-index: 2; position: relative;">
-            <h1 style="font-size:3.5rem; margin-bottom:10px; font-weight:800; animation: slideUp 0.8s ease-out;">Bem-vindo, <span id="welcome-name" style="color:#d1fae5;">Colega</span>!</h1>
-            <p style="font-size:1.4rem; opacity:0.9; font-weight:400; animation: slideUp 0.8s ease-out 0.2s backwards;">Seu ambiente está pronto.</p>
-            
-            <div class="loading-spinner"></div>
+        <div class="hub-grid">
+            <a href="hub_servicos.html" class="hub-card slide-up stagger-1">
+                <div class="hub-card-icon"><i class="fa-solid fa-robot"></i></div>
+                <h3 class="hub-card-title">Robôs</h3>
+                <p class="hub-card-desc">Automação processual (PROJUDI, PJE) e extração de dados em massa.</p>
+                <div class="hub-card-arrow">Abrir módulo <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+
+            <a href="#" onclick="event.preventDefault(); require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" class="hub-card slide-up stagger-2">
+                <div class="hub-card-icon"><i class="fa-solid fa-globe"></i></div>
+                <h3 class="hub-card-title">Site</h3>
+                <p class="hub-card-desc">Acesse o site oficial, baixe atualizações e veja as novidades.</p>
+                <div class="hub-card-arrow">Visitar <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+
+            <a href="sharepoint_create.html" class="hub-card slide-up stagger-3">
+                <div class="hub-card-icon"><i class="fa-solid fa-folder-plus"></i></div>
+                <h3 class="hub-card-title">Serviços Extras</h3>
+                <p class="hub-card-desc">Ferramentas de apoio e criação de pastas em lote no SharePoint.</p>
+                <div class="hub-card-arrow">Abrir módulo <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
         </div>
     </div>
 
-    <style>
-        /* Header Profile Styles */
-        .header-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 16px;
-            background: rgba(0,0,0,0.03);
-            border-radius: 30px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .header-profile:hover {
-            background: rgba(0,0,0,0.06);
-        }
-        .profile-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .profile-info {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.2;
-        }
-        .profile-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        .profile-role {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes pulse {
-            0% { opacity: 0.4; }
-            50% { opacity: 0.8; }
-            100% { opacity: 0.4; }
-        }
-    </style>
+    <div class="version-tag">v<span id="app-version">?.?.?</span></div>
 
-    <div class="main-container">
-        <!-- New Top Header -->
-        <div style="position: absolute; top: 0; left: 0; width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; pointer-events: none;">
-            <div style="flex: 1;"></div> <!-- Spacer -->
-            
-            <div style="display: flex; gap: 10px; align-items: center; pointer-events: auto;">
-                <!-- Admin Button -->
-                <button id="btn-admin-config" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;" title="Gerenciar Cargos">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </button>
-
-                <!-- Update Notification Button -->
-                <button id="btn-update-notify" style="display:none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #f59e0b; background: var(--card-bg); color: #f59e0b; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(245,158,11,0.25); transition: 0.2s; position: relative;" title="Nova versão disponível">
-                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
-                    <span id="update-dot" style="position:absolute; top:6px; right:6px; width:8px; height:8px; background:#ef4444; border-radius:50%; animation: update-pulse 1.5s infinite;"></span>
-                </button>
-
-                <button id="btn-open-settings" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;">
-                    <i class="fa-solid fa-gear"></i>
-                </button>
-
-                <div id="user-header-area" class="header-profile" style="pointer-events: auto; display: none;">
-                    <div class="profile-info">
-                        <span class="profile-name" id="display-name">Carregando...</span>
-                        <span class="profile-role">Usuário</span>
-                    </div>
-                    <div class="profile-avatar" id="display-avatar">
-                    ?
-                    </div>
-                </div>
+    <!-- Update Modal -->
+    <div id="modal-update" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-rocket" style="color: var(--warning);"></i> Atualização Disponível</h3>
+                <button class="modal-close" onclick="document.getElementById('modal-update').classList.remove('active')">&times;</button>
             </div>
-        </div>
-
-        <!-- Increased Logo Size from 140px to 220px -->
-        <img src="assets/logo2.png" alt="Logo" style="height: 220px; margin-bottom: 25px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15)); transform: translateY(5px);">
-        <div class="brand-main">ExtratJud</div>
-        <div class="subtitle">Selecione o módulo de trabalho</div>
-
-        <div class="cards-grid">
-            <!-- Módulo 1: Robôs (Antigo Hub) -->
-            <a href="hub_servicos.html" class="hub-card">
-                <div class="icon-circle">
-                    <i class="fa-solid fa-robot"></i>
-                </div>
-                <div class="card-title">Robôs</div>
-                <div class="card-desc">
-                    Automação processual (PROJUDI, PJE) e extração de dados em massa.
-                </div>
-            </a>
-
-            <!-- Módulo 2: Site / Downloads -->
-            <a href="#" onclick="event.preventDefault(); require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" class="hub-card">
-                <div class="icon-circle">
-                    <i class="fa-solid fa-globe"></i>
-                </div>
-                <div class="card-title">Site</div>
-                <div class="card-desc">
-                    Acesse o site oficial, baixe atualizações e veja as novidades.
-                </div>
-            </a>
-
-            <!-- Módulo: Serviços Extras -->
-            <a href="sharepoint_create.html" class="hub-card">
-                <div class="icon-circle">
-                    <i class="fa-solid fa-folder-plus"></i>
-                </div>
-                <div class="card-title">Serviços Extras</div>
-                <div class="card-desc">
-                    Ferramentas de apoio e criação de pastas em lote.
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <div class="version-tag">ver 2.1.2</div>
-
-    <!-- Update Notification Modal -->
-    <div id="modal-update" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.55); align-items:center; justify-content:center;">
-        <div style="background:var(--card-bg); border-radius:14px; padding:32px 28px; max-width:420px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.22); border:1px solid rgba(245,158,11,0.35); text-align:center; animation: fadeIn 0.25s ease-out;">
-            <div style="font-size:36px; color:#f59e0b; margin-bottom:12px;"><i class="fa-solid fa-rocket"></i></div>
-            <h3 style="margin:0 0 6px; font-size:18px; color:var(--text-color);">Nova versão disponível!</h3>
-            <p id="update-modal-info" style="font-size:14px; color:var(--text-secondary); margin:0 0 20px;">Carregando...</p>
-            <div style="display:flex; gap:10px; justify-content:center;">
-                <button id="btn-update-download" style="padding:10px 22px; border-radius:8px; border:none; background:#f59e0b; color:#fff; font-size:14px; font-weight:600; cursor:pointer;">
-                    <i class="fa-solid fa-download"></i> Baixar Atualização
-                </button>
-                <button id="btn-update-dismiss" style="padding:10px 22px; border-radius:8px; border:1px solid var(--border-color); background:transparent; color:var(--text-secondary); font-size:14px; cursor:pointer;">
-                    Agora não
-                </button>
+            <div class="modal-body">
+                <p id="update-modal-info" style="margin:0;">Carregando...</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="document.getElementById('modal-update').classList.remove('active')">Agora não</button>
+                <button id="btn-update-download" class="btn btn-primary"><i class="fa-solid fa-download"></i> Baixar</button>
             </div>
         </div>
     </div>
 
-    <style>
-        @keyframes update-pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.3); }
-        }
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
-        .form-input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.2s;
-            background: var(--bg-color);
-            color: var(--text-color);
-            box-sizing: border-box; /* Fix width overflow */
-        }
-        .form-input:focus {
-            border-color: var(--primary-color);
-            outline: none;
-        }
-        .form-helper {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-    </style>
-
-    <!-- Settings Modal (New) -->
-    <div id="modal-settings" class="settings-modal-overlay">
-        <div class="settings-modal-content">
-            <div class="settings-modal-header">
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="settings-overlay">
+        <div class="settings-modal">
+            <div class="settings-header">
                 <h2><i class="fa-solid fa-sliders"></i> Configurações</h2>
-                <button id="btn-close-settings" class="settings-close-btn">&times;</button>
+                <button class="modal-close" id="btn-close-settings">&times;</button>
             </div>
-            
-            <div class="settings-modal-body">
-                <div class="settings-sidebar">
-                    <button class="settings-tab active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
-                    <button class="settings-tab" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
-                    <button class="settings-tab" data-tab="download"><i class="fa-solid fa-download"></i> Download</button>
-                    <button class="settings-tab" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
+            <div class="settings-body">
+                <div class="settings-nav">
+                    <button class="settings-nav-btn active" data-tab="geral"><i class="fa-solid fa-wrench"></i> Geral</button>
+                    <button class="settings-nav-btn" data-tab="logs"><i class="fa-solid fa-file-lines"></i> Logs</button>
+                    <button class="settings-nav-btn" data-tab="download"><i class="fa-solid fa-download"></i> Download</button>
+                    <button class="settings-nav-btn" data-tab="sobre"><i class="fa-solid fa-circle-info"></i> Sobre</button>
                 </div>
-                
-                <div class="settings-content-area">
-                    
-                    <!-- ABAS DE CONTEÚDO -->
-                    <div id="tab-geral" class="settings-tab-pane active">
-                        <h3 class="settings-section-title">Aparência</h3>
-                        <p class="settings-section-desc">Personalize o tema visual do aplicativo.</p>
-                        
-                        <div class="theme-selector-group" style="display:flex; gap:10px; margin-bottom: 25px;">
-                            <button class="theme-option" data-theme="light" title="Claro">
-                                <i class="fa-solid fa-sun"></i> Claro
-                            </button>
-                            <button class="theme-option" data-theme="dark" title="Escuro">
-                                <i class="fa-solid fa-moon"></i> Escuro
-                            </button>
-                            <button class="theme-option" data-theme="system" title="Sistema">
-                                <i class="fa-solid fa-desktop"></i> Sistema
-                            </button>
+                <div class="settings-content">
+                    <div id="tab-geral" class="settings-pane active">
+                        <h4 class="settings-section-title">Aparência</h4>
+                        <p class="settings-section-desc">Personalize o tema visual.</p>
+                        <div class="theme-selector">
+                            <button class="theme-btn" data-theme="light"><i class="fa-solid fa-sun"></i> Claro</button>
+                            <button class="theme-btn" data-theme="dark"><i class="fa-solid fa-moon"></i> Escuro</button>
+                            <button class="theme-btn" data-theme="system"><i class="fa-solid fa-desktop"></i> Sistema</button>
                         </div>
-
-                        <h3 class="settings-section-title">Comportamento da Janela</h3>
-                        <p class="settings-section-desc">Personalize como o Extratjud interage com seu desktop.</p>
-
-                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-minimize-tray" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Minimizar para a bandeja ao fechar</span>
-                            </label>
-                            
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-always-top" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Manter janela sempre no topo</span>
-                            </label>
+                        <h4 class="settings-section-title">Comportamento</h4>
+                        <p class="settings-section-desc">Como o app interage com o desktop.</p>
+                        <div class="flex flex-col gap-2">
+                            <label class="checkbox-label"><input type="checkbox" id="chk-minimize-tray"> Minimizar para bandeja ao fechar</label>
+                            <label class="checkbox-label"><input type="checkbox" id="chk-always-top"> Manter sempre no topo</label>
                         </div>
-
-                        <h3 class="settings-section-title" style="margin-top: 25px;">Notificações</h3>
-                        <p class="settings-section-desc">Alertas sobre o status das automações.</p>
-
-                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-sound-finish" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Emitir som ao finalizar</span>
-                            </label>
-                            
-                            <label class="checkbox-container" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                                <input type="checkbox" id="chk-notification-finish" style="width:16px; height:16px;">
-                                <span style="font-size:13px; color:var(--text-color);">Notificação do Windows</span>
-                            </label>
+                        <h4 class="settings-section-title mt-4">Notificações</h4>
+                        <p class="settings-section-desc">Alertas sobre automações.</p>
+                        <div class="flex flex-col gap-2">
+                            <label class="checkbox-label"><input type="checkbox" id="chk-sound-finish"> Emitir som ao finalizar</label>
+                            <label class="checkbox-label"><input type="checkbox" id="chk-notification-finish"> Notificação do Windows</label>
                         </div>
                     </div>
-
-                    <div id="tab-logs" class="settings-tab-pane">
-                         <h3 class="settings-section-title">Gerenciamento de Logs</h3>
-                         <p class="settings-section-desc">Centralize os arquivos de registro para facilitar o suporte.</p>
-
-                        <div class="settings-item">
-                            <label class="settings-label">Diretório Global de Logs</label>
-                            <div class="settings-input-group">
-                                <input type="text" id="inp-global-log" readonly placeholder="Selecione uma pasta..." class="settings-input">
-                                <button id="btn-sel-log-dir" class="settings-btn-icon"><i class="fa-solid fa-folder-open"></i></button>
-                            </div>
-                            <small style="display:block; margin-top:5px; color:var(--text-secondary);">Todos os robôs salvarão seus relatórios de execução nesta pasta.</small>
-                        </div>
-                    </div>
-
-                    <div id="tab-download" class="settings-tab-pane">
-                        <div style="text-align:center; padding: 20px;">
-                            <img src="assets/logo2.png" style="height:70px; margin-bottom:15px; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.15));">
-                            <h3 style="margin:0 0 6px 0; color:var(--primary-color); font-size:22px;">EXTRATJUD</h3>
-                            <p style="margin:0 0 25px 0; color:var(--text-secondary); font-size:13px;">v<span class="app-version">?.?.?</span></p>
-
-                            <div style="background: rgba(var(--primary-rgb,16,185,129),0.05); border:1px solid rgba(var(--primary-rgb,16,185,129),0.15); border-radius:12px; padding:20px; margin-bottom:20px; text-align:left;">
-                                <p style="margin:0 0 15px 0; font-size:14px; color:var(--text-color);">Acesse o site oficial para baixar a versão mais recente, ver o changelog e acompanhar as atualizações.</p>
-                                <button onclick="require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" style="width:100%; padding:12px; background:var(--primary-color); color:#000; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px;">
-                                    <i class="fa-solid fa-globe"></i> Abrir Site Oficial
-                                </button>
-                                <button onclick="require('electron').shell.openExternal('https://github.com/An0mi-dot/Extrajud/releases')" style="width:100%; padding:12px; background:transparent; color:var(--text-color); border:1px solid var(--border-color); border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;">
-                                    <i class="fa-brands fa-github"></i> Ver Releases no GitHub
-                                </button>
-                            </div>
-
-                            <div style="font-size:12px; color:var(--text-secondary);">
-                                Desenvolvido por <strong>João Guilherme Almeida Viana</strong>
+                    <div id="tab-logs" class="settings-pane">
+                        <h4 class="settings-section-title">Diretório de Logs</h4>
+                        <p class="settings-section-desc">Todos os robôs salvarão relatórios nesta pasta.</p>
+                        <div class="input-group">
+                            <label class="input-label">Caminho</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="inp-global-log" readonly placeholder="Selecione uma pasta..." class="input">
+                                <button id="btn-sel-log-dir" class="btn btn-ghost"><i class="fa-solid fa-folder-open"></i></button>
                             </div>
                         </div>
                     </div>
-
-                    <div id="tab-sobre" class="settings-tab-pane">
-                        <div style="text-align:center; padding:10px 20px;">
-                            <!-- Fix: Logo visual offset (transform Y) -->
-                            <img src="assets/logo2.png" style="height:80px; margin-bottom:15px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1)); transform: translateY(5px);">
-                            <h3 style="margin:0; color:var(--primary-color); font-size: 24px;">EXTRATJUD</h3>
-                            <p style="margin:5px 0; color:var(--text-secondary); font-family: 'JetBrains Mono', monospace;">v<span id="settings-app-ver">?.?.?</span></p>
-                            
-                            <hr style="margin:25px 0; border:0; border-top:1px solid var(--border-color);">
-                            
-                            <div style="text-align:left; font-size:14px; color:var(--text-color); margin-bottom:25px; line-height: 1.6;">
-                                <h4 style="margin:0 0 12px 0; font-size:16px; color: var(--primary-color);">Sobre a Ferramenta</h4>
-                                <p style="margin-bottom:12px;">
-                                    O <strong>EXTRATJUD</strong> é uma solução corporativa de automação robótica de processos (RPA) desenvolvida para otimizar as operações do setor jurídico da Neoenergia Coelba.
-                                </p>
-                                <p style="margin-bottom:12px;">
-                                    <strong>Nota Técnica:</strong> O aplicativo não utiliza APIs oficiais dos tribunais, devido à indisponibilidade de acesso público a esses recursos. Em vez disso, a ferramenta automatiza processos manuais, utilizando Inteligência Artificial para executar a navegação e as tarefas repetitivas da forma mais rápida possível.
-                                </p>
-                                <p style="margin-bottom:12px;">
-                                    A ferramenta emprega tecnologias de navegação headless para interagir com portais judiciais de forma segura e eficiente, permitindo a extração massiva de dados, geração de relatórios gerenciais e auditoria com evidências documentais.
-                                </p>
+                    <div id="tab-download" class="settings-pane">
+                        <div style="text-align:center;">
+                            <h3 style="margin:0; color:var(--primary);">EXTRATJUD</h3>
+                            <p class="text-sm text-muted">v<span class="app-version">?.?.?</span></p>
+                            <div class="card mt-4" style="text-align:left;">
+                                <p class="text-sm mb-3">Acesse o site oficial para baixar a versão mais recente.</p>
+                                <button onclick="require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" class="btn btn-primary w-full mb-2"><i class="fa-solid fa-globe"></i> Site Oficial</button>
+                                <button onclick="require('electron').shell.openExternal('https://github.com/An0mi-dot/Extrajud/releases')" class="btn btn-ghost w-full"><i class="fa-brands fa-github"></i> Releases</button>
                             </div>
-
-                            <div style="background: rgba(var(--primary-rgb, 16, 185, 129), 0.05); border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 25px; border: 1px solid rgba(var(--primary-rgb, 16, 185, 129), 0.1);">
-                                <h4 style="margin:0 0 10px 0; font-size:14px; display:flex; align-items:center; gap:8px;">
-                                    <i class="fa-solid fa-code" style="color:var(--primary-color)"></i> Ficha Técnica
-                                </h4>
-                                <ul style="margin:0; padding-left:20px; font-size:13px; color:var(--text-secondary);">
+                        </div>
+                    </div>
+                    <div id="tab-sobre" class="settings-pane">
+                        <div style="text-align:center;">
+                            <h3 style="margin:0; color:var(--primary); font-size:1.5rem;">EXTRATJUD</h3>
+                            <p class="text-sm font-mono text-muted">v<span id="settings-app-ver">?.?.?</span></p>
+                            <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
+                            <div style="text-align:left; font-size:0.9rem; line-height:1.7;">
+                                <h4 style="color:var(--primary);">Sobre a Ferramenta</h4>
+                                <p>O <strong>EXTRATJUD</strong> é uma solução corporativa de automação robótica (RPA) para o setor jurídico da Neoenergia Coelba.</p>
+                                <p><strong>Nota Técnica:</strong> A ferramenta automatiza processos manuais nos portais judiciais, sem uso de APIs oficiais devido à indisponibilidade de acesso público.</p>
+                            </div>
+                            <div class="card mt-3" style="text-align:left;">
+                                <h4 style="font-size:0.9rem; margin:0 0 8px;"><i class="fa-solid fa-code" style="color:var(--primary);"></i> Ficha Técnica</h4>
+                                <ul style="margin:0; padding-left:18px; font-size:0.85rem; color:var(--text-secondary); line-height:1.8;">
                                     <li><strong>Engine:</strong> Electron & Node.js</li>
                                     <li><strong>Automação:</strong> Microsoft Playwright</li>
-                                    <li><strong>Interface:</strong> HTML5 / CSS3 (Custom Theme)</li>
+                                    <li><strong>Interface:</strong> HTML5 / CSS3</li>
                                 </ul>
                             </div>
-
-                            <div style="text-align:left; font-size:13px; color:var(--text-secondary); margin-bottom:20px;">
-                                <p>
-                                    Desenvolvido por <strong>João Guilherme Almeida Viana</strong><br>
-                                    <span style="opacity:0.8; font-size:12px;">Aprendiz Administrativo | Jurídico Contencioso Cível</span><br>
-                                    <a href="mailto:joao.aviana@neoenergia.com" style="color:var(--primary-color); text-decoration:none;">joao.aviana@neoenergia.com</a>
-                                </p>
+                            <div class="mt-4 text-sm text-muted" style="text-align:left; border-top:1px dashed var(--border); padding-top:12px;">
+                                <p class="font-mono text-xs">Electron: <span id="env-electron">...</span> | Node: <span id="env-node">...</span> | Chrome: <span id="env-chrome">...</span></p>
+                                <p class="font-mono text-xs">OS: <span id="env-plat">...</span></p>
                             </div>
-
-                            <div style="margin-top:20px; font-size:11px; color:#9ca3af; text-align:left; border-top: 1px dashed var(--border-color); padding-top: 15px;">
-                                <p style="font-weight:600; margin-bottom:5px;">Ambiente de Execução:</p>
-                                <ul style="columns: 2; list-style: none; padding: 0; margin: 0;">
-                                    <li>Electron: <span id="env-electron">...</span></li>
-                                    <li>Node: <span id="env-node">...</span></li>
-                                    <li>Chrome: <span id="env-chrome">...</span></li>
-                                    <li>OS: <span id="env-plat">...</span></li>
-                                </ul>
-                            </div>
-                            
-                            <div style="margin-top:20px;">
-                                <button onclick="require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" style="width:100%; padding:10px; background:var(--primary-color); color:#000; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                                    <i class="fa-solid fa-globe"></i> Acessar Site Oficial / Downloads
-                                </button>
-                            </div>
-
-                            <div style="margin-top:15px; font-size: 11px; color: #aaa; text-align: center;">
-                                &copy; 2026 Neoenergia Coelba. Todos os direitos reservados.
-                            </div>
+                            <p class="text-xs text-muted mt-4">&copy; 2026 Neoenergia Coelba. Todos os direitos reservados.</p>
                         </div>
                     </div>
-
                 </div>
             </div>
-
-            <div class="settings-modal-footer" style="padding: 15px 30px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
-                <button id="btn-save-settings" class="settings-btn-primary" style="background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;">
-                    <i class="fa-solid fa-check"></i> Salvar Alterações
-                </button>
+            <div class="settings-footer">
+                <button id="btn-save-settings" class="btn btn-primary"><i class="fa-solid fa-check"></i> Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts Logic -->
     <script type="module">
         const { ipcRenderer } = require('electron');
 
-        
-
-        // --- User Global Context ---
-        let userData = null;
-
         document.addEventListener('DOMContentLoaded', async () => {
-             // Update Version Globally
-             try {
-                const ver = await ipcRenderer.invoke('get-app-version') || '2.0.6';
-                document.querySelectorAll('.version-tag').forEach(el => el.textContent = 'ver ' + ver);
-                document.querySelectorAll('.app-version, .settings-ver-text, #settings-app-ver').forEach(el => el.textContent = ver);
-             } catch(e) { console.error('Version fetch failed', e); }
-
-             // --- Update Notification ---
-             const btnUpdateNotify = document.getElementById('btn-update-notify');
-             const modalUpdate = document.getElementById('modal-update');
-             const updateModalInfo = document.getElementById('update-modal-info');
-             let updateUrl = null;
-
-             function showUpdateBadge(newVer, url) {
-                 updateUrl = url;
-                 if (updateModalInfo) updateModalInfo.textContent = `Versão ${newVer} disponível. Clique para baixar.`;
-                 if (btnUpdateNotify) { btnUpdateNotify.style.display = 'flex'; }
-             }
-
-             // Listen for electron-updater events
-             ipcRenderer.on('updater:status', (_, data) => {
-                 if (data.status === 'available' || data.status === 'ready') {
-                     const newVer = (data.info && data.info.version) ? data.info.version : '';
-                     showUpdateBadge(newVer, null);
-                 }
-             });
-
-             // Manual check via updates.json
-             try {
-                 const upd = await ipcRenderer.invoke('check-for-updates');
-                 if (upd && upd.updateAvailable) {
-                     showUpdateBadge(upd.latestVersion, upd.url);
-                 }
-             } catch(e) { console.warn('Update check failed', e); }
-
-             if (btnUpdateNotify) {
-                 btnUpdateNotify.onclick = () => { if (modalUpdate) modalUpdate.style.display = 'flex'; };
-             }
-             document.getElementById('btn-update-dismiss')?.addEventListener('click', () => {
-                 if (modalUpdate) modalUpdate.style.display = 'none';
-             });
-             document.getElementById('btn-update-download')?.addEventListener('click', () => {
-                 const target = updateUrl || 'https://an0mi-dot.github.io/Extrajud/';
-                 require('electron').shell.openExternal(target);
-                 if (modalUpdate) modalUpdate.style.display = 'none';
-             });
-
-             // 1. Setup Header & Modal
-            const header = document.getElementById('user-header-area');
-            const nameEl = document.getElementById('display-name');
-            const btnSaveProfile = document.getElementById('btn-save-profile');
-            const modalProfile = document.getElementById('modal-profile');
-            const btnCloseProfile = document.getElementById('btn-close-profile');
-            const btnOpenSettings = document.getElementById('btn-open-settings');
-
-            // NEW SETTINGS VARS
-            const modalSettings = document.getElementById('modal-settings');
-            const btnCloseSettings = document.getElementById('btn-close-settings');
-            const btnSaveSettings = document.getElementById('btn-save-settings');
-            const inpGlobalLog = document.getElementById('inp-global-log');
-            const btnSelLogDir = document.getElementById('btn-sel-log-dir');
-            
-            // Checkboxes
-            const chkMinimize = document.getElementById('chk-minimize-tray');
-            const chkAlwaysTop = document.getElementById('chk-always-top');
-            const chkSoundFinish = document.getElementById('chk-sound-finish');
-            const chkNotificationFinish = document.getElementById('chk-notification-finish');
-            
-            if (btnCloseProfile) btnCloseProfile.onclick = () => modalProfile.style.display = 'none';
-            if (btnCloseSettings) btnCloseSettings.onclick = () => modalSettings.style.display = 'none';
-
-            if (btnOpenSettings) {
-                btnOpenSettings.onclick = async () => {
-                   modalSettings.style.display = 'flex';
-                   
-                   // Init Settings Tabs Logic
-                   const tabs = modalSettings.querySelectorAll('.settings-tab');
-                   const panes = modalSettings.querySelectorAll('.settings-tab-pane');
-
-                   tabs.forEach(tab => {
-                      tab.onclick = () => {
-                          tabs.forEach(t => t.classList.remove('active'));
-                          panes.forEach(p => p.classList.remove('active'));
-                          
-                          tab.classList.add('active');
-                          const target = tab.getAttribute('data-tab'); // geral, logs, sobre
-                          
-                          // Convert data-tab to ID
-                          const realTarget = document.getElementById('tab-' + target);
-                          if(realTarget) realTarget.classList.add('active');
-                      };
-                   });
-                   
-                   // Init Theme Buttons Logic inside modal
-                   modalSettings.querySelectorAll('.theme-option').forEach(btn => {
-                       btn.onclick = () => {
-                           const mode = btn.getAttribute('data-theme');
-                           if(window.themeConfig) window.themeConfig.apply(mode);
-                       };
-                   });
-
-                   // Load Current Settings State
-                   try {
-                       const state = await ipcRenderer.invoke('load-app-state');
-                       if (state && state.globalLogDir && inpGlobalLog) {
-                           inpGlobalLog.value = state.globalLogDir;
-                       }
-
-                       const genConfig = await ipcRenderer.invoke('get-general-config');
-                       if (chkMinimize) chkMinimize.checked = genConfig.minimizeToTray || false;
-                       if (chkAlwaysTop) chkAlwaysTop.checked = genConfig.alwaysOnTop || false;
-                       if (chkSoundFinish) chkSoundFinish.checked = genConfig.soundFinish || false;
-                       if (chkNotificationFinish) chkNotificationFinish.checked = genConfig.notificationFinish || false;
-
-                       // Populate version info
-                       const ver = await ipcRenderer.invoke('get-app-version') || '1.0.0';
-                       const verEls = document.querySelectorAll('#settings-app-ver, .settings-ver-text'); 
-                       verEls.forEach(el => el.textContent = ver);
-
-                       // Env Info
-                       if(document.getElementById('env-node')) document.getElementById('env-node').textContent = process.versions.node;
-                       if(document.getElementById('env-electron')) document.getElementById('env-electron').textContent = process.versions.electron;
-                       if(document.getElementById('env-chrome')) document.getElementById('env-chrome').textContent = process.versions.chrome;
-                       if(document.getElementById('env-plat')) document.getElementById('env-plat').textContent = process.platform + ' (' + process.arch + ')';
-                   } catch(e) { console.error('Error loading settings', e); }
-                };
-            }
-
-            if (btnSelLogDir) {
-                btnSelLogDir.onclick = async () => {
-                    const dir = await ipcRenderer.invoke('dialog:openDirectory');
-                    if (dir && inpGlobalLog) {
-                        inpGlobalLog.value = dir;
-                    }
-                };
-            }
-
-            if (btnSaveSettings) {
-                btnSaveSettings.onclick = async () => {
-                    try {
-                        // Save Path
-                        const state = await ipcRenderer.invoke('load-app-state') || {};
-                        if(inpGlobalLog) state.globalLogDir = inpGlobalLog.value;
-                        ipcRenderer.send('save-app-state', state);
-
-                        // Save General Config
-                        await ipcRenderer.invoke('set-general-config', {
-                            minimizeToTray: chkMinimize ? chkMinimize.checked : false,
-                            alwaysOnTop: chkAlwaysTop ? chkAlwaysTop.checked : false,
-                            soundFinish: chkSoundFinish ? chkSoundFinish.checked : false,
-                            notificationFinish: chkNotificationFinish ? chkNotificationFinish.checked : false
-                        });
-
-                        modalSettings.style.display = 'none';
-                    } catch(e) {
-                        await ipcAlert('Erro ao salvar: ' + e.message);
-                    }
-                };
-            }
-
-            // 2. Load User - Disabled (no auth)
-
-            // 3. Save Profile Logic
-            if (btnSaveProfile) {
-                btnSaveProfile.onclick = async () => {
-                    const newName = document.getElementById('inp-full-name').value;
-                    const newAvatar = document.getElementById('inp-avatar-url').value;
-                    
-                    const originalText = btnSaveProfile.innerHTML;
-                    btnSaveProfile.textContent = 'Salvando...';
-                    
-                    try {
-                            data: { full_name: newName, avatar_url: newAvatar }
-                        });
-
-                        if (error) throw error;
-                        
-                        // Update Local
-                        userData = data.user;
-                        
-                        // Fetch Role from DB to ensure security context is complete
-                        if (roleData) userData.role = roleData.role;
-
-                        ipcRenderer.send('update-user-cache', userData);
-                        initUserInterface(userData);
-                        
-                        modalProfile.style.display = 'none';
-                        await ipcAlert('Perfil atualizado com sucesso!');
-                        
-                    } catch (e) {
-                        await ipcAlert('Erro ao atualizar: ' + e.message);
-                    } finally {
-                        btnSaveProfile.innerHTML = originalText;
-                    }
-                };
-            }
-        });
-
-        function getDisplayName(user) {
-            const meta = user.user_metadata || {};
-            if (meta.full_name) return meta.full_name;
-            if (meta.first_name) return `${meta.first_name} ${meta.last_name || ''}`.trim();
-            // Fallback: converte "luana.moreira" → "Luana Moreira"
-            if (user.email) {
-                const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-                return user.email.split('@')[0].split(/[._-]/).map(cap).join(' ');
-            }
-            return 'Usuário';
-        }
-
-        function getAvatarUrl(user) {
-             const meta = user.user_metadata || {};
-             return meta.avatar_url || null;
-        }
-
-        function getInitials(name) {
-            const parts = name.split(' ').filter(p => p.length > 0);
-            if (parts.length === 0) return '?';
-            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-        }
-
-        function updateAvatarUI(elId, name, url) {
-            const el = document.getElementById(elId);
-            if (!el) return;
-            
-            if (url) {
-                el.innerHTML = `<img src="${url}" alt="Avatar">`;
-                el.style.backgroundColor = 'transparent';
-                el.style.border = 'none';
-            } else {
-                el.textContent = getInitials(name);
-                el.style.backgroundColor = 'var(--primary-color)';
-            }
-        }
-
-        function initUserInterface(user) {
-            const displayName = getDisplayName(user);
-            const avatarUrl = getAvatarUrl(user);
-
-            window.switchTab = (tabName) => {
-                document.querySelectorAll('.profile-section').forEach(el => el.classList.remove('active'));
-    
-                // Remove active class from all tabs first
-               const allTabs = document.querySelectorAll('.profile-tab');
-               allTabs.forEach(t => t.classList.remove('active'));
-               
-               // Activate Section
-               const section = document.getElementById(tabName);
-               if(section) section.classList.add('active');
-
-               // Activate Button
-               // Find the tab that calls this function with this Argument
-               // Simple text match since we don't have IDs on tabs
-               for(const t of allTabs) {
-                   if(t.getAttribute('onclick').includes(tabName)) {
-                       t.classList.add('active');
-                       break;
-                   }
-               }
-            };
-
-            // 1. Setup Header
-            const header = document.getElementById('user-header-area');
-            const nameEl = document.getElementById('display-name');
-            const btnChangeEmail = document.getElementById('btn-change-email');
-            const btnResetPass = document.getElementById('btn-reset-password');
-
-            if (header && nameEl) {
-                nameEl.textContent = displayName;
-                updateAvatarUI('display-avatar', displayName, avatarUrl);
-                header.style.display = 'flex';
-                
-                // Open Profile Modal
-                header.addEventListener('click', () => {
-                   document.getElementById('modal-profile').style.display = 'flex';
-                   document.getElementById('inp-full-name').value = getDisplayName(user);
-                   document.getElementById('inp-avatar-url').value = getAvatarUrl(user) || '';
-                   document.getElementById('inp-email').value = user.email || ''; 
-                   updateAvatarUI('modal-avatar-preview', getDisplayName(user), getAvatarUrl(user));
-
-                   // Update Central de Contas UI
-                   const accName = document.getElementById('account-current-name');
-                   const accEmail = document.getElementById('account-current-email');
-                   const accAvatar = document.getElementById('account-current-avatar');
-
-                   if(accName) accName.textContent = getDisplayName(user);
-                   if(accEmail) accEmail.textContent = user.email;
-                   if(accAvatar) updateAvatarUI('account-current-avatar', getDisplayName(user), getAvatarUrl(user));
-
-                   // Reset tab
-                   window.switchTab('tab-general');
+            try {
+                const ver = await ipcRenderer.invoke('get-app-version') || '2.0.0';
+                document.querySelectorAll('.version-tag, #app-version, .app-version, #settings-app-ver').forEach(el => {
+                    if (el.tagName === 'SPAN' || el.classList.contains('version-tag')) el.textContent = ver;
+                    else if (el.classList.contains('app-version')) el.textContent = ver;
                 });
+            } catch(e) {}
+
+            // Update check
+            const btnUpdateNotify = document.getElementById('btn-update-notify');
+            const modalUpdate = document.getElementById('modal-update');
+            let updateUrl = null;
+
+            function showUpdateBadge(newVer, url) {
+                updateUrl = url;
+                const info = document.getElementById('update-modal-info');
+                if (info) info.textContent = `Versão ${newVer} disponível.`;
+                if (btnUpdateNotify) btnUpdateNotify.style.display = 'flex';
             }
 
-            // --- Avatar Upload Logic ---
-            const inpFile = document.getElementById('inp-avatar-file');
-            const loadingText = document.getElementById('avatar-loading');
-            
-            if(inpFile) {
-                inpFile.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if(!file) return;
-                    
-                    if(file.size > 2 * 1024 * 1024) {
-                        await ipcAlert('A imagem deve ter no máximo 2MB.');
-                        return;
-                    }
-                    
-                    if(loadingText) loadingText.style.display = 'block';
-                    
-                    try {
-                        const fileExt = file.name.split('.').pop();
-                        const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-                        const filePath = `${fileName}`;
-                        
-                            .from('avatars')
-                            .upload(filePath, file);
-
-                        if (uploadError) throw uploadError;
-
-                        // 2. Get Public URL
-                        const publicUrl = data.publicUrl;
-
-                        // 3. Update User Metadata
-                        // We also set the input value so the user sees it immediately
-                        document.getElementById('inp-avatar-url').value = publicUrl;
-                        updateAvatarUI('modal-avatar-preview', getDisplayName(user), publicUrl);
-                        
-                        await ipcAlert('Imagem enviada! Clique em SALVAR ALTERAÇÕES para confirmar.');
-
-                    } catch (error) {
-                        console.error('Upload error', error);
-                        await ipcAlert('Erro ao enviar imagem: ' + (error.message || error));
-                    } finally {
-                        if(loadingText) loadingText.style.display = 'none';
-                        inpFile.value = ''; // Reset input to allow sending same file again
-                    }
-                };
-            }
-
-            // --- Security Handlers ---
-
-            if (btnChangeEmail) {
-                btnChangeEmail.onclick = async () => {
-                    const newEmail = prompt("Digite o novo email:");
-                    if (!newEmail || !newEmail.includes('@')) return;
-                    
-                    const originalText = btnChangeEmail.textContent;
-                    btnChangeEmail.textContent = '...';
-                    btnChangeEmail.disabled = true;
-
-                    try {
-                        if (error) throw error;
-                        await ipcAlert(`Um email de confirmação foi enviado para ${newEmail} e para o seu email atual.`);
-                    } catch (e) {
-                        await ipcAlert('Erro ao alterar email: ' + e.message);
-                    } finally {
-                        btnChangeEmail.textContent = originalText;
-                        btnChangeEmail.disabled = false;
-                    }
-                };
-            }
-
-            if (btnResetPass) {
-                btnResetPass.onclick = async () => {
-                    if (!await ipcConfirm("Isso enviará um link de redefinição para " + user.email + ". Continuar?")) return;
-                    
-                    const originalText = btnResetPass.innerHTML;
-                    btnResetPass.textContent = 'Enviando...';
-                    btnResetPass.disabled = true;
-
-                    try {
-                        if (error) throw error;
-                        await ipcAlert('Email enviado! Verifique sua caixa de entrada.');
-                    } catch (e) {
-                        await ipcAlert('Erro: ' + e.message);
-                    } finally {
-                        btnResetPass.innerHTML = originalText;
-                        btnResetPass.disabled = false;
-                    }
-                };
-            }
-
-
-            // --- Debug Logic ---
-            let isTestMode = false;
-            let f5Timer = null;
-            let f5Flag = false;
-
-            const toggleTestMode = () => {
-                isTestMode = !isTestMode;
-                const fab = document.getElementById('debug-fab');
-                if (fab) {
-                    fab.style.display = isTestMode ? 'flex' : 'none';
-                    // Reset menu when turning off
-                    if (!isTestMode) {
-                        const menu = document.getElementById('debug-menu');
-                        if (menu) menu.style.display = 'none';
-                    } else {
-                        // Announce activation
-                        ipcAlert('Modo de Teste: ' + (isTestMode ? 'ATIVADO' : 'DESATIVADO')).catch(()=>{});
-                    }
-                }
-            };
-
-            window.addEventListener('keydown', (e) => {
-                if (e.key === 'F5') {
-                    // Prevent default only if we are planning to use the combination? 
-                    // Be careful not to block reload if user just wants to reload.
-                    // But for now, user requested F5+T
-                    // Let's not prevent Default immediately unless needed, or just warn user
-                    // e.preventDefault(); 
-                    f5Flag = true;
-                    // We don't prevent default here to allow normal F5 refresh if T is not pressed quickly
-                    // But if T is pressed, we might be too late. 
-                    // Actually, if F5 is held down, it will refresh repeatedly. 
-                    // In Electron PROD, F5 is usually disabled. In DEV, it's useful.
-                    // Let's assumes user holds F5.
-                    clearTimeout(f5Timer);
-                    f5Timer = setTimeout(() => { f5Flag = false; }, 500);
-                }
-                if ((e.key === 't' || e.key === 'T') && f5Flag) {
-                    e.preventDefault(); // Prevent 't' being typed if focused somewhere
-                    f5Flag = false;
-                    toggleTestMode();
+            ipcRenderer.on('updater:status', (_, data) => {
+                if (data.status === 'available' || data.status === 'ready') {
+                    showUpdateBadge(data.info?.version || '', null);
                 }
             });
 
-            const fab = document.getElementById('debug-fab');
-            const menu = document.getElementById('debug-menu');
-            const btnForce = document.getElementById('btn-force-welcome');
+            try {
+                const upd = await ipcRenderer.invoke('check-for-updates');
+                if (upd?.updateAvailable) showUpdateBadge(upd.latestVersion, upd.url);
+            } catch(e) {}
 
-            if(fab) {
-                fab.addEventListener('click', () => {
-                   if(menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+            btnUpdateNotify?.addEventListener('click', () => modalUpdate?.classList.add('active'));
+            document.getElementById('btn-update-download')?.addEventListener('click', () => {
+                require('electron').shell.openExternal(updateUrl || 'https://an0mi-dot.github.io/Extrajud/');
+                modalUpdate?.classList.remove('active');
+            });
+
+            // Settings
+            const modalSettings = document.getElementById('modal-settings');
+            const btnOpenSettings = document.getElementById('btn-open-settings');
+            const btnCloseSettings = document.getElementById('btn-close-settings');
+            const btnSaveSettings = document.getElementById('btn-save-settings');
+
+            btnOpenSettings?.addEventListener('click', async () => {
+                modalSettings.classList.add('active');
+                try {
+                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    const inpLog = document.getElementById('inp-global-log');
+                    if (state.globalLogDir && inpLog) inpLog.value = state.globalLogDir;
+
+                    const gen = await ipcRenderer.invoke('get-general-config');
+                    const chkMin = document.getElementById('chk-minimize-tray');
+                    const chkTop = document.getElementById('chk-always-top');
+                    const chkSound = document.getElementById('chk-sound-finish');
+                    const chkNotif = document.getElementById('chk-notification-finish');
+                    if (chkMin) chkMin.checked = gen.minimizeToTray || false;
+                    if (chkTop) chkTop.checked = gen.alwaysOnTop || false;
+                    if (chkSound) chkSound.checked = gen.soundFinish || false;
+                    if (chkNotif) chkNotif.checked = gen.notificationFinish || false;
+
+                    const v = await ipcRenderer.invoke('get-app-version') || '1.0.0';
+                    document.getElementById('settings-app-ver').textContent = v;
+                    document.getElementById('env-node').textContent = process.versions.node;
+                    document.getElementById('env-electron').textContent = process.versions.electron;
+                    document.getElementById('env-chrome').textContent = process.versions.chrome;
+                    document.getElementById('env-plat').textContent = `${process.platform} (${process.arch})`;
+                } catch(e) {}
+            });
+
+            btnCloseSettings?.addEventListener('click', () => modalSettings.classList.remove('active'));
+            modalSettings?.addEventListener('click', (e) => { if (e.target === modalSettings) modalSettings.classList.remove('active'); });
+
+            // Tabs
+            modalSettings?.querySelectorAll('.settings-nav-btn').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    modalSettings.querySelectorAll('.settings-nav-btn').forEach(t => t.classList.remove('active'));
+                    modalSettings.querySelectorAll('.settings-pane').forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    const pane = document.getElementById('tab-' + tab.dataset.tab);
+                    if (pane) pane.classList.add('active');
                 });
-            }
+            });
 
-            if(btnForce) {
-                btnForce.addEventListener('click', () => {
-                    playWelcomeAnimation(displayName);
-                    if(menu) menu.style.display = 'none';
+            // Theme buttons
+            modalSettings?.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (window.themeConfig) window.themeConfig.apply(btn.dataset.theme);
                 });
-            }
+            });
 
-            // 2. Welcome Screen Logic - refactored
-            // Helper function
-            window.playWelcomeAnimation = (name) => {
-                const welcome = document.getElementById('welcome-overlay');
-                const welcomeName = document.getElementById('welcome-name');
-                const particles = document.getElementById('particles-area');
+            // Log dir
+            document.getElementById('btn-sel-log-dir')?.addEventListener('click', async () => {
+                const dir = await ipcRenderer.invoke('dialog:openDirectory');
+                const inp = document.getElementById('inp-global-log');
+                if (dir && inp) inp.value = dir;
+            });
 
-                if (welcome) {
-                    const firstName = name.split(' ')[0];
-                    if(welcomeName) welcomeName.textContent = firstName;
-                    
-                    // Reset styles for replay
-                    welcome.style.display = 'flex';
-                    welcome.style.opacity = '1';
-                    welcome.style.filter = 'none';
-                    
-                    // Clear existing particles
-                    if(particles) particles.innerHTML = '';
+            // Save
+            btnSaveSettings?.addEventListener('click', async () => {
+                try {
+                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    const inpLog = document.getElementById('inp-global-log');
+                    if (inpLog) state.globalLogDir = inpLog.value;
+                    ipcRenderer.send('save-app-state', state);
 
-                    // Particle Generation
-                    if(particles) {
-                        for(let i=0; i<50; i++) {
-                            const p = document.createElement('div');
-                            p.className = 'particle';
-                            p.style.left = Math.random() * 100 + '%';
-                            p.style.top = Math.random() * 100 + '%'; // Start anywhere
-                            // Randomize animation so they don't all start at once
-                            p.style.animationDelay = (Math.random() * 2) + 's';
-                            p.style.animationDuration = (Math.random() * 3 + 3) + 's'; // 3-6s
-                            const size = Math.random() * 6 + 2;
-                            p.style.width = size + 'px';
-                            p.style.height = size + 'px';
-                            p.style.opacity = Math.random() * 0.4 + 0.1;
-                            particles.appendChild(p);
-                        }
-                    }
-
-                    const closeWelcome = () => {
-                         welcome.style.opacity = '0';
-                         welcome.style.filter = 'blur(10px) brightness(1.2)'; // Smooth cinematic exit
-                         // Wait for transition end
-                         setTimeout(() => {
-                             welcome.style.display = 'none';
-                             welcome.style.filter = 'none'; // reset
-                         }, 800);
-                         sessionStorage.setItem('welcome_seen', 'true');
-                    };
-
-                    // Auto hide after 4.5s
-                    // Clear any existing timeout if we are forcing it multiple times
-                    if(window.welcomeTimeout) clearTimeout(window.welcomeTimeout);
-                    
-                    window.welcomeTimeout = setTimeout(() => {
-                        if(welcome.style.display !== 'none') closeWelcome();
-                    }, 4500);
-                }
-            };
-
-            // Use sessionStorage to only show once per app launch session
-            if (!sessionStorage.getItem('welcome_seen')) {
-                playWelcomeAnimation(displayName);
-            }
-        }
+                    await ipcRenderer.invoke('set-general-config', {
+                        minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false,
+                        alwaysOnTop: document.getElementById('chk-always-top')?.checked || false,
+                        soundFinish: document.getElementById('chk-sound-finish')?.checked || false,
+                        notificationFinish: document.getElementById('chk-notification-finish')?.checked || false
+                    });
+                    modalSettings.classList.remove('active');
+                } catch(e) { await ipcAlert('Erro ao salvar: ' + e.message); }
+            });
+        });
     </script>
-
-    <!-- ADMIN MODAL (Added v2.0.6) -->
-    <div id="modal-admin-logic" class="settings-modal-overlay">
-        <div class="settings-modal-content" style="max-width: 480px; height: auto; min-height: 250px; overflow: visible;">
-            <div class="settings-modal-header" style="padding: 24px; border-bottom: none; background: transparent;">
-                <h2><i class="fa-solid fa-user-shield" style="color: var(--primary-color);"></i> &nbsp;Gerenciar Cargos</h2>
-                <button id="btn-close-admin-logic" class="settings-close-btn">&times;</button>
-            </div>
-            
-            <div class="settings-modal-body" style="display: block; padding: 0 30px 20px;">
-                <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0; margin-bottom: 24px;">
-                    Selecione um usuário ou digite o email.
-                </p>
-
-                <div class="form-group">
-                    <label class="form-label"><i class="fa-regular fa-envelope"></i> Email do Usuário</label>
-                    <input type="text" id="inp-admin-email" class="form-input" list="admin-users-list" placeholder="exemplo@dominio.com" autocomplete="off">
-                    <datalist id="admin-users-list"></datalist>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label"><i class="fa-solid fa-id-badge"></i> Cargo</label>
-                    <div style="position: relative;">
-                        <select id="sel-admin-role" class="form-input" style="appearance: none; cursor: pointer;">
-                            <option value="admin">Admin (Acesso Total)</option>
-                            <option value="tester">Tester (Modo Debug)</option>
-                            <option value="pastas">Pastas (SharePoint)</option>
-                            <option value="remove" style="color: #ef4444; font-weight: bold;">❌ REMOVER CARGO</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="settings-modal-footer" style="padding: 20px 30px; background: var(--bg-color); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
-                <button id="btn-admin-save" class="settings-btn-primary" style="padding: 10px 20px;">
-                    <i class="fa-solid fa-check"></i> Salvar
-                </button>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
-
-
-
-
-

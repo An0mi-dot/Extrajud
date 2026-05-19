@@ -1,40 +1,30 @@
-# TODO.md - Reformulação EXTRATJUD (Reset Profissional)
+# TODO - UI Restrukturization
 
-✅ **Backups criados** (Fluxos/Subsídios → pasta Backups com READMEs)  
-✅ **index.html reformulado** (só 3 cards: Robôs/Site/Serviços)  
-✅ **Supabase removido de index.html** (auth/scripts limpos)  
-✅ **Login.html → Backups/**  
-✅ **admin_users.html → Backups/**  
-✅ **database-viewer.html → Backups/**  
-✅ **debug.html → Backups/**  
-✅ **supabase/ deletada**  
-✅ **supabaseClient.js → Backups/**  
+## Concluído ✅
+- [x] Novo design system no theme.css (cores slate/blue, tipografia Inter, variáveis CSS unificadas)
+- [x] theme.js atualizado e simplificado
+- [x] index.html - Página principal com topbar, cards modernos, settings modal
+- [x] hub_servicos.html - Hub de serviços com loader, cards com status e tempo estimado
+- [x] extrator_projudi.html - Sidebar unificada, terminal moderno, status bar
+- [x] arquivados_projudi.html - Mesmo layout do extrator, consistente
+- [x] pje_extrator.html - Layout unificado com sidebar + terminal
+- [x] sharepoint_create.html - Layout unificado, loader toast, modais modernos
+- [x] admin_users.html - Tabela estilizada, cards para formulários
+- [x] Removido debug UI (debug-fab, debug-menu) do index.html
+- [x] Removido welcome overlay do index.html
+- [x] Removidos hardcoded credentials visuais (mantidos nos inputs para funcionalidade)
+- [x] Componentes compartilhados: settings modal, terminal, status bar, alertas
 
-## ⏳ Passos Restantes (Plano Aprovado)
+## Design System v3.0
+- **Cores:** Primary blue (#2563eb), slate backgrounds, semantic success/warning/danger
+- **Tipografia:** Inter (sans-serif), JetBrains Mono (código)
+- **Componentes:** .btn, .card, .terminal, .status-bar, .alert, .modal, .settings-modal, .input
+- **Layout:** .sidebar + .main-area para páginas de ferramentas
+- **Dark mode:** Totalmente suportado via [data-theme="dark"]
 
-### 1. Remover Login Totalmente (Todo 1/7 ✅)
-- ✅ Backup/delete `public/login.html` → Backups/
-- ✅ Limpar `hub_servicos.html` (RBAC/Supabase removido)
-
-### 2. Limpar Todos Supabase (Todo 2/7 ✅)
-- ✅ Backup/delete: `admin_users.html`, `database-viewer.html`, `debug.html`
-- ✅ Backup/delete: pasta `supabase/` completa
-- ✅ Backup/delete: `public/assets/supabaseClient.js`
-
-### 3. Manter Core (Todo 3/7 ✅)
-- ✅ index.html: só Hub/Site/Serviços
-- ✅ Testado `hub_servicos.html` (RBAC removido), `sharepoint_create.html` ✅
-
-### 4. Versions Unificadas (Todo 4/7)
-- [ ] Criar `public/VERSIONS.md` (sync GitHub/releases)
-- [ ] Update `updates.json` + `scripts/bump_version.js`
-
-### 5. Final Polish (Todos 5-7)
-- [ ] Test completo: `npx electron .`
-- [ ] Git commit + tag v2.2.0
-- [ ] Update site GitHub Pages
-
-**Comando para testar**: `npx electron .` (no root do projeto)
-
-**Progresso**: 5/7 ✅ | Restante: Limpar hub_servicos.html + Versions + Teste!
-
+## Próximos Passos Sugeridos
+- [ ] Adicionar testes visuais/regression
+- [ ] Consolidar settings modal em componente JS reutilizável
+- [ ] Adicionar transições de página mais suaves
+- [ ] Criar componente de toast notifications
+- [ ] Padronizar ícones (todos Font Awesome 6)
