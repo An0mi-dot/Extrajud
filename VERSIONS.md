@@ -221,3 +221,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 - Site de download reestruturado com estética do app
 - Removido debug UI e welcome overlay
 - Todas as funcionalidades de bots preservadas
+## v2.2.0 - 2026-05-19
+
+- Commit: 1df7832
+- Notes: feat(site): add animated background effects and scroll animations
