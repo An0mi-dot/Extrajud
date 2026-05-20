@@ -223,7 +223,7 @@
         let fullLogs = [];
 
         window.addEventListener('DOMContentLoaded', () => { document.body.classList.add('loaded'); loadEmails(); });
-        document.getElementById('btn-back').addEventListener('click', (e) => { e.preventDefault(); document.body.style.opacity = '0'; setTimeout(() => { window.location.href = 'hub_servicos.html'; }, 300); });
+        document.getElementById('btn-back').addEventListener('click', (e) => { e.preventDefault(); document.body.style.opacity = '0'; setTimeout(() => { window.location.href = 'hub_servicos_extras.html'; }, 300); });
 
         function addLog(msg, typeClass) {
             const normalized = window.extrajudTerminalLogger

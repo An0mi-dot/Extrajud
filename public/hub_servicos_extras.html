@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXTRATJUD - Hub de Serviços</title>
+    <title>EXTRATJUD - Serviços Extras</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,11 +11,10 @@
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
     <script src="assets/dialogs.js"></script>
-    <script src="assets/terminal-logger.js"></script>
     <style>
-        .hub-layout { display: flex; flex-direction: column; min-height: 100vh; }
+        .extras-layout { display: flex; flex-direction: column; min-height: 100vh; }
 
-        .hub-topbar {
+        .extras-topbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -25,9 +24,9 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .hub-topbar-left { display: flex; align-items: center; gap: 16px; }
+        .extras-topbar-left { display: flex; align-items: center; gap: 16px; }
 
-        .hub-topbar-brand {
+        .extras-topbar-brand {
             font-size: 1.1rem;
             font-weight: 700;
             color: var(--text);
@@ -36,7 +35,7 @@
             gap: 8px;
         }
 
-        .hub-topbar-brand span {
+        .extras-topbar-brand span {
             background: var(--primary-light);
             color: var(--primary);
             font-size: 0.65rem;
@@ -46,7 +45,7 @@
             font-weight: 600;
         }
 
-        .hub-body {
+        .extras-body {
             flex: 1;
             padding: 32px 28px;
             max-width: 1200px;
@@ -55,17 +54,17 @@
             box-sizing: border-box;
         }
 
-        .hub-welcome { margin-bottom: 28px; }
-        .hub-welcome h2 { font-size: 1.5rem; margin: 0 0 4px; }
-        .hub-welcome p { margin: 0; font-size: 0.95rem; }
+        .extras-welcome { margin-bottom: 28px; }
+        .extras-welcome h2 { font-size: 1.5rem; margin: 0 0 4px; }
+        .extras-welcome p { margin: 0; font-size: 0.95rem; color: var(--text-secondary); }
 
-        .services-grid {
+        .extras-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 18px;
         }
 
-        .service-card {
+        .extra-card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
@@ -81,21 +80,21 @@
             overflow: hidden;
         }
 
-        .service-card:hover:not(.disabled) {
+        .extra-card:hover:not(.disabled) {
             transform: translateY(-4px);
             box-shadow: var(--shadow-lg);
             border-color: var(--primary);
         }
 
-        .service-card:active:not(.disabled) { transform: translateY(-1px); }
+        .extra-card:active:not(.disabled) { transform: translateY(-1px); }
 
-        .service-card.disabled {
+        .extra-card.disabled {
             opacity: 0.5;
             cursor: not-allowed;
             filter: grayscale(0.5);
         }
 
-        .service-card.disabled:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--border); }
+        .extra-card.disabled:hover { transform: none; box-shadow: var(--shadow-sm); border-color: var(--border); }
 
         .card-icon {
             width: 44px;
@@ -110,12 +109,12 @@
             transition: all var(--transition-base);
         }
 
-        .service-card:hover:not(.disabled) .card-icon {
+        .extra-card:hover:not(.disabled) .card-icon {
             background: var(--primary);
             color: #fff;
         }
 
-        .card-platform {
+        .card-tag {
             font-size: 0.65rem;
             font-weight: 700;
             text-transform: uppercase;
@@ -126,17 +125,14 @@
             align-self: flex-start;
         }
 
-        .tag-projudi { background: #fce7f3; color: #9d174d; }
-        .tag-pje { background: #e0e7ff; color: #3730a3; }
-        .tag-espaider { background: #ffedd5; color: #9a3412; }
+        .tag-sharepoint { background: #dbeafe; color: #1d4ed8; }
+        .tag-util { background: #e0e7ff; color: #3730a3; }
 
-        [data-theme="dark"] .tag-projudi { background: rgba(157,23,77,0.2); color: #f9a8d4; }
-        [data-theme="dark"] .tag-pje { background: rgba(55,48,163,0.2); color: #a5b4fc; }
-        [data-theme="dark"] .tag-espaider { background: rgba(154,52,18,0.2); color: #fdba74; }
-        [data-theme="dark"] .card-platform[style*="f0fdf4"] { background: rgba(22,101,52,0.2); color: #86efac; }
+        [data-theme="dark"] .tag-sharepoint { background: rgba(29,78,216,0.2); color: #93c5fd; }
+        [data-theme="dark"] .tag-util { background: rgba(55,48,163,0.2); color: #a5b4fc; }
 
         .card-title { font-size: 1.05rem; font-weight: 600; margin: 0; }
-        .service-card:hover:not(.disabled) .card-title { color: var(--primary); }
+        .extra-card:hover:not(.disabled) .card-title { color: var(--primary); }
 
         .card-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0; flex: 1; }
 
@@ -154,15 +150,7 @@
         .status-active { background: var(--success-light); color: var(--success); }
         .status-soon { background: var(--warning-light); color: var(--warning); }
 
-        .card-time {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .hub-footer {
+        .extras-footer {
             text-align: center;
             padding: 12px;
             font-size: 0.75rem;
@@ -171,7 +159,6 @@
             background: var(--surface);
         }
 
-        /* Loader */
         .loader-overlay {
             position: fixed;
             inset: 0;
@@ -217,14 +204,14 @@
         </div>
     </div>
 
-    <div class="hub-layout">
-        <div class="hub-topbar">
-            <div class="hub-topbar-left">
+    <div class="extras-layout">
+        <div class="extras-topbar">
+            <div class="extras-topbar-left">
                 <button class="btn btn-ghost btn-icon btn-sm" onclick="window.location.href='index.html'" title="Voltar">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
-                <div class="hub-topbar-brand">
-                    EXTRATJUD <span>SERVIÇOS</span>
+                <div class="extras-topbar-brand">
+                    EXTRATJUD <span>EXTRAS</span>
                 </div>
             </div>
             <div class="topbar-actions">
@@ -234,75 +221,42 @@
             </div>
         </div>
 
-        <div class="hub-body">
-            <div class="hub-welcome fade-in">
-                <h2>Hub de Serviços</h2>
-                <p>Selecione uma ferramenta para iniciar a automação.</p>
+        <div class="extras-body">
+            <div class="extras-welcome fade-in">
+                <h2>Serviços Extras</h2>
+                <p>Ferramentas auxiliares e utilitários de produtividade.</p>
             </div>
 
-            <div class="services-grid">
-                <a href="extrator_projudi.html" class="service-card slide-up stagger-1">
-                    <span class="card-platform tag-projudi">PROJUDI</span>
-                    <div class="card-icon"><i class="fa-solid fa-file-lines"></i></div>
-                    <h3 class="card-title">Citações e Intimações</h3>
-                    <p class="card-desc">Extração automatizada de Citações e Intimações do Portal PROJUDI com geração de tabelas e evidências em PDF.</p>
+            <div class="extras-grid">
+                <a href="sharepoint_create.html" class="extra-card slide-up stagger-1">
+                    <span class="card-tag tag-sharepoint">SHAREPOINT</span>
+                    <div class="card-icon"><i class="fa-solid fa-folder-plus"></i></div>
+                    <h3 class="card-title">Criar Pastas SharePoint</h3>
+                    <p class="card-desc">Criação sequencial de pastas no SharePoint com preview do diretório e controle de quantidade.</p>
                     <div class="card-meta">
                         <span class="card-status status-active">Disponível</span>
-                        <span class="card-time"><i class="fa-regular fa-clock"></i> ~2 min</span>
+                        <span class="card-time"><i class="fa-regular fa-clock"></i> ~1 min</span>
                     </div>
                 </a>
 
-                <a href="arquivados_projudi.html" class="service-card slide-up stagger-2">
-                    <span class="card-platform tag-projudi">PROJUDI</span>
-                    <div class="card-icon"><i class="fa-solid fa-box-archive"></i></div>
-                    <h3 class="card-title">Processos Arquivados</h3>
-                    <p class="card-desc">Busca e extração em massa de processos arquivados para auditoria de histórico.</p>
-                    <div class="card-meta">
-                        <span class="card-status status-active">Disponível</span>
-                        <span class="card-time"><i class="fa-regular fa-clock"></i> Variável</span>
-                    </div>
-                </a>
-
-                <a href="pje_extrator.html" class="service-card slide-up stagger-3">
-                    <span class="card-platform tag-pje">PJE</span>
-                    <div class="card-icon"><i class="fa-solid fa-gavel"></i></div>
-                    <h3 class="card-title">Automação PJE</h3>
-                    <p class="card-desc">Extração de Expedientes PJE 1º e 2º Grau (Pendentes de Ciência e Resposta).</p>
-                    <div class="card-meta">
-                        <span class="card-status status-soon">Em desenvolvimento</span>
-                        <span class="card-time"><i class="fa-regular fa-clock"></i> --</span>
-                    </div>
-                </a>
-
-                <div class="service-card disabled">
-                    <span class="card-platform tag-espaider">ESPAIDER</span>
-                    <div class="card-icon"><i class="fa-solid fa-credit-card"></i></div>
-                    <h3 class="card-title">Integração Espaider</h3>
-                    <p class="card-desc">Conector futuro para sincronização de dados e gestão jurídica no sistema Espaider.</p>
+                <div class="extra-card disabled">
+                    <span class="card-tag tag-util">UTILITÁRIO</span>
+                    <div class="card-icon"><i class="fa-solid fa-wrench"></i></div>
+                    <h3 class="card-title">Em breve...</h3>
+                    <p class="card-desc">Novas ferramentas de apoio serão adicionadas aqui conforme a demanda.</p>
                     <div class="card-meta">
                         <span class="card-status status-soon">Em breve</span>
                     </div>
                 </div>
-
-                <a href="hub_servicos_extras.html" class="service-card slide-up stagger-4">
-                    <span class="card-platform" style="background:#f0fdf4; color:#166534;">EXTRAS</span>
-                    <div class="card-icon"><i class="fa-solid fa-folder-plus"></i></div>
-                    <h3 class="card-title">Serviços Extras</h3>
-                    <p class="card-desc">Hub de ferramentas auxiliares: criação de pastas SharePoint e utilitários.</p>
-                    <div class="card-meta">
-                        <span class="card-status status-active">Disponível</span>
-                        <span class="card-time"><i class="fa-regular fa-clock"></i> --</span>
-                    </div>
-                </a>
             </div>
         </div>
 
-        <div class="hub-footer">
+        <div class="extras-footer">
             Versão <span id="app-version">?.?.?</span> &mdash; &copy; 2026 Neoenergia Coelba
         </div>
     </div>
 
-    <!-- Settings Modal (shared component) -->
+    <!-- Settings Modal -->
     <div id="modal-settings" class="settings-overlay">
         <div class="settings-modal">
             <div class="settings-header">
@@ -354,14 +308,6 @@
                             <div style="text-align:left; font-size:0.9rem; line-height:1.7;">
                                 <p>O <strong>EXTRATJUD</strong> é uma solução RPA para o setor jurídico da Neoenergia Coelba.</p>
                             </div>
-                            <div class="card mt-3" style="text-align:left;">
-                                <h4 style="font-size:0.9rem; margin:0 0 8px;"><i class="fa-solid fa-code" style="color:var(--primary);"></i> Ficha Técnica</h4>
-                                <ul style="margin:0; padding-left:18px; font-size:0.85rem; color:var(--text-secondary); line-height:1.8;">
-                                    <li><strong>Engine:</strong> Electron & Node.js</li>
-                                    <li><strong>Automação:</strong> Microsoft Playwright</li>
-                                    <li><strong>Interface:</strong> HTML5 / CSS3</li>
-                                </ul>
-                            </div>
                             <p class="text-xs text-muted mt-4 font-mono">Electron: <span id="env-electron">...</span> | Node: <span id="env-node">...</span> | OS: <span id="env-plat">...</span></p>
                         </div>
                     </div>
@@ -376,7 +322,6 @@
     <script>
         const { ipcRenderer } = require('electron');
 
-        // Hide loader
         (function(){
             const loader = document.getElementById('app-loader');
             function hide(){ if(loader){ loader.classList.add('hidden'); setTimeout(()=>loader.remove(), 500); } }
@@ -384,16 +329,14 @@
             setTimeout(hide, 6000);
         })();
 
-        // Version
         (async function(){
             try {
-                const ver = await ipcRenderer.invoke('get-app-version') || '2.0.0';
+                const ver = await ipcRenderer.invoke('get-app-version') || '3.0.0';
                 document.getElementById('app-version').textContent = ver;
             } catch(e) {}
         })();
 
-        // Service card transitions
-        document.querySelectorAll('a.service-card').forEach(link => {
+        document.querySelectorAll('a.extra-card').forEach(link => {
             link.addEventListener('click', async function(e) {
                 e.preventDefault();
                 const target = this.href;
@@ -406,7 +349,6 @@
             });
         });
 
-        // Settings
         (function(){
             const modal = document.getElementById('modal-settings');
             const btnOpen = document.getElementById('btn-open-settings');
@@ -424,7 +366,7 @@
                     document.getElementById('chk-always-top').checked = gen.alwaysOnTop || false;
                     document.getElementById('chk-sound-finish').checked = gen.soundFinish || false;
                     document.getElementById('chk-notification-finish').checked = gen.notificationFinish || false;
-                    const v = await ipcRenderer.invoke('get-app-version') || '1.0.0';
+                    const v = await ipcRenderer.invoke('get-app-version') || '3.0.0';
                     document.getElementById('settings-app-ver').textContent = v;
                     document.getElementById('env-node').textContent = process.versions.node;
                     document.getElementById('env-electron').textContent = process.versions.electron;
