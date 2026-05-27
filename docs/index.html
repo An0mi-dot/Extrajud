@@ -423,7 +423,7 @@
             <h2>Baixar EXTRATJUD</h2>
             <p>Instalador para Windows 10/11 (64-bit)</p>
             <div class="download-actions">
-                <a href="https://github.com/An0mi-dot/Extrajud/releases/latest" target="_blank" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download Mais Recente</a>
+                <a id="btn-download-windows" href="#" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download Mais Recente</a>
                 <a href="https://github.com/An0mi-dot/Extrajud/releases" target="_blank" class="btn btn-ghost"><i class="fa-brands fa-github"></i> Todos os Releases</a>
             </div>
             <div class="download-note">Versão atual: v3.0.0 &bull; Instalador NSIS &bull; ~150MB</div>
@@ -435,6 +435,14 @@
     </footer>
 
     <script>
+        const fallbackZip = 'https://github.com/An0mi-dot/Extrajud/releases/download/v3.0.0/Instalador-3.0.0.zip';
+        const downloadBtn = document.getElementById('btn-download-windows');
+        if (downloadBtn) {
+            downloadBtn.href = fallbackZip;
+            downloadBtn.target = '_blank';
+            downloadBtn.rel = 'noopener noreferrer';
+        }
+
         // Scroll animations
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, i) => {
@@ -455,6 +463,13 @@
             .then(r => r.json())
             .then(data => {
                 if (data.version) {
+                    const zipUrl = data.download_url || `https://github.com/An0mi-dot/Extrajud/releases/download/v${data.version}/Instalador-${data.version}.zip`;
+                    const btn = document.getElementById('btn-download-windows');
+                    if (btn) {
+                        btn.href = zipUrl;
+                        btn.target = '_blank';
+                        btn.rel = 'noopener noreferrer';
+                    }
                     document.querySelectorAll('.hero-badge').forEach(el => {
                         el.innerHTML = `<i class="fa-solid fa-circle-check"></i> Versão ${data.version} disponível`;
                     });
