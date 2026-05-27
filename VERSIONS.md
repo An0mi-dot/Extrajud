@@ -225,3 +225,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 1df7832
 - Notes: feat(site): add animated background effects and scroll animations
+## v3.0.1 - 2026-05-27
+
+- Commit: b9c1843
+- Notes: feat(site): download zip directly from release assets
