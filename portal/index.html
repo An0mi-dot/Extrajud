@@ -269,7 +269,7 @@
                     btn.target = '_blank';
                     btn.rel = 'noopener noreferrer';
                     btn.disabled = false;
-                    btnText.textContent = 'Ver Releases (sem instalador)';
+                    btnText.textContent = 'Baixar (indisponível)';
                 }
 
                 // Changelog
@@ -291,8 +291,10 @@
                 document.getElementById('changelogBody').innerHTML = '<p class="text-sm" style="color:var(--danger);">Não foi possível conectar ao GitHub.</p>';
 
                 const btn = document.getElementById('downloadBtn');
-                btn.disabled = true;
-                btn.querySelector('span').textContent = 'Indisponível';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.querySelector('span').textContent = 'Indisponível no momento';
+                }
             }
         }
 
