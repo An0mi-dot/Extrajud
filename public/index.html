@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/status-bar.js"></script>
     <script src="assets/dialogs.js"></script>
     <style>
         body {
@@ -168,10 +169,10 @@
                 <div class="hub-card-arrow">Abrir módulo <i class="fa-solid fa-arrow-right"></i></div>
             </a>
 
-            <a href="#" onclick="event.preventDefault(); require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" class="hub-card slide-up stagger-2">
+            <a href="#" onclick="event.preventDefault(); window.api.openExternal('https://an0mi-dot.github.io/Extrajud/')" class="hub-card slide-up stagger-2">
                 <div class="hub-card-icon"><i class="fa-solid fa-globe"></i></div>
-                <h3 class="hub-card-title">Site</h3>
-                <p class="hub-card-desc">Acesse o site oficial, baixe atualizações e veja as novidades.</p>
+                <h3 class="hub-card-title">Portal</h3>
+                <p class="hub-card-desc">Acesse o portal, baixe atualizações e veja as novidades.</p>
                 <div class="hub-card-arrow">Visitar <i class="fa-solid fa-arrow-right"></i></div>
             </a>
 
@@ -180,6 +181,12 @@
                 <h3 class="hub-card-title">Serviços Extras</h3>
                 <p class="hub-card-desc">Ferramentas de apoio e criação de pastas em lote no SharePoint.</p>
                 <div class="hub-card-arrow">Abrir módulo <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+            <a href="dashboard.html" class="hub-card slide-up stagger-4">
+                <div class="hub-card-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <h3 class="hub-card-title">Dashboard</h3>
+                <p class="hub-card-desc">Histórico de execuções, fila de automações e métricas de uso.</p>
+                <div class="hub-card-arrow">Abrir <i class="fa-solid fa-arrow-right"></i></div>
             </a>
         </div>
     </div>
@@ -255,9 +262,8 @@
                             <h3 style="margin:0; color:var(--primary);">EXTRATJUD</h3>
                             <p class="text-sm text-muted">v<span class="app-version">?.?.?</span></p>
                             <div class="card mt-4" style="text-align:left;">
-                                <p class="text-sm mb-3">Acesse o site oficial para baixar a versão mais recente.</p>
-                                <button onclick="require('electron').shell.openExternal('https://an0mi-dot.github.io/Extrajud/')" class="btn btn-primary w-full mb-2"><i class="fa-solid fa-globe"></i> Site Oficial</button>
-                                <button onclick="require('electron').shell.openExternal('https://github.com/An0mi-dot/Extrajud/releases')" class="btn btn-ghost w-full"><i class="fa-brands fa-github"></i> Releases</button>
+                                <p class="text-sm mb-3">Acesse o portal para baixar a versão mais recente.</p>
+                                <button onclick="window.api.openExternal('https://an0mi-dot.github.io/Extrajud/')" class="btn btn-primary w-full"><i class="fa-solid fa-globe"></i> Portal</button>
                             </div>
                         </div>
                     </div>
@@ -294,12 +300,10 @@
         </div>
     </div>
 
-    <script type="module">
-        const { ipcRenderer } = require('electron');
-
+    <script>
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                const ver = await ipcRenderer.invoke('get-app-version') || '2.0.0';
+                const ver = await window.api.invoke('get-app-version') || '2.0.0';
                 document.querySelectorAll('.version-tag, #app-version, .app-version, #settings-app-ver').forEach(el => {
                     if (el.tagName === 'SPAN' || el.classList.contains('version-tag')) el.textContent = ver;
                     else if (el.classList.contains('app-version')) el.textContent = ver;
@@ -318,20 +322,20 @@
                 if (btnUpdateNotify) btnUpdateNotify.style.display = 'flex';
             }
 
-            ipcRenderer.on('updater:status', (_, data) => {
+            window.api.on('updater:status', (data) => {
                 if (data.status === 'available' || data.status === 'ready') {
                     showUpdateBadge(data.info?.version || '', null);
                 }
             });
 
             try {
-                const upd = await ipcRenderer.invoke('check-for-updates');
+                const upd = await window.api.invoke('check-for-updates');
                 if (upd?.updateAvailable) showUpdateBadge(upd.latestVersion, upd.url);
             } catch(e) {}
 
             btnUpdateNotify?.addEventListener('click', () => modalUpdate?.classList.add('active'));
             document.getElementById('btn-update-download')?.addEventListener('click', () => {
-                require('electron').shell.openExternal(updateUrl || 'https://an0mi-dot.github.io/Extrajud/');
+                window.api.openExternal(updateUrl || 'https://an0mi-dot.github.io/Extrajud/');
                 modalUpdate?.classList.remove('active');
             });
 
@@ -344,11 +348,11 @@
             btnOpenSettings?.addEventListener('click', async () => {
                 modalSettings.classList.add('active');
                 try {
-                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    const state = await window.api.invoke('load-app-state') || {};
                     const inpLog = document.getElementById('inp-global-log');
                     if (state.globalLogDir && inpLog) inpLog.value = state.globalLogDir;
 
-                    const gen = await ipcRenderer.invoke('get-general-config');
+                    const gen = await window.api.invoke('get-general-config');
                     const chkMin = document.getElementById('chk-minimize-tray');
                     const chkTop = document.getElementById('chk-always-top');
                     const chkSound = document.getElementById('chk-sound-finish');
@@ -358,7 +362,7 @@
                     if (chkSound) chkSound.checked = gen.soundFinish || false;
                     if (chkNotif) chkNotif.checked = gen.notificationFinish || false;
 
-                    const v = await ipcRenderer.invoke('get-app-version') || '1.0.0';
+                    const v = await window.api.invoke('get-app-version') || '1.0.0';
                     document.getElementById('settings-app-ver').textContent = v;
                     document.getElementById('env-node').textContent = process.versions.node;
                     document.getElementById('env-electron').textContent = process.versions.electron;
@@ -390,7 +394,7 @@
 
             // Log dir
             document.getElementById('btn-sel-log-dir')?.addEventListener('click', async () => {
-                const dir = await ipcRenderer.invoke('dialog:openDirectory');
+                const dir = await window.api.invoke('dialog:openDirectory');
                 const inp = document.getElementById('inp-global-log');
                 if (dir && inp) inp.value = dir;
             });
@@ -398,12 +402,12 @@
             // Save
             btnSaveSettings?.addEventListener('click', async () => {
                 try {
-                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    const state = await window.api.invoke('load-app-state') || {};
                     const inpLog = document.getElementById('inp-global-log');
                     if (inpLog) state.globalLogDir = inpLog.value;
-                    ipcRenderer.send('save-app-state', state);
+                    window.api.send('save-app-state', state);
 
-                    await ipcRenderer.invoke('set-general-config', {
+                    await window.api.invoke('set-general-config', {
                         minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false,
                         alwaysOnTop: document.getElementById('chk-always-top')?.checked || false,
                         soundFinish: document.getElementById('chk-sound-finish')?.checked || false,
