@@ -323,13 +323,20 @@
         async function loadToolVersion(app) {
             try {
                 const res = await fetch(`https://api.github.com/repos/${app.repo}/releases/latest`);
-                if (!res.ok) return null;
-                const release = await res.json();
-                const version = (release.tag_name || release.name || '').replace(/^v/, '');
-                const zipAsset = release.assets.find(a => a.name && a.name.match(/\.zip$/i));
-                const exeAsset = release.assets.find(a => a.name && a.name.match(/\.(exe|msi)$/i));
-                const asset = zipAsset || exeAsset;
-                return { version, url: asset ? asset.browser_download_url : release.html_url, size: asset ? asset.size : 0, ext: asset ? asset.name.match(/\.(\w+)$/i)[1].toUpperCase() : '' };
+                if (res.ok) {
+                    const release = await res.json();
+                    const version = (release.tag_name || release.name || '').replace(/^v/, '');
+                    const zipAsset = release.assets.find(a => a.name && a.name.match(/\.zip$/i));
+                    const exeAsset = release.assets.find(a => a.name && a.name.match(/\.(exe|msi)$/i));
+                    const asset = zipAsset || exeAsset;
+                    if (asset) {
+                        return { version, url: asset.browser_download_url, size: asset.size, ext: asset.name.match(/\.(\w+)$/i)[1].toUpperCase() };
+                    }
+                    // Release existe mas sem assets — baixa source ZIP da tag
+                    return { version, url: `https://github.com/${app.repo}/archive/refs/tags/${release.tag_name}.zip`, ext: 'ZIP' };
+                }
+                // Sem release — baixa source ZIP do branch main
+                return { version: 'main', url: `https://github.com/${app.repo}/archive/refs/heads/main.zip`, ext: 'ZIP' };
             } catch { return null; }
         }
 
@@ -370,11 +377,9 @@
                     dlEl.disabled = false;
                     dlEl.querySelector('span').textContent = info.ext ? `Baixar (${info.ext})` : 'Baixar';
                 } else {
-                    verEl.textContent = 'N/A';
-                    dlEl.href = `https://github.com/${app.repo}/releases`;
-                    dlEl.target = '_blank';
-                    dlEl.disabled = false;
-                    dlEl.querySelector('span').textContent = 'Ver Releases';
+                    verEl.textContent = '—';
+                    dlEl.disabled = true;
+                    dlEl.querySelector('span').textContent = 'Indisponível';
                 }
             }
         }
