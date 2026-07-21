@@ -257,3 +257,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 8709e58
 - Notes: fix(portal): change PROTOCOLO-POSTAIS icon to terminal
+## v3.0.9 - 2026-07-21
+
+- Commit: bdf7855
+- Notes: fix(portal): remove GitHub links and mentions
