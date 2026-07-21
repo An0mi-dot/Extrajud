@@ -1,8 +1,15 @@
 const { chromium } = require('playwright-core');
-const sharepoint = require('./src/sharepoint_service');
 const path = require('path');
 const fs = require('fs');
 const { BrowserWindow, ipcMain } = require('electron');
+
+let _sharepoint = null;
+function getSharepoint() {
+    if (!_sharepoint) {
+        try { _sharepoint = require('./sharepoint_service'); } catch (e) { _sharepoint = null; }
+    }
+    return _sharepoint;
+}
 
 // Utility to find Edge executable on Windows
 function findEdgeExec() {
@@ -34,57 +41,61 @@ function makeEventSender(webContents) {
 }
 
 // Try to find an email input in the page/frames and fill it + submit 'Next' if possible.
-async function tryFillEmail(page, email, sender = null, timeoutMs = 15000) {
-    const selectors = ['input#i0116', 'input[name="loginfmt"]', 'input[type="email"]', 'input[name="login"]', 'input[aria-label*="Email"]'];
-    const submitSelectors = ['#idSIButton9', 'button:has-text("Next")', 'button:has-text("Próximo")', 'input[type="submit"]', 'button[type="submit"]'];
-    const end = Date.now() + (timeoutMs || 15000);
-    while (Date.now() < end) {
+async function tryFillEmail(page, email, sender = null, timeoutMs = 30000) {
+    const selectors = [
+        'input#i0116',
+        'input[name="loginfmt"]',
+        'input[type="email"]',
+        'input[aria-label*="Email"]',
+        'input[aria-label*="e-mail"]',
+        'input[aria-label*="Conta"]',
+        'input[placeholder*="Email"]',
+        'input[placeholder*="e-mail"]',
+        'input[placeholder*="Conta"]',
+    ];
+
+    // Wait for any of the selectors to appear
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
         try {
             const frames = [page, ...page.frames()];
             for (const f of frames) {
                 try {
-                    for (const s of selectors) {
-                        const el = await f.$(s);
+                    const url = await f.url().catch(() => '');
+                    if (!url.includes('login.microsoftonline.com') && !url.includes('login.live.com')) continue;
+                } catch(e) { continue; }
+
+                for (const s of selectors) {
+                    try {
+                        const el = await f.waitForSelector(s, { timeout: 3000, state: 'visible' });
                         if (!el) continue;
-                        let filled = false;
-                        // Try normal fill
-                        try { await el.fill(email); filled = true; } catch (e) { /* continue */ }
-                        // Fallback: use evaluate to set value and dispatch events
-                        if (!filled) {
-                            try {
-                                await f.evaluate((sel, val) => {
-                                    const e = document.querySelector(sel);
-                                    if (e) {
-                                        e.value = val;
-                                        e.dispatchEvent(new Event('input', { bubbles: true }));
-                                        e.dispatchEvent(new Event('change', { bubbles: true }));
-                                    }
-                                }, s, email);
-                                filled = true;
-                            } catch (ee) { /* ignore */ }
+                        
+                        // Clear and fill
+                        await el.click();
+                        await el.fill('');
+                        await el.type(email, { delay: 30 });
+                        
+                        // Try to click "Next" / "Próximo" / "Enter"
+                        try {
+                            const nextBtn = await f.waitForSelector('#idSIButton9, button:has-text("Próximo"), button:has-text("Next"), input[type="submit"]', { timeout: 2000 });
+                            if (nextBtn) await nextBtn.click();
+                        } catch(e) {
+                            // Fallback: press Enter
+                            try { await el.press('Enter'); } catch(ee) {}
                         }
 
-                        if (filled) {
-                            // Try to submit via known MS button or pressing Enter
-                            try { await el.press('Enter'); } catch (e) {}
-                            for (const ss of submitSelectors) {
-                                try {
-                                    const btn = await f.$(ss);
-                                    if (btn) { try { await btn.click(); } catch(e){} }
-                                } catch (ee) { /* ignore */ }
-                            }
-
-                            if (sender) sender.send('log-message', { type: 'info', msg: `Campo de e-mail preenchido automaticamente (${s})`, tech: 'tryFillEmail' });
-                            await page.waitForTimeout(1200);
-                            return true;
-                        }
-                    }
-                } catch (e) { /* ignore frame errors */ }
+                        if (sender) sender.send('log-message', { type: 'info', msg: `Email ${email} preenchido automaticamente.`, tech: 'tryFillEmail' });
+                        await page.waitForTimeout(2000);
+                        return true;
+                    } catch(e) { /* continue to next selector */ }
+                }
             }
-        } catch (e) { /* ignore */ }
+        } catch(e) { /* ignore */ }
         await page.waitForTimeout(800);
     }
-    throw new Error('email_input_not_found');
+    
+    if (sender) sender.send('log-message', { type: 'warn', msg: 'Não foi possível preencher o email automaticamente. Faça manualmente.', tech: 'tryFillEmail' });
+    return false;
 }
 
 async function launchBrowser(edgeExe, webContents) {
@@ -126,168 +137,101 @@ async function startSession(args = {}, webContents) {
         const res = await launchBrowser(null, webContents);
         browser = res.browser; context = res.context; page = res.page;
 
-        sharepoint.attachPopupFocusHandler(page, sender);
+        getSharepoint()?.attachPopupFocusHandler(page, sender);
 
-        const ok = await sharepoint.openOficiosRoot(page, args.url || null, sender);
+        const ok = await getSharepoint()?.openOficiosRoot(page, args.url || null, sender);
         if (!ok) throw new Error('Falha ao navegar para OFÍCIOS root');
 
-        // If an email credential was supplied, attempt to auto-fill the email on login pages
-        let autoFillAttempted = false;
-        let autoFilled = false;
-        if (args && args.email) {
-            autoFillAttempted = true;
-            sender.send('log-message', { type: 'info', msg: `Tentando preencher email de login: ${args.email}`, tech: 'sharepoint.startSession' });
-            try {
-                const ok = await tryFillEmail(page, args.email, sender, typeof args.loginTimeoutMs === 'number' ? Math.min(args.loginTimeoutMs, 20000) : 15000);
-                if (ok) {
-                    autoFilled = true;
-                    sender.send('log-message', { type: 'info', msg: `Preenchimento automático do email concluído (campo detectado e preenchido).`, tech: 'sharepoint.startSession' });
-                }
-            } catch (err) {
-                sender.send('log-message', { type: 'warn', msg: `Preenchimento automático do email falhou ou não encontrado: ${err && err.message ? err.message : String(err)}`, tech: 'sharepoint.startSession' });
-            }
-        }
-
-        // Wait until SharePoint content is available or user completes login
-        const WAIT_TIMEOUT = typeof args.loginTimeoutMs === 'number' ? args.loginTimeoutMs : (8 * 60 * 1000); // default 8 min
-        const POLL_INTERVAL = 1500;
-        let list = null;
-        let rootNotFoundCount = 0;
-        let loginNotified = false;
-        const startTime = Date.now();
-
-        // Reserve a session id early so UI can reference it for login confirmation/cancel
         const sessionId = makeSessionId();
         sessions.set(sessionId, { browser, page, context, createdAt: Date.now(), capturedRequests: [] });
-        // Keep session open longer (60 minutes) so user has time to inspect/complete actions
         _scheduleAutoClose(sessionId, 60 * 60 * 1000);
-        sender.send('log-message', { type: 'info', msg: `Sessão (pré) reservada: ${sessionId}`, tech: 'sharepoint.startSession' });
+        sender.send('log-message', { type: 'info', msg: `Sessão reservada: ${sessionId}`, tech: 'sharepoint.startSession' });
 
+        let email = args && args.email ? args.email.trim() : null;
+        let autoFilled = false;
+        const WAIT_TIMEOUT = 8 * 60 * 1000;
+        const startTime = Date.now();
+
+        // Wait loop until we land on SharePoint
         while (Date.now() - startTime < WAIT_TIMEOUT) {
             try {
-                list = await sharepoint.listChildrenOfOficios(page, args.selector || null, sender);
-                // If the evaluator couldn't find the root twice in a row, assume the target folder is present but empty (avoid infinite loop)
-                if (list && (!list.ok && list.error === 'root_not_found')) {
-                    rootNotFoundCount++;
-                    sender.send('log-message', { type: 'warn', msg: `listChildrenOfOficios root_not_found (consecutive=${rootNotFoundCount})`, tech: 'sharepoint.startSession' });
-                    if (rootNotFoundCount >= 2) {
-                        sender.send('log-message', { type: 'info', msg: 'Assumindo pasta vazia após múltiplas tentativas; prosseguindo com preview vazio.', tech: 'sharepoint.startSession' });
-                        // Treat as valid empty list so UI shows empty preview
-                        list = { ok: true, items: [], rootText: '', containerSelector: '' };
-                        break;
-                    }
-                } else {
-                    // Reset counter when we have any other result (including valid empty array)
-                    rootNotFoundCount = 0;
-                }
+                const cur = page.url() || '';
+                const isOnLogin = cur.includes('login.microsoftonline.com') || cur.includes('login.live.com') || cur.includes('login.windows.net');
+                const isOnSharePoint = cur.includes('sharepoint.com');
 
-                // Accept valid list even if empty: treat empty folder as valid content (avoid infinite loop)
-                if (list && list.ok && Array.isArray(list.items)) {
-                    // Found content (may be empty)
-                    if (loginNotified) {
-                        sender.send('log-message', { type: 'info', msg: `Login detectado (URL atual: ${page.url()})`, tech: 'sharepoint.startSession' });
-                        sender.send('sharepoint:login-completed', { url: page.url() });
-                    }
+                if (isOnSharePoint) {
+                    sender.send('log-message', { type: 'info', msg: 'Navegador redirecionou para SharePoint com sucesso.', tech: 'sharepoint.startSession' });
                     break;
                 }
-            } catch (e) {
-                // ignore, page might still be loading or in redirect
-            }
 
-            // Check URL/frame for login page
-            try {
-                const cur = page.url() || '';
-                const frames = page.frames() || [];
-                const frameHasLogin = frames.some(f => { try { return (f.url() || '').includes('login.microsoftonline.com'); } catch(e){ return false; } });
-                if ((cur && cur.includes('login.microsoftonline.com')) || frameHasLogin) {
-                    if (!loginNotified) {
-                        loginNotified = true;
-                        // If an email credential was provided, do not prompt the user; attempt autofill (again) and wait for redirection
-                        if (args && args.email) {
-                            sender.send('log-message', { type: 'info', msg: 'Página de login detectada; credencial fornecida — tentando preenchimento automático e aguardando redirecionamento.', tech: 'sharepoint.startSession' });
-                            // Try autofill again if not already successful
-                            if (!autoFilled) {
-                                try {
-                                    const ok2 = await tryFillEmail(page, args.email, sender, 8000).catch(() => false);
-                                    if (ok2) {
-                                        autoFilled = true;
-                                        sender.send('log-message', { type: 'info', msg: 'Autofill bem-sucedido na detecção da página de login.', tech: 'sharepoint.startSession' });
-                                    } else {
-                                        sender.send('log-message', { type: 'warn', msg: 'Autofill não encontrou o campo na segunda tentativa.', tech: 'sharepoint.startSession' });
-                                    }
-                                } catch (ee) {
-                                    sender.send('log-message', { type: 'warn', msg: `Autofill falhou na segunda tentativa: ${ee && ee.message ? ee.message : String(ee)}`, tech: 'sharepoint.startSession' });
+                if (isOnLogin && email && !autoFilled) {
+                    sender.send('log-message', { type: 'info', msg: 'Página de login detectada. Preenchendo email automaticamente...', tech: 'sharepoint.startSession' });
+                    const filled = await tryFillEmail(page, email, sender, 20000);
+                    if (filled) {
+                        autoFilled = true;
+                        sender.send('log-message', { type: 'info', msg: 'Email preenchido. Aguardando senha e redirecionamento...', tech: 'sharepoint.startSession' });
+                    }
+                }
+
+                if (isOnLogin && !email) {
+                    sender.send('sharepoint:waiting-for-login', { url: cur, sessionId });
+
+                    // Wait for user to provide email via the modal
+                    const result = await new Promise(resolve => {
+                        const handler = (event, arg) => {
+                            try {
+                                if (event && event.sender && event.sender === webContents && arg && arg.sessionId === sessionId) {
+                                    resolve(arg);
                                 }
-                            }
-                            // Do NOT send any UI prompt (waiting/request) — continue polling for content until timeout
-                        } else {
-                            sender.send('log-message', { type: 'info', msg: 'Página de login detectada. Aguardando usuário realizar login...', tech: 'sharepoint.startSession' });
-                            sender.send('sharepoint:waiting-for-login', { url: cur, sessionId });
-                            sender.send('sharepoint:request-login', { sessionId });
+                            } catch (e) { /* ignore */ }
+                        };
+                        ipcMain.on('sharepoint:login-action', handler);
+                        const remaining = Math.max(0, WAIT_TIMEOUT - (Date.now() - startTime));
+                        setTimeout(() => { ipcMain.removeListener('sharepoint:login-action', handler); resolve({ action: 'timeout' }); }, remaining);
+                    });
 
-                            // Wait for user's confirmation or cancellation via ipcMain event
-                            const waitForUserAction = () => new Promise(resolve => {
-                                const handler = (event, arg) => {
-                                    // Ensure the response comes from the same renderer that asked
-                                    try {
-                                        if (event && event.sender && event.sender === webContents && arg && arg.sessionId === sessionId) {
-                                            resolve(arg.action);
-                                        }
-                                    } catch (e) { /* ignore */ }
-                                };
-                                ipcMain.on('sharepoint:login-action', handler);
+                    if (result.action === 'cancel' || result.action === 'timeout') {
+                        throw new Error(result.action === 'cancel' ? 'Usuário cancelou' : 'Tempo esgotado');
+                    }
 
-                                // Also auto-resolve after remaining timeout
-                                const remaining = Math.max(0, WAIT_TIMEOUT - (Date.now() - startTime));
-                                const timer = setTimeout(() => { ipcMain.removeListener('sharepoint:login-action', handler); resolve('timeout'); }, remaining);
-                            });
-
-                            const action = await waitForUserAction();
-                            if (action === 'cancel' || action === 'timeout') {
-                                throw new Error(action === 'cancel' ? 'Usuário cancelou login' : 'Tempo esgotado aguardando confirmação de login');
-                            }
-                            // if action === 'done' continue; loop will retry detection
+                    // User provided email through the modal
+                    if (result.email) {
+                        email = result.email;
+                        sender.send('log-message', { type: 'info', msg: `Email: ${email}. Preenchendo automaticamente...`, tech: 'sharepoint.startSession' });
+                        sender.send('sharepoint:login-waiting', { sessionId });
+                        const filled = await tryFillEmail(page, email, sender, 20000);
+                        if (filled) {
+                            autoFilled = true;
+                            sender.send('log-message', { type: 'info', msg: 'Email preenchido com sucesso.', tech: 'sharepoint.startSession' });
                         }
                     }
                 }
-            } catch (e) { /* ignore */ }
-
-            await page.waitForTimeout(POLL_INTERVAL);
+            } catch (e) {
+                // Re-throw known errors, ignore others
+                if (e.message && (e.message.includes('cancelou') || e.message.includes('esgotado'))) throw e;
+            }
+            await page.waitForTimeout(1500);
         }
 
-        if (!list || !list.ok) {
-            throw new Error('Falha ao detectar conteúdo do SharePoint dentro do tempo esperado');
-        }
-
-        sender.send('log-message', { type: 'info', msg: `Sessão iniciada: ${sessionId}`, tech: 'sharepoint.startSession' });
-
-        // Analyzer/capture removed — no network capture attached
-
-        // Make preview serializable as before
-        let safePreview = null;
-        try { JSON.stringify(list); safePreview = list; }
-        catch (e) {
-            safePreview = {
-                rootText: list && list.rootText ? list.rootText : '',
-                containerSelector: list && list.containerSelector ? list.containerSelector : '',
-                totalItems: Array.isArray(list && list.items) ? list.items.length : 0,
-                folders: Array.isArray(list && list.items) ? (list.items.filter(i => i && i.isFolder).map(i => ({ name: i.name || '', selector: i.selector || '' }))) : []
-            };
-            sender.send('log-message', { type: 'warn', msg: 'Preview contained unserializable values; sent compact summary instead.', tech: 'sharepoint.startSession' });
-        }
-
-        // Compute suggested count (simple heuristic)
-        const totalItems = Array.isArray(list && list.items) ? list.items.length : (list && list.totalItems ? list.totalItems : 0);
-        const suggested = Math.max(1, Math.min(10, Math.floor(Math.max(3, 20 - totalItems))));
-
-        // Prompt renderer to ask the user how many to create (only after browser is open and preview obtained)
+        // Final check
         try {
-            // Bring the app window to front so the user sees the confirmation popup
+            const finalUrl = page.url() || '';
+            if (finalUrl.includes('login.microsoftonline.com') || finalUrl.includes('login.live.com')) {
+                throw new Error('Login não foi concluído dentro do tempo esperado');
+            }
+        } catch (e) {
+            if (e.message.includes('Login não foi concluído')) throw e;
+        }
+
+        sender.send('log-message', { type: 'info', msg: 'Navegador pronto. Solicitando quantidade de pastas...', tech: 'sharepoint.startSession' });
+
+        // Prompt user for how many folders to create (skip preview/list detection)
+        try {
             try { sender.send('bring-window-front'); } catch (e) { /* ignore */ }
-            sender.send('sharepoint:prompt-create', { sessionId, preview: safePreview, suggested });
+            sender.send('sharepoint:prompt-create', { sessionId });
         } catch (e) { /* ignore */ }
 
-        return { ok: true, sessionId, preview: safePreview };
+        return { ok: true, sessionId, preview: null };
     } catch (e) {
         const errMsg = e && e.message ? e.message : String(e);
         const errStack = e && e.stack ? e.stack : null;
@@ -332,7 +276,8 @@ async function createInSession(sessionId, args = {}, webContents) {
 
         let resp;
         try {
-            resp = await sharepoint.createSequentialFolders(s.page, args.selector || null, count, options, sender, null);
+            const sp = getSharepoint();
+            resp = sp ? await sp.createSequentialFolders(s.page, args.selector || null, count, options, sender, null) : { ok: false, error: 'sharepoint_service_unavailable' };
         } catch (e) {
             resp = { ok: false, error: e && e.message ? e.message : String(e) };
         }
@@ -393,16 +338,17 @@ async function getPreview(args = {}, webContents) {
         browser = res.browser; page = res.page;
 
         // attach popup focus handlers
-        sharepoint.attachPopupFocusHandler(page, sender);
+        getSharepoint()?.attachPopupFocusHandler(page, sender);
 
         // open root
-        const ok = await sharepoint.openOficiosRoot(page, args.url || null, sender);
+        const sp = getSharepoint();
+        const ok = sp ? await sp.openOficiosRoot(page, args.url || null, sender) : false;
         if (!ok) throw new Error('Falha ao navegar para OFÍCIOS root');
 
         // wait a bit for dynamic content
         await page.waitForTimeout(2000);
 
-        const list = await sharepoint.listChildrenOfOficios(page, args.selector || null, sender);
+        const list = sp ? await sp.listChildrenOfOficios(page, args.selector || null, sender) : { items: [] };
         sender.send('log-message', { type: 'info', msg: `Preview obtido: ${list.items ? list.items.length : 0} itens.`, tech: 'sharepoint.getPreview' });
 
         // Ensure the preview is JSON-serializable for IPC transport. If not, build a safe summary.
@@ -439,9 +385,10 @@ async function createSequential(args = {}, webContents) {
         const res = await launchBrowser(null, webContents);
         browser = res.browser; page = res.page;
 
-        sharepoint.attachPopupFocusHandler(page, sender);
+        getSharepoint()?.attachPopupFocusHandler(page, sender);
 
-        const ok = await sharepoint.openOficiosRoot(page, args.url || null, sender);
+        const sp = getSharepoint();
+        const ok = sp ? await sp.openOficiosRoot(page, args.url || null, sender) : false;
         if (!ok) throw new Error('Falha ao navegar para OFÍCIOS root');
 
         await page.waitForTimeout(2000);
@@ -450,7 +397,7 @@ async function createSequential(args = {}, webContents) {
         const count = typeof args.count === 'number' ? args.count : null;
         const options = { prefix: args.prefix || 'OFICIO ' };
 
-        const resp = await sharepoint.createSequentialFolders(page, args.selector || null, count, options, sender, null);
+        const resp = sp ? await sp.createSequentialFolders(page, args.selector || null, count, options, sender, null) : { ok: false, error: 'sharepoint_service_unavailable' };
 
         sender.send('log-message', { type: 'info', msg: `Criação finalizada. Resultado: ${JSON.stringify(resp)}`, tech: 'sharepoint.create' });
 
