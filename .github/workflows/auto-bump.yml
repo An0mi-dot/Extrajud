@@ -5,6 +5,12 @@ on:
     branches: 
       - main
       - 'reorg/*'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force bump version'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -33,6 +39,8 @@ jobs:
 
       - name: Bump Version
         id: bump
+        env:
+          FORCE_BUMP: ${{ github.event.inputs.force == 'true' && 'true' || '' }}
         run: |
           npm ci
           # Script skips bump if package.json was already updated in the triggering commit
