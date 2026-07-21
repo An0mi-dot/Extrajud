@@ -273,3 +273,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 62dee32
 - Notes: fix(portal): restore envelope icon for PROTOCOLO-POSTAIS
+## v3.1.3 - 2026-07-21
+
+- Commit: 36d12a4
+- Notes: fix(app): rename Site card to Portal, remove GitHub Releases button
