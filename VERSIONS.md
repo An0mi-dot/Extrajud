@@ -245,3 +245,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: cf18c67
 - Notes: feat(portal): add PROTOCOLO-POSTAIS tool card
+## v3.0.6 - 2026-07-21
+
+- Commit: e85d67c
+- Notes: fix(portal): download source ZIP when no release exists
