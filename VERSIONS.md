@@ -265,3 +265,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 60c5d2d
 - Notes: fix(portal): replace gavel icon with terminal icon
+## v3.1.1 - 2026-07-21
+
+- Commit: 8e7e65b
+- Notes: fix(portal): restore download button behavior, only hide github links
