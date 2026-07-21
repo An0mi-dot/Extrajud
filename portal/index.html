@@ -96,9 +96,6 @@
             <span id="themeToggle" class="btn-ghost" style="font-size:1rem;padding:6px 10px;border:none;cursor:pointer;" onclick="toggleTheme()">
                 <i class="fa-regular fa-moon"></i>
             </span>
-            <a href="https://github.com/An0mi-dot/Extrajud" target="_blank" class="btn-ghost">
-                <i class="fa-brands fa-github"></i> GitHub
-            </a>
         </div>
     </header>
 
@@ -160,9 +157,7 @@
 
     <footer class="footer">
         <p style="margin:0;">
-            <a href="https://github.com/An0mi-dot/Extrajud" target="_blank">GitHub</a>
-            &middot; <a href="https://github.com/An0mi-dot/Extrajud/releases" target="_blank">Releases</a>
-            &middot; <a href="#" onclick="document.getElementById('aboutModal').classList.add('active')">Sobre</a>
+            <a href="#" onclick="document.getElementById('aboutModal').classList.add('active')">Sobre</a>
         </p>
     </footer>
 
@@ -175,7 +170,6 @@
             </div>
             <div class="modal-body">
                 <p><strong>EXTRATJUD</strong> &mdash; Ferramenta desktop para automação de extração de dados processuais do PROJUDI e PJE.</p>
-                <p>Distribuído gratuitamente via <strong>GitHub Releases</strong>.</p>
                 <p class="text-sm text-muted" style="margin:0;">Versão do portal: 1.0.0</p>
             </div>
             <div class="modal-footer">
@@ -297,10 +291,8 @@
                 document.getElementById('changelogBody').innerHTML = '<p class="text-sm" style="color:var(--danger);">Não foi possível conectar ao GitHub.</p>';
 
                 const btn = document.getElementById('downloadBtn');
-                btn.href = `https://github.com/${REPO}/releases`;
-                btn.target = '_blank';
-                btn.disabled = false;
-                btn.querySelector('span').textContent = 'Ver Releases';
+                btn.disabled = true;
+                btn.querySelector('span').textContent = 'Indisponível';
             }
         }
 
