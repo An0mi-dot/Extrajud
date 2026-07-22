@@ -157,12 +157,11 @@
 
                 statusEl.textContent = 'Identificando dispositivo...';
 
-                // 1. Obter machine identifier do backend (via IPC)
-                if (typeof window.ipcRenderer === 'undefined') {
-                    throw new Error('IPC Renderer n�o dispon�vel');
+                if (typeof window.api === 'undefined') {
+                    throw new Error('IPC Bridge não disponível');
                 }
 
-                const machineId = await window.ipcRenderer.invoke('get-machine-id');
+                const machineId = await window.api.invoke('get-machine-id');
                 console.log('[Init] Machine ID:', machineId.substring(0, 16) + '...');
 
                 if (!machineId) {

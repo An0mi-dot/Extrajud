@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, webContents } = require('electron');
+const { chromium } = require('playwright-core');
 
 // --- INSPECT EXCEL (Remove after use) ---
 // const inspectExcel = require('./scripts/inspect_excel');
@@ -44,6 +45,8 @@ const { exec, execSync } = require('child_process');
 const https = require('https');
 const { net } = require('electron');
 const automacaoService = require('./src/automacao_service');
+const historyService = require('./src/history-service');
+const queueService = require('./src/queue-service');
 
 // IPC bridge: renderer calls this to make HTTP requests via Electron's net module
 // (net module uses Windows credential manager + NTLM/Kerberos proxy auth natively)
@@ -358,6 +361,243 @@ ipcMain.handle('pje:get-session', async () => {
   return null;
 });
 
+// --- PJE DevTools Flow (browser session management) ---
+const pjeSessions = new Map();
+
+function findEdgeExec() {
+  const paths = [
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'
+  ];
+  return paths.find(p => fs.existsSync(p));
+}
+
+ipcMain.handle('pje:start-session', async (event, args) => {
+  try {
+    const url = args && args.url ? args.url : 'https://pje.tjba.jus.br/pje/';
+    const edgePath = findEdgeExec();
+    if (!edgePath) return { ok: false, error: 'Edge executable not found' };
+
+    // Load saved storage if available
+    let storagePath = null;
+    try {
+      if (fs.existsSync(PJE_STORAGE)) storagePath = PJE_STORAGE;
+    } catch (e) {}
+
+    const browser = await chromium.launch({
+      executablePath: edgePath,
+      headless: false,
+      args: ['--start-maximized', '--disable-blink-features=AutomationControlled']
+    });
+    const context = await browser.newContext({
+      viewport: null,
+      ...(storagePath ? { storageState: storagePath } : {})
+    });
+
+    const page = await context.newPage();
+    page.setDefaultTimeout(60000);
+
+    if (storagePath) {
+      try { event.sender.send('log-message', { type: 'info', msg: 'Sessão salva carregada automaticamente. ✓' }); } catch (e) {}
+    } else {
+      try { event.sender.send('log-message', { type: 'info', msg: 'Nenhuma sessão salva encontrada.' }); } catch (e) {}
+    }
+
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+    const sessionId = Math.random().toString(36).slice(2, 10);
+    pjeSessions.set(sessionId, { browser, context, page });
+
+    try { event.sender.send('log-message', { type: 'info', msg: `Navegador PJE aberto em ${url}` }); } catch (e) {}
+
+    return { ok: true, sessionId, hasSession: !!storagePath };
+  } catch (e) {
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+});
+
+ipcMain.handle('pje:navigate-to-extraction', async (event, args) => {
+  try {
+    const session = pjeSessions.get(args && args.sessionId);
+    if (!session) return { ok: false, error: 'Sessão não encontrada' };
+
+    const { page } = session;
+    const instance = args && args.instance ? args.instance : 'pje1';
+
+    if (instance === 'pje1') {
+      try { event.sender.send('log-message', { type: 'info', msg: 'Executando sequência de navegação PJE 1º Grau...' }); } catch (e) {}
+
+      // Step 1: Click user dropdown
+      try {
+        await page.waitForSelector('.dropdown-toggle', { timeout: 15000 });
+        await page.click('.dropdown-toggle');
+        try { event.sender.send('log-message', { type: 'info', msg: 'Dropdown do usuário clicado.' }); } catch (e) {}
+      } catch (e) {
+        try { event.sender.send('log-message', { type: 'warn', msg: 'Dropdown não encontrado, continuando...' }); } catch (e) {}
+      }
+
+      await page.waitForTimeout(1500);
+
+      // Step 2: Click Procuradoria profile via JSF-generated table
+      try {
+        const profileLink = await page.locator('[id="papeisUsuarioForm:dtPerfil:2:colPerfil"] > a').first();
+        await profileLink.waitFor({ timeout: 10000 });
+        await profileLink.click();
+        try { event.sender.send('log-message', { type: 'info', msg: 'Perfil Procuradoria clicado.' }); } catch (e) {}
+      } catch (e) {
+        try { event.sender.send('log-message', { type: 'warn', msg: 'Link Procuradoria via ID não encontrado, tentando por texto...' }); } catch (e) {}
+        try {
+          const fallback = await page.locator('a:has-text("Procuradoria")').first();
+          await fallback.waitFor({ timeout: 5000 });
+          await fallback.click();
+          try { event.sender.send('log-message', { type: 'info', msg: 'Perfil Procuradoria selecionado (fallback).' }); } catch (e) {}
+        } catch (e2) {
+          try { event.sender.send('log-message', { type: 'warn', msg: 'Link Procuradoria não encontrado.' }); } catch (e2) {}
+        }
+      }
+
+      // Step 3: Wait for page reload after profile switch, then click Expedientes tab
+      try {
+        await page.waitForTimeout(4000);
+        const expTab = await page.locator('#tabExpedientes_lbl').first();
+        await expTab.waitFor({ timeout: 20000 });
+        await expTab.click();
+        try { event.sender.send('log-message', { type: 'info', msg: 'Aba EXPEDIENTES clicada.' }); } catch (e) {}
+      } catch (e) {
+        try { event.sender.send('log-message', { type: 'warn', msg: 'Aba EXPEDIENTES não encontrada, tentando fallback...' }); } catch (e) {}
+        try {
+          const fallback = await page.locator('td:has-text("Expedientes")').first();
+          await fallback.waitFor({ timeout: 10000 });
+          await fallback.click();
+          try { event.sender.send('log-message', { type: 'info', msg: 'Aba Expedientes clicada (fallback).' }); } catch (e) {}
+        } catch (e2) {}
+      }
+
+      await page.waitForTimeout(2000);
+
+      // Step 4: Click "Pendentes de ciência ou de resposta"
+      try {
+        const pendLink = await page.locator('[id="formAbaExpediente:listaAgrSitExp:0:j_id165"] > span.nomeTarefa').first();
+        await pendLink.waitFor({ timeout: 15000 });
+        await pendLink.click();
+        try { event.sender.send('log-message', { type: 'info', msg: 'Pendentes de ciência ou de resposta clicado.' }); } catch (e) {}
+      } catch (e) {
+        try { event.sender.send('log-message', { type: 'warn', msg: 'Seletor de Pendentes não encontrado, tentando fallback...' }); } catch (e) {}
+        try {
+          const fallback = await page.locator('span.nomeTarefa:has-text("Pendentes")').first();
+          await fallback.waitFor({ timeout: 8000 });
+          await fallback.click();
+          try { event.sender.send('log-message', { type: 'info', msg: 'Pendentes clicado (fallback).' }); } catch (e) {}
+        } catch (e2) {
+          try { event.sender.send('log-message', { type: 'warn', msg: 'Link Pendentes não encontrado.' }); } catch (e2) {}
+        }
+      }
+
+      await page.waitForTimeout(2000);
+    }
+
+    // Save storage state after successful navigation (cookies + localStorage)
+    try {
+      const session = pjeSessions.get(args && args.sessionId);
+      if (session && session.context) {
+        if (!fs.existsSync(PLAYWRIGHT_DIR)) fs.mkdirSync(PLAYWRIGHT_DIR, { recursive: true });
+        await session.context.storageState({ path: PJE_STORAGE });
+        try {
+          const userDir = path.join(app.getPath('userData'), 'playwright-storage');
+          if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
+          await session.context.storageState({ path: path.join(userDir, 'pje.json') });
+        } catch (e) {}
+        try { event.sender.send('log-message', { type: 'info', msg: 'Sessão salva para próximas execuções. 💾' }); } catch (e) {}
+      }
+    } catch (e) {
+      try { event.sender.send('log-message', { type: 'warn', msg: 'Não foi possível salvar sessão: ' + (e.message || e) }); } catch (e2) {}
+    }
+
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+});
+
+ipcMain.handle('pje:save-session', async (event, args) => {
+  try {
+    const session = pjeSessions.get(args && args.sessionId);
+    if (!session || !session.context) return { ok: false, error: 'Sessão não encontrada' };
+    if (!fs.existsSync(PLAYWRIGHT_DIR)) fs.mkdirSync(PLAYWRIGHT_DIR, { recursive: true });
+    await session.context.storageState({ path: PJE_STORAGE });
+    try {
+      const userDir = path.join(app.getPath('userData'), 'playwright-storage');
+      if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
+      await session.context.storageState({ path: path.join(userDir, 'pje.json') });
+    } catch (e) {}
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+});
+
+ipcMain.handle('pje:cancel-session', async (event, args) => {
+  try {
+    const session = pjeSessions.get(args && args.sessionId);
+    if (session) {
+      try { if (session.browser) await session.browser.close(); } catch (e) {}
+      pjeSessions.delete(args.sessionId);
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+});
+ipcMain.handle('pje:run-extraction', async (event, args) => {
+  try {
+    const session = pjeSessions.get(args && args.sessionId);
+    if (!session || !session.page) return { ok: false, error: 'Sessão não encontrada' };
+
+    const { page } = session;
+    const script = args.script;
+    const limit = args.limit || 5;
+    const mergeChoice = args.mergeChoice !== undefined ? args.mergeChoice : 1;
+
+    if (!script) return { ok: false, error: 'Script não fornecido' };
+
+    const consoleHandler = (msg) => {
+      try { event.sender.send('log-message', { type: msg.type(), msg: msg.text() }); } catch (e) {}
+    };
+    page.on('console', consoleHandler);
+
+    try {
+      await page.evaluate((opts) => {
+        const origPrompt = window.prompt;
+        window.PJE_PARAR = false;
+        window.prompt = (msg) => {
+          if (msg && msg.toLowerCase().includes('quantas')) return String(opts.limit);
+          if (msg && msg.toLowerCase().includes('juntar')) return String(opts.mergeChoice);
+          return origPrompt(msg);
+        };
+        return eval(opts.script);
+      }, { script, limit, mergeChoice });
+
+      return { ok: true };
+    } finally {
+      page.removeListener('console', consoleHandler);
+    }
+  } catch (e) {
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+});
+
+ipcMain.handle('pje:stop-extraction', async (event, args) => {
+  try {
+    const session = pjeSessions.get(args && args.sessionId);
+    if (session && session.page) {
+      try { await session.page.evaluate(() => { window.PJE_PARAR = true; }); } catch (e) {}
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+});
+// --- End PJE DevTools Flow ---
 
 // State helpers used by update routines
 function readStateFile() {
@@ -453,7 +693,17 @@ ipcMain.handle('set-update-config', async (event, cfg) => {
   } catch (e) { console.error('set-update-config', e); return { ok: false, error: e.message }; }
 });
 
+// Cache para check-for-updates (TTL: 1 hora)
+let _updateCache = null;
+let _updateCacheTime = 0;
+const UPDATE_CACHE_TTL = 60 * 60 * 1000; // 1 hora
+
 ipcMain.handle('check-for-updates', async () => {
+  // Retorna cache se ainda válido
+  if (_updateCache && (Date.now() - _updateCacheTime < UPDATE_CACHE_TTL)) {
+    return _updateCache;
+  }
+
   try {
     const state = readStateFile();
     const updateServer = (state.update && state.update.updateServer) || (require(path.join(__dirname, 'package.json')).updateServer) || null;
@@ -475,11 +725,15 @@ ipcMain.handle('check-for-updates', async () => {
     if (!latest) return { error: 'no_version_in_meta', meta };
     const toParts = (v) => (''+v).replace(/^v/i,'').split('.').map(n => parseInt(n)||0);
     const L = toParts(latest), C = toParts(localVer);
+    let result;
     for (let i=0;i<Math.max(L.length,C.length);i++) {
-      if ((L[i]||0) > (C[i]||0)) return { updateAvailable: true, latestVersion: latest, changelog: meta.notes || meta.body || meta.changelog || '', url: meta.url || meta.html_url || meta.download_url || updateServer };
-      if ((L[i]||0) < (C[i]||0)) return { updateAvailable: false };
+      if ((L[i]||0) > (C[i]||0)) { result = { updateAvailable: true, latestVersion: latest, changelog: meta.notes || meta.body || meta.changelog || '', url: meta.url || meta.html_url || meta.download_url || updateServer }; break; }
+      if ((L[i]||0) < (C[i]||0)) { result = { updateAvailable: false }; break; }
     }
-    return { updateAvailable: false };
+    if (!result) result = { updateAvailable: false };
+    _updateCache = result;
+    _updateCacheTime = Date.now();
+    return result;
   } catch (e) { console.error('check-for-updates error', e); return { error: e.message }; }
 });
 
@@ -638,9 +892,9 @@ function createWindow() {
     autoHideMenuBar: true,
     icon: path.join(__dirname, 'public', 'assets', 'icon.ico'),
     webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
-        webviewTag: true // Ativa a tag <webview> para o navegador integrado
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'preload.js')
     }
   });
 
@@ -819,6 +1073,92 @@ ipcMain.on('renderer-log', (e, { level, args }) => {
     try {
         console[level ? level : 'log']('[renderer]', ...(Array.isArray(args) ? args : []));
     } catch (_){ console.log('[renderer] (log error)', args); }
+});
+
+// --- History Service IPC Handlers ---
+ipcMain.handle('history:get-records', (event, filter) => {
+    return historyService.getRecords(filter || {});
+});
+
+ipcMain.handle('history:get-record', (event, id) => {
+    return historyService.getRecord(id);
+});
+
+ipcMain.handle('history:delete-record', (event, id) => {
+    return historyService.deleteRecord(id);
+});
+
+ipcMain.handle('history:clear', () => {
+    historyService.clearHistory();
+    return { ok: true };
+});
+
+ipcMain.handle('history:get-stats', () => {
+    return historyService.getStats();
+});
+
+// Track current running execution for history
+global._currentExecId = null;
+
+ipcMain.handle('history:start', (event, record) => {
+    const id = historyService.addRecord({
+        type: record.type || 'unknown',
+        status: 'running',
+        args: record.args || {},
+        logFile: record.logFile || null
+    });
+    global._currentExecId = id;
+    return id;
+});
+
+ipcMain.handle('history:finish', (event, data) => {
+    if (!global._currentExecId) return false;
+    const result = historyService.updateRecord(global._currentExecId, {
+        status: data.status || 'success',
+        finishedAt: new Date().toISOString(),
+        files: data.files || [],
+        error: data.error || null
+    });
+    global._currentExecId = null;
+    return result;
+});
+
+// Backup: main process also finishes history directly (in case renderer navigated away)
+process.on('automation-finished', (code) => {
+    if (!global._currentExecId) return;
+    console.log('[main] automation-finished event received, finishing history record');
+    historyService.updateRecord(global._currentExecId, {
+        status: code === 0 ? 'success' : 'error',
+        finishedAt: new Date().toISOString()
+    });
+    global._currentExecId = null;
+});
+
+ipcMain.handle('history:add-log', (event, logEntry) => {
+    if (!global._currentExecId) return false;
+    return historyService.addLog(global._currentExecId, logEntry);
+});
+
+// --- Queue Service IPC Handlers ---
+ipcMain.handle('queue:add-job', (event, job) => {
+    return queueService.addJob(job);
+});
+
+ipcMain.handle('queue:remove-job', (event, id) => {
+    return queueService.removeJob(id);
+});
+
+ipcMain.handle('queue:get-jobs', (event, filter) => {
+    return queueService.getJobs(filter || {});
+});
+
+ipcMain.handle('queue:clear-completed', () => {
+    queueService.clearCompleted();
+    return { ok: true };
+});
+
+ipcMain.handle('queue:get-stats', () => {
+    return queueService.getStats();
 });
 
 // --- IPC Handler ---

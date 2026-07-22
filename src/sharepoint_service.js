@@ -710,404 +710,63 @@ async function createFolderViaRest(page, folderName, baseSelectorOrText = null, 
 // UI-based attempt: use the site's own "New" / "Novo" button and menu to create a folder.
 // This tries multiple flows and is frame-aware. Returns {ok:true} on success or {ok:false, error:..}.
 async function createFolderUsingSiteButtons(page, folderName, eventSender = null) {
+    const log = (msg, type = 'info') => {
+        if (eventSender) eventSender.send('log-message', { type, msg: `[SP-BOT] ${msg}`, tech: 'createFolderUsingSiteButtons' });
+    };
+
     try {
-        // Targeted flow for the observed DOM:
-        // 1) Click toolbar 'Novo' button (data-automationid: newComposite/newCommand or aria-controls command-bar-menu-id)
-        // 2) Click menu item button[data-automationid="newFolderCommand"] (label: 'Pasta')
-        // 3) Wait for dialog input[data-automation-id="nameDialogTextField"] (or #textField25), fill and click button[data-automation-id="Criar"].
+        // Garante que está na página certa do SharePoint
+        await page.waitForTimeout(1500);
 
-        // Targeted flow for the observed modern SharePoint DOM:
-        // 1) Click toolbar 'Novo'/'Criar ou carregar' button
-        // 2) Click menu item button[data-automationid="newFolderCommand"] (label: 'Pasta')
-        // 3) Fill dialog input[data-automation-id="nameDialogTextField"] and click button[data-automation-id="Criar"].
-
-        const tryFlow = async (ctx) => {
-            const debugLog = (msg) => {
-                // Forçado como 'info' para ter certeza que aparece na tela do app
-                if (eventSender) eventSender.send('log-message', { type: 'info', msg: `[SP-BOT] ${msg}`, tech: 'createFolderUsingSiteButtons' });
-                else console.log(`[SP-BOT] ${msg}`);
-            };
-
-            // Se for um frame, verifique se a URL dele pertence ao SharePoint; se não, ignore para evitar cliques em ads/widgets
-            try {
-                const url = await ctx.url();
-                debugLog(`Verificando contexto: ${url}`);
-                if (url && (url.includes('about:blank') || (!url.includes('sharepoint.com') && !url.includes('microsoftonline.com')))) {
-                    debugLog(`Contexto ignorado por não ser SharePoint/Válido.`);
-                    return { ok: false, error: 'invalid_frame_context' };
-                }
-            } catch(e) {}
-
-            try {
-                debugLog(`Aguardando estabilização da página (1.5s)...`);
-                await ctx.waitForTimeout(1500);
-
-                let clickedNovo = false;
-                
-                // Primeiro: Tentar o selector matador mais exato que existe na nova UI 
-                // e que escapa do Breadcrumb naturalmente por ser o command bar principal
-                const exactNewBtn = await ctx.$('button[data-automationid="newCommand"]');
-                if (exactNewBtn && await exactNewBtn.isVisible()) {
-                    debugLog(`Botão 'Novo' EXATO encontrado (data-automationid=newCommand). Clicando via JS...`);
-                    try {
-                        await exactNewBtn.evaluate(el => el.click());
-                        clickedNovo = true;
-                    } catch(e) {
-                        debugLog(`Falha no click exato: ${e.message}`);
-                    }
-                }
-
-                if (!clickedNovo) {
-                    debugLog(`Buscando alternativas para botão 'Novo' ou 'Criar ou carregar'...`);
-                    const novoSelectors = [
-                        'button[title="Criar ou carregar"]',
-                        'button[name="Novo"]',
-                        '.ms-CommandBar button:has-text("Novo")',
-                        '[data-automation-id="pageHeader"] button[data-id="newComposite"]',
-                        '#sp-command-bar button[data-id="newComposite"]',
-                        'button[data-id="newComposite"]' // Fallback amplo
-                    ];
-
-                    for (const s of novoSelectors) {
-                        try {
-                            const elements = await ctx.$$(s);
-                            for (const el of elements) {
-                                if (el && await el.isVisible()) {
-                                    const outerHTML = await el.evaluate(n => n.outerHTML.substring(0, 150));
-                                    debugLog(`Avaliando elemento '${s}': ${outerHTML}`);
-                                    
-                                    // Bloqueio apenas baseado no atributo ou classe de nav
-                                    const isBreadcrumb = await el.evaluate(node => {
-                                        let curr = node;
-                                        let depth = 0;
-                                        while (curr && depth < 5) { // Limita a busca a 5 ancestrais para não pegar os containers globais
-                                            if (curr.classList && curr.classList.contains("ms-Breadcrumb")) return true;
-                                            if (curr.getAttribute && curr.getAttribute("aria-label") && curr.getAttribute("aria-label").toLowerCase().includes("breadcrumb")) return true;
-                                            curr = curr.parentElement;
-                                            depth++;
-                                        }
-                                        return false;
-                                    });
-                                    
-                                    if (!isBreadcrumb) {
-                                        debugLog(`Elemento APROVADO. Clicando via JS...`);
-                                        try {
-                                            await el.evaluate(n => n.click());
-                                            clickedNovo = true;
-                                            break;
-                                        } catch(e) {
-                                            debugLog(`Falha no click do Novo: ${e.message}`);
-                                        }
-                                    } else {
-                                        debugLog(`Elemento REJEITADO (Parece Breadcrumb).`);
-                                    }
-                                }
-                            }
-                        } catch (e) {
-                             debugLog(`Erro ao testar seletor '${s}': ${e.message}`);
-                        }
-                        if (clickedNovo) break;
-                    }
-                }
-
-                if (!clickedNovo) {
-                    debugLog(`Nenhum seletor principal do botão 'Novo' funcionou. Tentando fallback geométrico...`);
-                    // Try one very strict fallback: exact button by name, but assert its top/left position is likely a menu bar
-                    try {
-                        const fallbackBtns = await ctx.$$('button:has-text("Novo")');
-                        for (const b of fallbackBtns) {
-                             if(await b.isVisible()) {
-                                 const boundingBox = await b.boundingBox();
-                                 if (boundingBox && boundingBox.y > 100 && boundingBox.y < 300) { // Typical command bar Y-level. Breadcrumb is usually higher or same, but text differs.
-                                     debugLog(`Fallback geométrico aceito (Y=${boundingBox.y}). Clicando via JS 'Novo'.`);
-                                     try {
-                                         await b.evaluate(el => el.click());
-                                         clickedNovo = true;
-                                         break;
-                                     } catch(e) {
-                                         debugLog(`Falha clc fallback: ${e.message}`);
-                                     }
-                                 } else {
-                                     debugLog(`Fallback IGNORADO devido a posição Y inválida (Y=${boundingBox ? boundingBox.y : 'null'}). Provável Breadcrumb.`);
-                                 }
-                             }
-                        }
-                    } catch(e){}
-                }
-
-                if (!clickedNovo) {
-                    debugLog(`Botão 'Novo' não foi encontrado de nenhuma forma neste contexto.`);
-                    return { ok: false, error: 'new_button_not_found' };
-                }
-
-                 // Wait shortly for contextual menu to appear. Modern SP uses `#command-bar-menu-id` ou `.ms-ContextualMenu`
-                debugLog(`Aguardando menu contextual do botão Pasta aparecer...`);
-                // Ampliamos as classes observadas antes de disparar o clique do menu
-                try { await ctx.waitForSelector('#command-bar-menu-id, .ms-ContextualMenu, .ms-Callout, button[data-automationid="newFolderCommand"], span.ms-ContextualMenu-itemText', { timeout: 3000 }); } catch(e){}
-
-                // Click the 'Pasta' menu item
-                debugLog(`Buscando opção 'Pasta' no menu...`);
-                
-                // Nós iteramos sobre várias possibilidades se o menu for renderizado de forma complexa (DOM voador do final do body)
-                const folderBtnSelectors = [
-                    'button[data-automationid="newFolderCommand"]',
-                    'button[name="Pasta"]',
-                    '.ms-ContextualMenu-link:has-text("Pasta")',
-                    'span.ms-ContextualMenu-itemText:has-text("Pasta")',
-                    'li[role="menuitem"]:has-text("Pasta")'
-                ];
-
-                let folderBtn = null;
-                for (const sel of folderBtnSelectors) {
-                    try {
-                        const el = await ctx.$(sel);
-                        if (el && await el.isVisible()) {
-                            folderBtn = el;
-                            debugLog(`Opção 'Pasta' encontrada pelo seletor: ${sel}`);
-                            break;
-                        }
-                    } catch(e) {}
-                }
-
-                // E se o botão estiver renderizado fora do fluxo normal do frame mas sim no <body> principal do documento como um portal?
-                if (!folderBtn) {
-                     // Executa varredura profunda no documento inteiro em busca da span específica mencionada
-                     debugLog(`Opção 'Pasta' não achada por seletores normais. Inspecionando DOM do menu...`);
-                     folderBtn = await ctx.evaluateHandle(() => {
-                         // Procura todas as spans baseadas na menção "Pasta"
-                         const spans = Array.from(document.querySelectorAll('span.ms-ContextualMenu-itemText, span.ms-Button-label, div[role="menuitem"]'));
-                         const target = spans.find(s => s.innerText && s.innerText.trim() === 'Pasta');
-                         if (target) {
-                             // Se o target for apenas o texto "span", nós escalamos até o botão clícável real (li, button ou a)
-                             const clickable = target.closest('button, a, li, [role="menuitem"]') || target;
-                             return clickable;
-                         }
-                         return null;
-                     });
-
-                     const isNull = await folderBtn.evaluate(el => el === null);
-                     if (isNull) folderBtn = null;
-                }
-
-                if (!folderBtn) {
-                     debugLog(`Opção 'Pasta' DEFINITIVAMENTE NÃO encontrada na tela.`);
-                     return { ok:false, error: 'menu_folder_button_not_found' };
-                }
-
-                debugLog(`Opção 'Pasta' resolvida. Disparando clique...`);
-                
-                // Precisamos garantir que não será interceptado por outras animações. Vamos tentar clicar de 2 formas.
-                try {
-                    await folderBtn.evaluate(el => el.click());
-                } catch(e) {
-                    debugLog(`Falha no via .evaluate(): ${e.message}. Tentando via .click()...`);
-                    try { await folderBtn.click({ delay: 50 }); } catch (er) {}
-                }
-
-                // Wait for dialog input; prefer data-automation-id
-                debugLog(`Aguardando input text para nome da pasta...`);
-
-                // Nova UI tem IDs que variam, então usamos placeholder, label, role e vários fallbacks visuais.
-                let inputSel = [
-                    'input[data-automation-id="nameDialogTextField"]',
-                    'input.ms-TextField-field',
-                    'input[placeholder*="Pasta"]',
-                    'input[placeholder*="folder"]',
-                    'input:not([type="hidden"])[value=""]',
-                    'input[type="text"]', // Genérico, o único input text na modal normalmente é o nome da pasta
-                    'div[role="dialog"] input'
-                ].join(', ');
-
-                let nameInput = null;
-                try { 
-                    debugLog(`Usando seleteores amplos: ${inputSel}`);
-                    nameInput = await ctx.waitForSelector(inputSel, { timeout: 4500, state: 'visible' }); 
-                } catch(e) {
-                    debugLog(`waitForSelector estourou o tempo. Fazendo inspeção forçada do DOM do Dialog...`);
-                    // Se a espera oficial falhar, vamos fazer uma varredura via código no DOM para tentar achar QUALQUER input
-                    nameInput = await ctx.evaluateHandle(() => {
-                        const dlgs = document.querySelectorAll('[role="dialog"], .ms-Dialog, .ms-Modal');
-                        for (let d of dlgs) {
-                            const inp = d.querySelector('input[type="text"], input:not([type="hidden"])');
-                            if (inp) return inp;
-                        }
-                        // Fallback global de emergência...
-                        const allInputs = document.querySelectorAll('input:not([type="hidden"])');
-                        for (let i of allInputs) {
-                            if (i.getBoundingClientRect().width > 10) return i; // Se for visível
-                        }
-                        return null;
-                    });
-
-                    if (nameInput) {
-                        const isNull = await nameInput.evaluate(el => el === null);
-                        if (isNull) nameInput = null;
-                        else debugLog(`Incrível! Encontramos o input text escapando das limitações do Playwright.`);
-                    }
-                }
-
-                if (!nameInput) {
-                    debugLog(`Input text 'Nome da Pasta' não foi encontrado. Modal bloqueado/ausente.`);
-                    return { ok:false, error: 'name_input_not_found' };
-                }
-
-                // Fill: type with a short per-character delay so the page's JS can validate progressively
-                debugLog(`Input text encontrado. Escrevendo '${folderName}'...`);
-                try {
-                    try { await nameInput.fill(''); } catch(e){}
-                    try {
-                        // Prefer ElementHandle.type when available (slower but reliable)
-                        if (typeof nameInput.type === 'function') {
-                            await nameInput.type(folderName, { delay: 50 });
-                        } else {
-                            // Fallback: set value and dispatch events
-                            await nameInput.evaluate((el, val) => { el.focus(); if ('value' in el) el.value = val; else el.innerText = val; el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true})); }, folderName);
-                        }
-
-                        // Ensure change/input events fired
-                        try { await nameInput.evaluate(el => { el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true})); }); } catch(e){}
-                    } catch(e) {
-                        try { await nameInput.fill(folderName); } catch(e){}
-                    }
-                } catch (e) {
-                    debugLog(`Erro durante a digitação: ${e.message}`);
-                }
-
-                // Click Criar button — wait until it becomes enabled after filling (SharePoint may validate async)
-                debugLog(`Buscando botão 'Criar' final...`);
-                let createBtn = null;
-                
-                // Buscar botão 'Criar' com os seletores padrões fortes e o selector específico de span relatado
-                const createSelectors = [
-                    'button[data-automation-id="Criar"]',
-                    'span.ms-Button-label:has-text("Criar")',
-                    'button:has-text("Criar")',
-                    '[role="dialog"] button.ms-Button--primary'
-                ];
-
-                for (const sel of createSelectors) {
-                    try {
-                        const el = await ctx.$(sel);
-                        if (el && await el.isVisible()) {
-                            createBtn = el;
-                            debugLog(`Botão 'Criar' localizado com sucesso pelo seletor: ${sel}`);
-                            // Se achou uma span como alvo, vamos subir a arvore para pegar pra clicar no wrapper dela (button) para garantir
-                            const isSpan = await createBtn.evaluate(e => e.tagName.toLowerCase() === 'span');
-                            if (isSpan) {
-                                const parentObj = await createBtn.evaluateHandle(el => el.closest('button') || el);
-                                createBtn = parentObj;
-                            }
-                            break;
-                        }
-                    } catch(e){}
-                }
-
-                if (createBtn) {
-                    debugLog(`Botão 'Criar' válido encontrado. Processando ativação.`);
-                    try { await createBtn.evaluate(b => b.removeAttribute && b.removeAttribute('disabled')); } catch(e){}
-
-                    // trigger blur so validation runs
-                    try { await nameInput.evaluate(el => el.blur && el.blur()); } catch(e){}
-
-                    // Espera curta manual em JS purão para estabilizar digitação e regras de negocio Fluent UI
-                    await ctx.waitForTimeout(500);
-
-                    // Wait for the button to enable; poll quickly but allow slightly longer for validation (up to ~1.8s)
-                    let clicked = false;
-                    for (let i = 0; i < 15; i++) {
-                        try {
-                            const enabled = await createBtn.evaluate(b => {
-                                try {
-                                    const dis = b.getAttribute && (b.getAttribute('disabled') || b.getAttribute('aria-disabled'));
-                                    const cls = b.className || '';
-                                    return !(dis === 'true' || dis === '' || dis === 'disabled' || cls.indexOf('is-disabled') !== -1 || b.disabled === true);
-                                } catch(e) { return false; }
-                            });
-                            if (enabled) { 
-                                debugLog(`Botão 'Criar' detectado como HABILITADO. Confirmando criação.`);
-                                // Típicamente no frame/FluentUI, evaluateHandle click ignora popups escondendo element
-                                await createBtn.evaluate(el => el.click()).catch(e => debugLog(`Falha click JS: ${e.message}`));
-
-                                await ctx.waitForTimeout(1000); // 1.0s fixo de fôlego!
-                                
-                                // Wait for dialog to vanish to signal success
-                                try {
-                                    debugLog(`Aguardando Modal de Criação sumir da tela...`);
-                                    await ctx.waitForSelector('h2:has-text("Crie uma pasta"), h2:has-text("Create a folder"), dialog, [role="dialog"]', { state: 'detached', timeout: 5000 });
-                                    debugLog(`SUCESSO COMPLETO: Criação detectada com modal sumindo.`);
-                                    
-                                    // Ação anti-sobreposição para o próximo loop (A barra de Novo pode sumir por 1s ou ficar stale pós criação)
-                                    await ctx.waitForTimeout(800);
-                                    
-                                    return { ok:true }; 
-                                } catch(e){
-                                    debugLog(`Aviso: Modal de Criação demorou a sumir ou interceptou timeout.`);
-                                }
-                                break; 
-                            }
-                        } catch(e){}
-                        await ctx.waitForTimeout(120);
-                    }
-                    if (!clicked) {
-                        debugLog(`Botão 'Criar' pareceu desabilitado muito tempo, tentando clique forçado final.`);
-                        // final attempt: click anyway
-                        try { 
-                            await createBtn.click({ delay: 100 }).catch(e => debugLog(`Falha click criar force: ${e.message}`)); 
-                            // Wait shortly to see if it takes
-                            await ctx.waitForTimeout(500);
-                            const exists = await createBtn.isVisible().catch(()=>false);
-                            if (!exists) {
-                                debugLog(`SUCESSO: Clique forçado eliminou Modal de Criação.`);
-                                return { ok: true };
-                            }
-                        } catch(e){}
-                    }
-                } else {
-                    debugLog(`Botão 'Criar' não encontrado. Recorrendo a tecla "ENTER" no Input.`);
-                    // press Enter in input
-                    try { await nameInput.press('Enter', { delay: 100 }); } catch(e){}
-                }
-                
-                // Final check: did the name of the folder appear in the list?
-                debugLog(`Verificação Pós-Criar: Checando se existe elemento com nome '${folderName}' listado.`);
-                try {
-                    await ctx.waitForTimeout(1000);
-                    const listFolder = await ctx.$(`button[data-automationid="${folderName}"], div:has-text("${folderName}")`);
-                    if (listFolder) {
-                        debugLog(`SUCESSO: Pasta verificada na lista de arquivos.`);
-                        return { ok: true };
-                    }
-                    debugLog(`Falha ao ver pasta na listagem pós-criação.`);
-                } catch(e) {
-                     debugLog(`Erro na checagem final: ${e.message}`);
-                }
-            return { ok:false, error: 'not_detected_after_create' };
-            } catch (e) {
-                return { ok:false, error: e && e.message };
-            }
-        };
-
-        // Try main page context first, if it fails then consider frames. 
-        // We avoid parallel loops to prevent double clicks and session state conflicts.
-        const mainRes = await tryFlow(page);
-        if (mainRes && mainRes.ok) return mainRes;
-
-        // If main page didn't have the button, check if a valid SharePoint frame exists.
-        const frames = page.frames();
-        for (const f of frames) {
-            try {
-                const url = f.url();
-                if (!url || url.includes('about:blank') || (!url.includes('sharepoint.com') && !url.includes('microsoftonline.com'))) continue;
-                
-                const frameRes = await tryFlow(f);
-                if (frameRes && frameRes.ok) return frameRes;
-            } catch(e){}
+        // 1) Clicar no botão "Criar ou carregar" (data-id="newComposite")
+        log('Procurando botão "Criar ou carregar"...');
+        const novoBtn = await page.$('button[data-id="newComposite"]');
+        if (!novoBtn || !(await novoBtn.isVisible())) {
+            log('Botão "Criar ou carregar" não encontrado!', 'error');
+            return { ok: false, error: 'newComposite_not_found' };
         }
+        await novoBtn.evaluate(el => el.click());
+        log('Botão "Criar ou carregar" clicado.');
+        await page.waitForTimeout(800);
 
-        return { ok:false, error: mainRes.error || 'all_attempts_failed' };
+        // 2) Clicar em "Pasta" no menu (data-automationid="newFolderCommand")
+        log('Procurando opção "Pasta" no menu...');
+        const pastaBtn = await page.$('button[data-automationid="newFolderCommand"]');
+        if (!pastaBtn || !(await pastaBtn.isVisible())) {
+            log('Opção "Pasta" não encontrada!', 'error');
+            return { ok: false, error: 'newFolderCommand_not_found' };
+        }
+        await pastaBtn.evaluate(el => el.click());
+        log('Opção "Pasta" clicada.');
+        await page.waitForTimeout(800);
+
+        // 3) Preencher o input do nome da pasta (data-automation-id="nameDialogTextField")
+        log(`Preenchendo nome da pasta: "${folderName}"...`);
+        const nameInput = await page.$('input[data-automation-id="nameDialogTextField"]');
+        if (!nameInput || !(await nameInput.isVisible())) {
+            log('Campo de nome da pasta não encontrado!', 'error');
+            return { ok: false, error: 'nameDialogTextField_not_found' };
+        }
+        await nameInput.fill('');
+        await nameInput.type(folderName, { delay: 30 });
+        await page.waitForTimeout(300);
+
+        // 4) Clicar no botão "Criar" (data-automation-id="Criar")
+        log('Clicando em "Criar"...');
+        const criarBtn = await page.$('button[data-automation-id="Criar"]');
+        if (!criarBtn || !(await criarBtn.isVisible())) {
+            log('Botão "Criar" não encontrado!', 'error');
+            return { ok: false, error: 'Criar_button_not_found' };
+        }
+        await criarBtn.evaluate(el => el.click());
+        await page.waitForTimeout(1500);
+
+        log(`Pasta "${folderName}" criada com sucesso.`);
+        return { ok: true };
+
     } catch (e) {
-        if (eventSender) eventSender.send('log-message', { type: 'error', msg: `createFolderUsingSiteButtons error: ${e && e.message}`, tech: 'createFolderUsingSiteButtons' });
-        return { ok:false, error: e && e.message };
+        log(`Erro: ${e.message}`, 'error');
+        return { ok: false, error: e.message };
     }
 }
 

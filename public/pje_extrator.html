@@ -10,12 +10,60 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/status-bar.js"></script>
     <script src="assets/dialogs.js"></script>
     <script src="assets/terminal-logger.js"></script>
     <style>
         body { margin: 0; display: flex; height: 100vh; overflow: hidden; opacity: 0; transition: opacity 0.3s ease; }
         body.loaded { opacity: 1; }
         .main-area { flex: 1; display: flex; flex-direction: column; padding: 16px 20px; gap: 12px; min-width: 0; }
+
+        .pje-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 6px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        .pje-tab-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 0;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pje-tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .pje-tab-btn i { font-size: 0.9rem; }
+
+        .pje-pane { display: none; flex: 1; min-height: 0; }
+        .pje-pane.active { display: flex; flex-direction: column; gap: 12px; }
+
+        .pje-flow { flex: 1; min-height: 0; overflow-y: auto; }
+
+        .pje-logs {
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+        }
+
+        .pje-logs.active { display: flex; }
+        .pje-logs .terminal { flex: 1; min-height: 0; }
+        .pje-logs .terminal-body { flex: 1; min-height: 0; max-height: none; }
 
         .step-indicator {
             display: flex;
@@ -160,6 +208,9 @@
         }
         .twofa-wait.active { display: block; }
 
+        .twofa-wait .card,
+        .twofa-wait .alert { margin: 0 auto; }
+
         .twofa-icon {
             font-size: 3rem;
             color: var(--warning);
@@ -170,6 +221,21 @@
             0%, 100% { opacity: 0.6; transform: scale(1); }
             50% { opacity: 1; transform: scale(1.1); }
         }
+
+        .flow-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pje-log-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .pje-log-toolbar .sidebar-section-label { margin: 0; }
     </style>
 </head>
 <body>
@@ -194,6 +260,14 @@
         <div class="sidebar-section-label">Modo</div>
         <div id="sidebar-mode" class="text-xs text-muted mb-2">Automático</div>
 
+        <div class="sidebar-section-label">Sessão</div>
+        <div id="sidebar-session-status" class="text-xs text-muted mb-2">
+            <span id="session-status-text">Verificando...</span>
+        </div>
+        <button id="btn-import-session" class="btn btn-ghost w-full btn-sm" style="margin-bottom:8px; font-size:0.75rem;">
+            <i class="fa-solid fa-file-import"></i> Importar Sessão
+        </button>
+
         <div style="margin-top: auto;">
             <div class="sidebar-section-label">Controles</div>
             <div class="flex flex-col gap-2 mt-2">
@@ -205,88 +279,131 @@
     </div>
 
     <div class="main-area">
-        <div class="step-indicator" id="stepIndicator">
-            <div class="step-item active" data-step="1">
-                <span class="step-num">1</span> Instância
+        <div class="pje-tabs">
+            <button class="pje-tab-btn active" data-tab="flow" id="tab-flow-btn"><i class="fa-solid fa-diagram-project"></i> Fluxo</button>
+            <button class="pje-tab-btn" data-tab="logs" id="tab-logs-btn"><i class="fa-solid fa-terminal"></i> Logs</button>
+        </div>
+
+        <div class="pje-pane active pje-flow" id="pane-flow">
+            <div class="step-indicator" id="stepIndicator">
+                <div class="step-item active" data-step="1">
+                    <span class="step-num">1</span> Instância
+                </div>
+                <div class="step-item" data-step="2">
+                    <span class="step-num">2</span> Login
+                </div>
+                <div class="step-item" data-step="3">
+                    <span class="step-num">3</span> Navegação
+                </div>
+                <div class="step-item" data-step="4">
+                    <span class="step-num">4</span> Extração
+                </div>
+                <div class="step-item" data-step="5">
+                    <span class="step-num">5</span> Word
+                </div>
             </div>
-            <div class="step-item" data-step="2">
-                <span class="step-num">2</span> Login
-            </div>
-            <div class="step-item" data-step="3">
-                <span class="step-num">3</span> Navegação
-            </div>
-            <div class="step-item" data-step="4">
-                <span class="step-num">4</span> Extração
-            </div>
-            <div class="step-item" data-step="5">
-                <span class="step-num">5</span> Word
+
+            <div class="flow-stack">
+                <div id="step1-select" class="card">
+                    <h4 style="margin:0 0 12px; font-size:0.95rem;"><i class="fa-solid fa-code-branch" style="color:var(--primary);"></i> Selecione a Instância PJE</h4>
+                    <div class="pje-selector">
+                        <div class="pje-option" data-instance="pje1" onclick="selectInstance(this)">
+                            <div class="pje-option-icon"><i class="fa-solid fa-building-columns"></i></div>
+                            <div class="pje-option-title">PJE 1º Grau</div>
+                            <div class="pje-option-desc">Varas de primeira instância</div>
+                        </div>
+                        <div class="pje-option" data-instance="pje2" onclick="selectInstance(this)">
+                            <div class="pje-option-icon"><i class="fa-solid fa-landmark"></i></div>
+                            <div class="pje-option-title">PJE 2º Grau</div>
+                            <div class="pje-option-desc">Tribunal de segunda instância</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="step1-mode" class="card" style="display:none;">
+                    <h4 style="margin:0 0 12px; font-size:0.95rem;"><i class="fa-solid fa-microchip" style="color:var(--primary);"></i> Modo de Extração</h4>
+                    <div class="extraction-mode">
+                        <div class="mode-option disabled" data-mode="auto" style="opacity:0.5;pointer-events:none;filter:grayscale(1);">
+                            <i class="fa-solid fa-robot"></i>
+                            <div class="mode-option-title">Automação Interna <span style="font-size:0.7rem;color:var(--text-muted);">(Em breve)</span></div>
+                            <div class="mode-option-desc">Robô Playwright nativo</div>
+                        </div>
+                        <div class="mode-option" data-mode="inject" onclick="selectMode(this)">
+                            <i class="fa-solid fa-code"></i>
+                            <div class="mode-option-title">Injetar DevTools</div>
+                            <div class="mode-option-desc">Script via console do navegador</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="step2-wait" class="twofa-wait card">
+                    <div class="twofa-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h3 style="margin:0 0 8px;">Aguardando Autenticação 2FA</h3>
+                    <p class="text-sm text-muted" style="max-width:400px; margin:0 auto;">
+                        Realize o login e complete a verificação de dois fatores no navegador que foi aberto.
+                    </p>
+                    <div class="flex gap-2" style="justify-content:center; margin-top:24px;">
+                        <button id="btn2faCancel" class="btn btn-ghost">Cancelar</button>
+                        <button id="btn2faConfirm" class="btn btn-primary"><i class="fa-solid fa-check"></i> Login Concluído</button>
+                    </div>
+                </div>
+
+                <div id="extraction-panel" class="card" style="display:none; margin-top:12px;">
+                    <div style="display:flex; gap:6px; margin-bottom:8px;">
+                        <button id="extract-tab-run" class="script-tab-btn active" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--primary); color:#fff; font-size:0.75rem; font-weight:600; cursor:pointer;">
+                            <i class="fa-solid fa-play"></i> Extrair
+                        </button>
+                        <button id="extract-tab-session" class="script-tab-btn" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:0.75rem; font-weight:600; cursor:pointer;">
+                            <i class="fa-solid fa-file-export"></i> Exportar Sessão
+                        </button>
+                    </div>
+                    <div id="extract-pane-run">
+                        <h4 style="margin:0 0 4px; font-size:0.85rem;"><i class="fa-solid fa-play" style="color:var(--primary);"></i> Extrair Dados</h4>
+                        <p class="text-sm text-muted" style="margin:0 0 8px;">O script será executado automaticamente no navegador.</p>
+                        <div class="input-group" style="margin-bottom:8px;">
+                            <label class="input-label">Cidades para processar:</label>
+                            <div class="flex gap-2" style="align-items:center;">
+                                <input type="number" id="inp-extract-limit" value="5" min="1" style="width:80px; padding:6px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:0.85rem;">
+                                <span class="text-sm text-muted">(0 = processar todas)</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="btn-run-extraction" class="btn btn-primary"><i class="fa-solid fa-play"></i> Executar Extração</button>
+                            <button id="btn-stop-extraction" class="btn btn-ghost" style="display:none;"><i class="fa-solid fa-stop"></i> Parar</button>
+                        </div>
+                    </div>
+                    <div id="extract-pane-session" style="display:none;">
+                        <h4 style="margin:0 0 4px; font-size:0.85rem;"><i class="fa-solid fa-file-export" style="color:var(--primary);"></i> Script de Exportação de Sessão</h4>
+                        <p class="text-sm text-muted" style="margin:0 0 8px;">Execute no console do navegador onde você já está logado no PJE (F12 → Console). O JSON será copiado automaticamente.</p>
+                        <textarea id="script-text-session" readonly style="width:100%;height:200px;font-family:monospace;font-size:0.75rem;padding:8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);resize:vertical;white-space:pre;overflow:auto;"></textarea>
+                        <button id="btn-copy-script-session" class="btn btn-primary btn-sm mt-2" style="margin-top:8px;"><i class="fa-solid fa-copy"></i> Copiar Script</button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <div id="step1-select" class="card">
-            <h4 style="margin:0 0 12px; font-size:0.95rem;"><i class="fa-solid fa-code-branch" style="color:var(--primary);"></i> Selecione a Instância PJE</h4>
-            <div class="pje-selector">
-                <div class="pje-option" data-instance="pje1" onclick="selectInstance(this)">
-                    <div class="pje-option-icon"><i class="fa-solid fa-building-columns"></i></div>
-                    <div class="pje-option-title">PJE 1º Grau</div>
-                    <div class="pje-option-desc">Varas de primeira instância</div>
-                </div>
-                <div class="pje-option" data-instance="pje2" onclick="selectInstance(this)">
-                    <div class="pje-option-icon"><i class="fa-solid fa-landmark"></i></div>
-                    <div class="pje-option-title">PJE 2º Grau</div>
-                    <div class="pje-option-desc">Tribunal de segunda instância</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="step1-mode" class="card" style="display:none;">
-            <h4 style="margin:0 0 12px; font-size:0.95rem;"><i class="fa-solid fa-microchip" style="color:var(--primary);"></i> Modo de Extração</h4>
-            <div class="extraction-mode">
-                <div class="mode-option selected" data-mode="auto" onclick="selectMode(this)">
-                    <i class="fa-solid fa-robot"></i>
-                    <div class="mode-option-title">Automação Interna</div>
-                    <div class="mode-option-desc">Robô Playwright nativo</div>
-                </div>
-                <div class="mode-option" data-mode="inject" onclick="selectMode(this)">
-                    <i class="fa-solid fa-code"></i>
-                    <div class="mode-option-title">Injetar DevTools</div>
-                    <div class="mode-option-desc">Script via console do navegador</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="step2-wait" class="twofa-wait">
-            <div class="twofa-icon"><i class="fa-solid fa-shield-halved"></i></div>
-            <h3 style="margin:0 0 8px;">Aguardando Autenticação 2FA</h3>
-            <p class="text-sm text-muted" style="max-width:400px; margin:0 auto;">
-                Realize o login e complete a verificação de dois fatores no navegador que foi aberto.
-            </p>
-            <div class="flex gap-2" style="justify-content:center; margin-top:24px;">
-                <button id="btn2faCancel" class="btn btn-ghost">Cancelar</button>
-                <button id="btn2faConfirm" class="btn btn-primary"><i class="fa-solid fa-check"></i> Login Concluído</button>
-            </div>
-        </div>
-
-        <div class="alert alert-info" id="info-alert">
-            <i class="fa-solid fa-circle-info"></i>
-            <div><strong>Como usar:</strong> Selecione a instância (1º ou 2º Grau) e o modo de extração. Clique em Iniciar. O robô abrirá o navegador — realize o login com 2FA.</div>
-        </div>
-
-        <div class="terminal">
-            <div class="terminal-header">
-                <div class="terminal-dots">
-                    <div class="terminal-dot red"></div>
-                    <div class="terminal-dot yellow"></div>
-                    <div class="terminal-dot green"></div>
-                </div>
-                <span class="terminal-title">CONSOLE PJE</span>
+        <div class="pje-pane pje-logs" id="pane-logs">
+            <div class="pje-log-toolbar">
+                <span class="sidebar-section-label" style="margin:0; color:var(--text-secondary);">LOG COMPLETO</span>
                 <div class="terminal-actions">
                     <button id="btn-copy-log" class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:0.7rem;">Copiar</button>
                     <button id="btn-download-log" class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:0.7rem;">Baixar</button>
                     <button id="btn-clear-log" class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:0.7rem;">Limpar</button>
                 </div>
             </div>
-            <div class="terminal-body" id="logs"></div>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                    </div>
+                    <span class="terminal-title">CONSOLE PJE</span>
+                </div>
+                <div class="terminal-body" id="logs"></div>
+            </div>
         </div>
     </div>
 
@@ -348,6 +465,12 @@
                                 <button id="btn-sel-log-dir" class="btn btn-ghost"><i class="fa-solid fa-folder-open"></i></button>
                             </div>
                         </div>
+                        <div style="margin-top:16px;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="chk-no-save-logs">
+                                Não salvar logs (não persiste logs ao fechar)
+                            </label>
+                        </div>
                     </div>
                     <div id="tab-sobre" class="settings-pane">
                         <div style="text-align:center;">
@@ -368,13 +491,373 @@
         </div>
     </div>
 
+    <!-- Import Session Modal -->
+    <div id="modal-import-session" class="modal-overlay">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-import"></i> Importar Sessão PJE</h3>
+                <button class="modal-close" id="btn-close-import-session">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
+                <p class="text-sm text-muted" style="margin:0 0 12px;">
+                    Cole abaixo o JSON da sessão exportada do seu navegador.
+                </p>
+
+                <div class="card" style="margin-bottom:12px; background:var(--bg);">
+                    <h5 style="margin:0 0 8px; font-size:0.85rem;">
+                        <i class="fa-solid fa-code"></i> Script de Exportação (PJE 1º Grau)
+                    </h5>
+                    <p class="text-xs text-muted" style="margin:0 0 6px;">
+                        Execute no console do navegador onde você já está logado no PJE (F12 → Console):
+                    </p>
+                    <textarea id="script-export-cookies" readonly style="width:100%;height:140px;font-family:monospace;font-size:0.7rem;padding:6px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);resize:vertical;white-space:pre;overflow:auto;"></textarea>
+                    <button id="btn-copy-export-script" class="btn btn-primary btn-sm mt-2" style="margin-top:6px;">
+                        <i class="fa-solid fa-copy"></i> Copiar Script
+                    </button>
+                </div>
+
+                <div class="card" style="background:var(--bg);">
+                    <h5 style="margin:0 0 8px; font-size:0.85rem;">
+                        <i class="fa-solid fa-paste"></i> JSON da Sessão
+                    </h5>
+                    <p class="text-xs text-muted" style="margin:0 0 6px;">
+                        Cole aqui o JSON gerado pelo script acima após executá-lo no navegador logado:
+                    </p>
+                    <textarea id="inp-session-json" placeholder='Cole o JSON aqui...' style="width:100%;height:160px;font-family:monospace;font-size:0.75rem;padding:8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);resize:vertical;white-space:pre;overflow:auto;"></textarea>
+                    <div id="import-session-feedback" class="text-xs mt-1" style="margin-top:4px; min-height:18px;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-cancel-import-session" class="btn btn-ghost">Cancelar</button>
+                <button id="btn-confirm-import-session" class="btn btn-primary"><i class="fa-solid fa-check"></i> Importar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const { ipcRenderer } = require('electron');
+
+        // Script de exportação for use in browser DevTools
+        const PJE_EXPORT_SESSION_SCRIPT = `(function(){
+  const data = {
+    url: location.href,
+    origin: location.origin,
+    cookies: [],
+    localStorage: {}
+  };
+  document.cookie.split('; ').filter(Boolean).forEach(function(c) {
+    var idx = c.indexOf('=');
+    data.cookies.push({
+      name: c.slice(0, idx),
+      value: c.slice(idx + 1),
+      domain: location.hostname,
+      path: '/',
+      httpOnly: false,
+      secure: location.protocol === 'https:',
+      sameSite: 'Lax'
+    });
+  });
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    data.localStorage[k] = localStorage.getItem(k);
+  }
+  var json = JSON.stringify(data, null, 2);
+  navigator.clipboard.writeText(json).then(function() {
+    console.log('%c✅ Sessão PJE copiada! Vá no app Extrajud e clique em "Importar Sessão".', 'color:#4CAF50; font-size:14px; font-weight:bold;');
+  })["catch"](function() {
+    console.log('%c📋 Copie o JSON abaixo manualmente:', 'color:#FF9800; font-size:14px;');
+    console.log(json);
+  });
+})();`;
 
         const PJE_URLS = {
-            pje1: 'https://pje1g.trt5.jus.br/pje/Processo/ConsultaPublica/listView.seam',
-            pje2: 'https://pje2g.trt5.jus.br/pje/Processo/ConsultaPublica/listView.seam'
+            pje1: 'https://pje.tjba.jus.br/pje/',
+            pje2: 'https://pje2g.tjba.jus.br/pje/'
         };
+
+        const PJE_SCRIPT_PJE1 = `window.PJE_PARAR = false;
+(async function () {
+    console.clear();
+    console.log("%c 🚀 Iniciando Extrator PJe - Versão JS Corrigida (Seletor SPAN, Paginação e Word)", "background: #000; color: #00ff00; font-size: 14px; padding: 5px;");
+
+    const TEMPO_ESPERA_CARREGAMENTO = 4000;
+    const TEMPO_ESPERA_PAGINACAO = 1000;
+
+    const esperar = (ms) => new Promise(res => setTimeout(res, ms));
+
+    const limparTexto = (texto) => {
+        if (!texto) return "";
+        return texto.split('\\n').map(l => l.trim()).filter(l => l.length > 0).join('\\n');
+    };
+
+    let nosIniciais = Array.from(document.querySelectorAll("span.nomeTarefa"));
+    const blacklist = ["CAIXA DE ENTRADA","PENDENTES","EXPEDIENTES","ACERVO","MINHAS PETIÇÕES","CIÊNCIA","PRAZO","RESPONDIDOS","APENAS","SEM PRAZO"];
+    let listaAlvos = nosIniciais.filter(el => {
+        const nomeRaw = el.innerText || '';
+        const nome = nomeRaw.trim();
+        if (!nome) return false;
+        const upper = nome.toUpperCase();
+        if (upper.match(/^\\d+$/)) return false;
+        for (const b of blacklist) if (upper.includes(b)) return false;
+        return true;
+    }).map(el => el.innerText.trim());
+    listaAlvos = [...new Set(listaAlvos)];
+    listaAlvos.sort((a, b) => a.localeCompare(b));
+    const totalEncontrado = listaAlvos.length;
+
+    if (totalEncontrado === 0) {
+        console.log("%c ❌ Nenhuma cidade/jurisdição encontrada.", "color: red; font-weight: bold;");
+        return;
+    }
+
+    let inputUsuario = prompt(
+        \`Foram encontradas \${totalEncontrado} cidades/jurisdições.\\n\\nQuantas deseja processar?\\n(Digite um número. Ex: 5)\`
+    );
+    if (inputUsuario === null) return;
+    let limite = parseInt(inputUsuario.trim());
+    if (isNaN(limite) || limite <= 0) {
+        console.log("%c ❌ Número inválido. Script cancelado.", "color: orange");
+        return;
+    }
+    if (limite > totalEncontrado) limite = totalEncontrado;
+
+    console.log(\`%c ▶ Processando \${limite} cidades...\`, "color: cyan; font-weight: bold;");
+    let relatorioFinal = {};
+
+    for (let i = 0; i < limite; i++) {
+        if (window.PJE_PARAR) {
+            console.log("%c ⏹ Execução interrompida.", "color: orange; font-weight: bold;");
+            break;
+        }
+        let nomeCidadeAlvo = listaAlvos[i];
+        console.log(\`⏳ (\${i + 1}/\${limite}) Buscando: \${nomeCidadeAlvo}...\`);
+        try {
+            const tryExpandMenus = async () => {
+                const preferred = [
+                    "Pendentes de ciência ou de resposta",
+                    "Pendentes de ciência",
+                    "Pendentes de resposta",
+                    "Expedientes",
+                    "Caixa de entrada"
+                ];
+                for (const menu of preferred) {
+                    let menuXpath = \`//span[contains(@class, 'nomeTarefa') and normalize-space(text())="\${menu}"]\`;
+                    let menuNode = document.evaluate(menuXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    if (!menuNode) {
+                        menuXpath = \`//span[contains(@class, 'nomeTarefa') and contains(normalize-space(text()), "\${menu}")]\`;
+                        menuNode = document.evaluate(menuXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    }
+                    if (menuNode) {
+                        const clickable = menuNode.closest('a') || menuNode;
+                        try { clickable.scrollIntoView({ block: 'center', behavior: 'auto' }); } catch (e) {}
+                        await esperar(250);
+                        try { clickable.click(); } catch (e) {}
+                        await esperar(900);
+                        try {
+                            const cityXpath = \`//span[contains(@class, 'nomeTarefa') and normalize-space(text())="\${nomeCidadeAlvo}"]\`;
+                            const found = document.evaluate(cityXpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                            if (found) return;
+                        } catch (e) {}
+                    }
+                }
+            };
+
+            const activateCityWithRetries = async (cityName, attempts = 3) => {
+                const xpath = \`//span[contains(@class, 'nomeTarefa') and normalize-space(text())="\${cityName}"]\`;
+                for (let attempt = 1; attempt <= attempts; attempt++) {
+                    if (attempt > 1) {
+                        console.warn(\`   ⚠ Tentativa \${attempt} para recuperar "\${cityName}"...\`);
+                        await tryExpandMenus();
+                    }
+                    let res = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                    let node = res.singleNodeValue;
+                    if (!node) {
+                        await esperar(500);
+                        res = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                        node = res.singleNodeValue;
+                    }
+                    if (!node) continue;
+                    const clickable = node.closest('a') || node;
+                    try { clickable.scrollIntoView({ block: 'center', behavior: 'auto' }); } catch (e) {}
+                    await esperar(300);
+                    try { clickable.click(); } catch (e) {}
+                    await esperar(TEMPO_ESPERA_CARREGAMENTO);
+                    const tabela = document.querySelector("table[id$='tbExpedientes']");
+                    if (tabela && tabela.querySelectorAll('tbody > tr').length > 0) return true;
+                    await esperar(300);
+                }
+                return false;
+            };
+
+            const ativado = await activateCityWithRetries(nomeCidadeAlvo, 3);
+            if (!ativado) {
+                console.warn(\`   ⚠ Não foi possível ativar "\${nomeCidadeAlvo}" após tentativas.\`);
+                continue;
+            }
+
+            let processosDaCidade = [];
+            let paginaAtual = 1;
+            const tableSelector = "table[id$='tbExpedientes']";
+            const tableEl = document.querySelector(tableSelector);
+
+            const findPagerForTable = (tableEl) => {
+                let el = tableEl;
+                while (el && el !== document.body) {
+                    if (el.querySelector && el.querySelector('.rich-datascr-button')) return el;
+                    el = el.parentElement;
+                }
+                const near = document.querySelectorAll('.rich-datascr');
+                for (const n of near) {
+                    if (n.contains(tableEl) || tableEl.compareDocumentPosition(n) & Node.DOCUMENT_POSITION_PRECEDING) return n;
+                }
+                return null;
+            };
+
+            const pager = tableEl ? findPagerForTable(tableEl) : null;
+            let guardPages = 0;
+            const MAX_PAGES = 400;
+            const seenPageFirsts = new Set();
+
+            while (true) {
+                if (window.PJE_PARAR) break;
+                console.log(\`      Página \${paginaAtual}...\`);
+                let linhasTabela = document.querySelectorAll(tableSelector + " > tbody > tr");
+                if (linhasTabela.length > 0) {
+                    linhasTabela.forEach(linha => {
+                        let celulas = linha.querySelectorAll("td");
+                        if (celulas.length >= 3) {
+                            let colDetalhes = celulas[1].innerText;
+                            let colProcesso = celulas[2].innerText;
+                            let textoCompleto = limparTexto(colDetalhes + "\\n" + colProcesso);
+                            if (!processosDaCidade.includes(textoCompleto)) {
+                                processosDaCidade.push(textoCompleto);
+                            }
+                        }
+                    });
+                }
+
+                const firstRowText = (linhasTabela[0] && linhasTabela[0].innerText) ? linhasTabela[0].innerText.trim() : '';
+                if (firstRowText) {
+                    if (seenPageFirsts.has(firstRowText)) { break; }
+                    seenPageFirsts.add(firstRowText);
+                }
+
+                const findNextButton = (pagerEl) => {
+                    const candidates = [];
+                    if (pagerEl) candidates.push(...Array.from(pagerEl.querySelectorAll('.rich-datascr-button, button, a')));
+                    if (candidates.length === 0) candidates.push(...Array.from(document.querySelectorAll('.rich-datascr-button, .rich-paginator button, .rich-paginator a')));
+                    const preferred = candidates.find(b => {
+                        const onclick = (b.getAttribute && (b.getAttribute('onclick') || '') || '').toLowerCase();
+                        const title = (b.getAttribute && (b.getAttribute('title') || '') || '').toLowerCase();
+                        const txt = (b.innerText || '').trim();
+                        if (onclick.includes('fastforward') || onclick.includes('next') || onclick.includes('pagina') || onclick.includes('avancar')) return true;
+                        if (title.includes('próxima') || title.includes('proxima')) return true;
+                        if (['»','>>','›','>','Próxima','Próximo'].includes(txt)) return true;
+                        return false;
+                    });
+                    if (preferred) return preferred;
+                    return candidates.find(c => !!(c.offsetWidth || c.offsetHeight || c.getClientRects().length)) || null;
+                };
+
+                let botaoAvancar = findNextButton(pager);
+                if (botaoAvancar) {
+                    const prevRows = Array.from(document.querySelectorAll(tableSelector + ' > tbody > tr'));
+                    const prevSnapshot = { count: prevRows.length, first: prevRows[0] ? prevRows[0].innerText.trim() : '' };
+                    let advanced = false;
+                    for (let attemptClick = 1; attemptClick <= 4; attemptClick++) {
+                        try { botaoAvancar.click(); } catch (e) { await esperar(200); botaoAvancar = findNextButton(pager); if (botaoAvancar) try { botaoAvancar.click(); } catch(_){} }
+                        const startWait = Date.now();
+                        while (Date.now() - startWait < Math.max(3000, TEMPO_ESPERA_PAGINACAO + attemptClick * 300)) {
+                            await esperar(300);
+                            const currRows = Array.from(document.querySelectorAll(tableSelector + ' > tbody > tr'));
+                            const currFirst = currRows[0] ? currRows[0].innerText.trim() : '';
+                            if (currFirst !== prevSnapshot.first || currRows.length !== prevSnapshot.count) { advanced = true; break; }
+                        }
+                        if (advanced) break;
+                        await esperar(700 + attemptClick * 300);
+                    }
+                    if (!advanced) {
+                        let pageNums = [];
+                        if (pager) pageNums = Array.from(pager.querySelectorAll('a, span')).filter(e => (/^\\d+$/.test((e.innerText||'').trim())));
+                        if (pageNums.length > 0) {
+                            let currIdx = pageNums.findIndex(e => e.classList.contains('rich-datascr-current') || e.classList.contains('rich-datascr-active') || e.tagName === 'SPAN');
+                            if (currIdx === -1) currIdx = pageNums.findIndex(e => e.innerText && e.innerText.trim() === String(paginaAtual));
+                            if (currIdx >= 0 && currIdx < pageNums.length - 1) {
+                                try { pageNums[currIdx + 1].click(); } catch(_) {}
+                                const startWait = Date.now();
+                                while (Date.now() - startWait < 4000) {
+                                    await esperar(300);
+                                    const currRows = Array.from(document.querySelectorAll(tableSelector + ' > tbody > tr'));
+                                    const currFirst = currRows[0] ? currRows[0].innerText.trim() : '';
+                                    if (currFirst !== prevSnapshot.first || currRows.length !== prevSnapshot.count) { advanced = true; break; }
+                                }
+                            }
+                        }
+                    }
+                    if (!advanced) { console.warn('⚠ Não foi possível avançar paginação.'); break; }
+                    paginaAtual++;
+                    guardPages++;
+                    if (guardPages > MAX_PAGES) { console.warn('⚠ Limite máximo de páginas.'); break; }
+                } else { break; }
+            }
+            if (processosDaCidade.length > 0) {
+                relatorioFinal[nomeCidadeAlvo] = processosDaCidade;
+                console.log(\`   ✅ \${processosDaCidade.length} expedientes.\`);
+            } else { console.log(\`   ⚠ Nenhum expediente.\`); }
+        } catch (erro) { console.error(\`❌ Erro em \${nomeCidadeAlvo}:\`, erro); }
+    }
+
+    let escolha = prompt("Deseja juntar todas as cidades em um único arquivo Word?\\nDigite:\\n1 - Sim, juntar tudo\\n2 - Não, gerar separados");
+    if (escolha === null) return;
+    escolha = parseInt(escolha.trim());
+
+    if (Object.keys(relatorioFinal).length === 0) {
+        console.log("Nenhum dado coletado.");
+        alert("Processo finalizado, mas nenhum dado foi coletado.");
+        return;
+    }
+
+    if (escolha === 1) {
+        console.log("💾 Gerando arquivo único...");
+        let conteudoHTML = '<html><head><meta charset=\\'utf-8\\'><title>Relatório PJe Unificado</title><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.2;}</style></head><body>';
+        Object.keys(relatorioFinal).forEach((nomeCidade, idx) => {
+            let quebraPagina = idx > 0 ? '<div style=\"page-break-before: always;\"></div>' : '';
+            conteudoHTML += quebraPagina;
+            let contagemProcessos = relatorioFinal[nomeCidade].length;
+            conteudoHTML += '<h1 style=\"font-size:14pt;font-weight:bold;text-transform:uppercase;color:#000;margin-top:20px;margin-bottom:10px;background-color:#f0f0f0;padding:5px;\">' + nomeCidade + ' (' + contagemProcessos + ')</h1>';
+            relatorioFinal[nomeCidade].forEach(textoProcesso => {
+                conteudoHTML += '<div style=\"margin-bottom:25px;border-bottom:1px solid #ddd;padding-bottom:10px;\"><p>' + textoProcesso.replace(/\\n/g, "<br>") + '</p></div>';
+            });
+        });
+        conteudoHTML += '</body></html>';
+        const blob = new Blob(['\\ufeff', conteudoHTML], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\\//g, '-');
+        link.download = 'Relatorio_PJE_' + dataHoje + '.doc';
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        console.log("%c ✅ Documento único gerado!", "color: #4CAF50; font-weight: bold;");
+    } else {
+        console.log("💾 Gerando arquivos separados...");
+        Object.keys(relatorioFinal).forEach(nomeCidade => {
+            let conteudoHTML = '<html><head><meta charset=\\'utf-8\\'><title>Relatório PJe ' + nomeCidade + '</title><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.2;}</style></head><body>';
+            let contagemProcessos = relatorioFinal[nomeCidade].length;
+            conteudoHTML += '<h1 style=\"font-size:14pt;font-weight:bold;text-transform:uppercase;color:#000;margin-top:20px;margin-bottom:10px;background-color:#f0f0f0;padding:5px;\">' + nomeCidade + ' (' + contagemProcessos + ')</h1>';
+            relatorioFinal[nomeCidade].forEach(textoProcesso => {
+                conteudoHTML += '<div style=\"margin-bottom:25px;border-bottom:1px solid #ddd;padding-bottom:10px;\"><p>' + textoProcesso.replace(/\\n/g, "<br>") + '</p></div>';
+            });
+            conteudoHTML += '</body></html>';
+            const blob = new Blob(['\\ufeff', conteudoHTML], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Relatorio_PJE_' + nomeCidade.replace(/\\s+/g, "_") + '.doc';
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        });
+    }
+
+    console.log("\\n%c 🏁 Processo finalizado. Verifique seus downloads.", "background: green; color: white; font-size: 16px; padding: 5px;");
+})();`;
 
         let selectedInstance = null;
         let selectedMode = 'auto';
@@ -387,6 +870,10 @@
         const btnStop = document.getElementById('btnStop');
         const btn2faDone = document.getElementById('btn2faDone');
         const logArea = document.getElementById('logs');
+        const tabFlowBtn = document.getElementById('tab-flow-btn');
+        const tabLogsBtn = document.getElementById('tab-logs-btn');
+        const paneFlow = document.getElementById('pane-flow');
+        const paneLogs = document.getElementById('pane-logs');
 
         window.addEventListener('DOMContentLoaded', () => { document.body.classList.add('loaded'); restoreState(); });
 
@@ -395,6 +882,17 @@
             document.body.style.opacity = '0';
             setTimeout(() => { window.location.href = 'hub_servicos.html'; }, 300);
         });
+
+        function switchPjeTab(tab) {
+            const isLogs = tab === 'logs';
+            tabFlowBtn.classList.toggle('active', !isLogs);
+            tabLogsBtn.classList.toggle('active', isLogs);
+            paneFlow.classList.toggle('active', !isLogs);
+            paneLogs.classList.toggle('active', isLogs);
+        }
+
+        tabFlowBtn?.addEventListener('click', () => switchPjeTab('flow'));
+        tabLogsBtn?.addEventListener('click', () => switchPjeTab('logs'));
 
         function selectInstance(el) {
             document.querySelectorAll('.pje-option').forEach(o => o.classList.remove('selected'));
@@ -406,11 +904,12 @@
         }
 
         function selectMode(el) {
-            document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
+            if (el.classList.contains('disabled')) return;
+            document.querySelectorAll('.mode-option:not(.disabled)').forEach(o => o.classList.remove('selected'));
             el.classList.add('selected');
             selectedMode = el.dataset.mode;
-            document.getElementById('sidebar-mode').textContent = selectedMode === 'auto' ? 'Automação Interna' : 'Injetar DevTools';
-            addLog(`Modo de extração: ${selectedMode === 'auto' ? 'Automação interna' : 'Injeção via DevTools'}`, 'info');
+            document.getElementById('sidebar-mode').textContent = 'Injetar DevTools';
+            addLog('Modo de extração: Injeção via DevTools', 'info');
         }
 
         function setStep(n) {
@@ -436,20 +935,23 @@
             if (saveTimer) clearTimeout(saveTimer);
             saveTimer = setTimeout(async () => {
                 try {
-                    const cur = await ipcRenderer.invoke('load-app-state');
-                    (cur.pje = cur.pje || {}).logs = fullLogs.slice(-300);
+                    const cur = await window.api.invoke('load-app-state');
+                    (cur.pje = cur.pje || {}).instance = selectedInstance;
+                    cur.pje.mode = selectedMode;
                     cur.pje.isRunning = btnStop.style.display !== 'none';
                     cur.pje.scrollTop = logArea.scrollTop;
-                    cur.pje.instance = selectedInstance;
-                    cur.pje.mode = selectedMode;
-                    ipcRenderer.send('save-app-state', cur);
+                    const noSave = document.getElementById('chk-no-save-logs')?.checked;
+                    if (!noSave) cur.pje.logs = fullLogs.slice(-300);
+                    else delete cur.pje.logs;
+                    cur.pje.noSaveLogs = !!noSave;
+                    window.api.send('save-app-state', cur);
                 } catch (e) {}
             }, 800);
         }
 
         async function restoreState() {
             try {
-                const state = await ipcRenderer.invoke('load-app-state');
+                const state = await window.api.invoke('load-app-state');
                 const s = state?.pje;
                 if (!s) return;
                 if (Array.isArray(s.logs)) { s.logs.forEach(l => addLog(l.msg || l, 'log-' + (l.type || 'info'), false)); if (s.scrollTop) logArea.scrollTop = s.scrollTop; }
@@ -461,11 +963,13 @@
                 }
                 if (s.mode) {
                     selectedMode = s.mode;
-                    document.getElementById('sidebar-mode').textContent = selectedMode === 'auto' ? 'Automação Interna' : 'Injetar DevTools';
+                    document.getElementById('sidebar-mode').textContent = 'Injetar DevTools';
                     const opt = document.querySelector(`.mode-option[data-mode="${selectedMode}"]`);
                     if (opt) opt.classList.add('selected');
                 }
                 if (s.isRunning) { btnStart.style.display = 'none'; btnStop.style.display = 'flex'; }
+                const chkNoSave = document.getElementById('chk-no-save-logs');
+                if (chkNoSave && s.noSaveLogs) chkNoSave.checked = true;
             } catch (e) {}
         }
 
@@ -493,17 +997,21 @@
 
             btnStart.style.display = 'none';
             btnStop.style.display = 'flex';
+            switchPjeTab('flow');
             setStep(1);
 
             const url = PJE_URLS[selectedInstance];
             addLog(`Iniciando automação PJE...`, 'info');
             addLog(`URL: ${url}`, 'info');
-            addLog(`Modo: ${selectedMode === 'auto' ? 'Automação interna' : 'Injeção DevTools'}`, 'info');
+            const modeName = { inject: 'Injeção DevTools', record: 'Gravação de Cliques', auto: 'Automação interna' };
+            addLog(`Modo: ${modeName[selectedMode] || selectedMode}`, 'info');
 
             showLoading('Abrindo navegador PJE...');
 
             try {
-                const res = await ipcRenderer.invoke('pje:start-session', {
+                window.setAutomationType('pje');
+                try { await window.api.invoke('history:start', { type: 'pje', args: { instance: selectedInstance, mode: selectedMode } }); } catch(_) {}
+                const res = await window.api.invoke('pje:start-session', {
                     instance: selectedInstance,
                     url: url,
                     mode: selectedMode
@@ -520,7 +1028,11 @@
 
                 currentSession = res.sessionId;
                 addLog(`Sessão iniciada [${currentSession}].`, 'success');
+                if (res.hasSession) {
+                    addLog('Sessão salva carregada automaticamente — login pode não ser necessário.', 'info');
+                }
 
+                switchPjeTab('logs');
                 setStep(2);
                 addLog('Navegador aberto. Aguardando login + 2FA...', 'warning');
 
@@ -539,7 +1051,7 @@
             addLog('Solicitando parada...', 'warning');
             showLoading('Cancelando...');
             try {
-                if (currentSession) await ipcRenderer.invoke('pje:cancel-session', { sessionId: currentSession });
+                if (currentSession) await window.api.invoke('pje:cancel-session', { sessionId: currentSession });
                 addLog('Sessão encerrada.', 'info');
             } catch(e) { addLog('Erro ao cancelar: ' + e.message, 'error'); }
             resetState();
@@ -548,46 +1060,43 @@
         btn2faDone.addEventListener('click', async () => {
             document.getElementById('step2-wait').classList.remove('active');
             btn2faDone.style.display = 'none';
-            addLog('Login 2FA confirmado pelo usuário.', 'success');
+            addLog('Login confirmado pelo usuário.', 'success');
 
+            // Normal extraction mode
             setStep(3);
-            addLog('Navegando até área de extração...', 'info');
+            addLog('Executando navegação automática PJE...', 'info');
             showLoading('Navegando...');
 
             try {
-                await ipcRenderer.invoke('pje:navigate-to-extraction', { sessionId: currentSession });
-                hideLoading();
-                addLog('Navegação concluída.', 'success');
-
-                setStep(4);
-                addLog('Iniciando extração de expedientes...', 'info');
-                showLoading('Extraindo...');
-
-                await ipcRenderer.invoke('pje:extract', {
+                const navRes = await window.api.invoke('pje:navigate-to-extraction', {
                     sessionId: currentSession,
-                    mode: selectedMode
+                    instance: selectedInstance
                 });
 
                 hideLoading();
-                addLog('Extração concluída.', 'success');
 
-                setStep(5);
-                addLog('Gerando documento Word...', 'info');
-                showLoading('Gerando Word...');
+                if (!navRes?.ok) {
+                    addLog('Falha na navegação: ' + (navRes?.error || 'Erro desconhecido'), 'error');
+                    btnStart.style.display = 'flex';
+                    btnStop.style.display = 'none';
+                    return;
+                }
 
-                await ipcRenderer.invoke('pje:generate-word', { sessionId: currentSession });
+                addLog('Navegação concluída!', 'success');
+                switchPjeTab('logs');
 
-                hideLoading();
-                addLog('Documento Word gerado com sucesso!', 'success');
+                setStep(4);
+                const extractPanel = document.getElementById('extraction-panel');
+                if (extractPanel) extractPanel.style.display = 'block';
+
+                addLog('Painel de extração pronto. Defina a quantidade de cidades e clique em Executar.', 'info');
 
                 setStep(5);
                 document.querySelectorAll('.step-item').forEach(s => s.classList.add('done'));
 
-                btnStart.style.display = 'flex';
-                btnStop.style.display = 'none';
-                currentSession = null;
-
                 playSuccessSound();
+
+                try { window.api.invoke('history:finish', { type: 'pje', status: 'success' }); } catch(_) {}
 
             } catch(e) {
                 hideLoading();
@@ -611,6 +1120,7 @@
             document.getElementById('step2-wait').classList.remove('active');
             currentSession = null;
             scheduleSave();
+            switchPjeTab('flow');
         }
 
         function playSuccessSound() {
@@ -626,25 +1136,185 @@
             } catch(e) {}
         }
 
-        ipcRenderer.on('log-message', (event, data) => {
+        window.api.on('log-message', (data) => {
             if (typeof data === 'string') addLog(data, 'info');
             else { let cls = 'info'; if(data.type==='success') cls='success'; else if(data.type==='error') cls='error'; else if(data.type==='warning'||data.type==='warn') cls='warning'; addLog(data, cls); }
+            try { window.api.invoke('history:add-log', typeof data === 'string' ? { msg: data } : data); } catch(_) {}
         });
 
-        ipcRenderer.on('automation-status', (event, status) => {
+        window.api.on('automation-status', (status) => {
             if (status === true) { btnStart.style.display = 'none'; btnStop.style.display = 'flex'; }
             else if (status === false) { btnStart.style.display = 'flex'; btnStop.style.display = 'none'; }
             scheduleSave();
         });
 
-        ipcRenderer.on('script-finished', async () => {
+        window.api.on('script-finished', async () => {
+            try { await window.api.invoke('history:finish', { status: 'success' }); } catch(_) {}
             resetState();
             addLog('Execução finalizada.', 'success');
             try {
-                const config = await ipcRenderer.invoke('get-general-config');
+                const config = await window.api.invoke('get-general-config');
                 if (config.notificationFinish) new Notification('Extratjud', { body: 'Automação PJE finalizada.' });
                 if (config.soundFinish) playSuccessSound();
             } catch(e) {}
+        });
+
+        // --- Session Import ---
+        const sessionStatusText = document.getElementById('session-status-text');
+        const exportScriptArea = document.getElementById('script-export-cookies');
+
+        if (exportScriptArea) exportScriptArea.value = PJE_EXPORT_SESSION_SCRIPT;
+
+        async function checkSessionStatus() {
+            try {
+                const has = await window.api.invoke('pje:has-session');
+                if (sessionStatusText) {
+                    if (has) {
+                        sessionStatusText.innerHTML = '<span style="color:var(--success);">✓ Sessão salva</span>';
+                    } else {
+                        sessionStatusText.innerHTML = '<span style="color:var(--text-muted);">Nenhuma sessão salva</span>';
+                    }
+                }
+            } catch (e) {
+                if (sessionStatusText) sessionStatusText.textContent = 'Erro ao verificar';
+            }
+        }
+        checkSessionStatus();
+
+        // Import modal
+        const importModal = document.getElementById('modal-import-session');
+        const importJsonInput = document.getElementById('inp-session-json');
+        const importFeedback = document.getElementById('import-session-feedback');
+
+        document.getElementById('btn-import-session')?.addEventListener('click', () => {
+            if (importModal) importModal.classList.add('active');
+            if (importJsonInput) { importJsonInput.value = ''; }
+            if (importFeedback) importFeedback.textContent = '';
+        });
+
+        function closeImportModal() {
+            if (importModal) importModal.classList.remove('active');
+        }
+        document.getElementById('btn-close-import-session')?.addEventListener('click', closeImportModal);
+        document.getElementById('btn-cancel-import-session')?.addEventListener('click', closeImportModal);
+        importModal?.addEventListener('click', (e) => { if (e.target === importModal) closeImportModal(); });
+
+        document.getElementById('btn-confirm-import-session')?.addEventListener('click', async () => {
+            if (!importJsonInput || !importFeedback) return;
+            const raw = importJsonInput.value.trim();
+            if (!raw) {
+                importFeedback.innerHTML = '<span style="color:var(--danger);">⚠ Cole o JSON da sessão primeiro.</span>';
+                return;
+            }
+            // Validate JSON
+            try { JSON.parse(raw); } catch (e) {
+                importFeedback.innerHTML = '<span style="color:var(--danger);">⚠ JSON inválido. Verifique se copiou corretamente.</span>';
+                return;
+            }
+            importFeedback.innerHTML = '<span style="color:var(--text-muted);">Importando...</span>';
+            try {
+                const res = await window.api.invoke('pje:import-session', raw);
+                if (res?.ok) {
+                    importFeedback.innerHTML = '<span style="color:var(--success);">✓ Sessão importada com sucesso!</span>';
+                    setTimeout(() => { closeImportModal(); }, 1500);
+                    checkSessionStatus();
+                } else {
+                    importFeedback.innerHTML = '<span style="color:var(--danger);">⚠ Erro: ' + (res?.error || 'desconhecido') + '</span>';
+                }
+            } catch (e) {
+                importFeedback.innerHTML = '<span style="color:var(--danger);">⚠ Erro ao importar: ' + e.message + '</span>';
+            }
+        });
+
+        // Extraction panel tab switching
+        function switchExtractTab(tab) {
+            const tabs = ['extract-tab-run', 'extract-tab-session'];
+            const panes = ['extract-pane-run', 'extract-pane-session'];
+            tabs.forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.background = i === tab ? 'var(--primary)' : 'var(--surface)';
+                    el.style.color = i === tab ? '#fff' : 'var(--text)';
+                }
+                const pane = document.getElementById(panes[i]);
+                if (pane) pane.style.display = i === tab ? 'block' : 'none';
+            });
+        }
+        document.getElementById('extract-tab-run')?.addEventListener('click', () => switchExtractTab(0));
+        document.getElementById('extract-tab-session')?.addEventListener('click', () => switchExtractTab(1));
+
+        // Populate session export script in the display area
+        const scriptTextSession = document.getElementById('script-text-session');
+        if (scriptTextSession) scriptTextSession.value = PJE_EXPORT_SESSION_SCRIPT;
+
+        document.getElementById('btn-copy-script-session')?.addEventListener('click', async () => {
+            const area = document.getElementById('script-text-session');
+            if (!area) return;
+            try {
+                await navigator.clipboard.writeText(area.value);
+                const btn = document.getElementById('btn-copy-script-session');
+                if (btn) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!'; setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copiar Script'; }, 2000); }
+            } catch (e) {
+                area.select();
+                document.execCommand('copy');
+            }
+        });
+
+        document.getElementById('btn-copy-export-script')?.addEventListener('click', async () => {
+            const area = document.getElementById('script-export-cookies');
+            if (!area) return;
+            try {
+                await navigator.clipboard.writeText(area.value);
+                const btn = document.getElementById('btn-copy-export-script');
+                if (btn) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!'; setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copiar Script'; }, 2000); }
+            } catch (e) {
+                area.select();
+                document.execCommand('copy');
+            }
+        });
+
+        // Extraction execution
+        document.getElementById('btn-run-extraction')?.addEventListener('click', async () => {
+            const btnRun = document.getElementById('btn-run-extraction');
+            const btnStop = document.getElementById('btn-stop-extraction');
+            const inpLimit = document.getElementById('inp-extract-limit');
+            const limit = parseInt(inpLimit?.value) || 5;
+
+            if (!currentSession) {
+                addLog('Nenhuma sessão ativa.', 'error');
+                return;
+            }
+
+            btnRun.style.display = 'none';
+            btnStop.style.display = 'flex';
+            addLog(`🚀 Iniciando extração (limite: ${limit === 0 ? 'todas' : limit})...`, 'info');
+
+            try {
+                const res = await window.api.invoke('pje:run-extraction', {
+                    sessionId: currentSession,
+                    script: PJE_SCRIPT_PJE1,
+                    limit: limit,
+                    mergeChoice: 1
+                });
+                if (res?.ok) {
+                    addLog('✅ Extração concluída!', 'success');
+                    playSuccessSound();
+                } else {
+                    addLog('❌ Erro na extração: ' + (res?.error || 'desconhecido'), 'error');
+                }
+            } catch (e) {
+                addLog('❌ Erro na extração: ' + e.message, 'error');
+            } finally {
+                btnRun.style.display = 'flex';
+                btnStop.style.display = 'none';
+            }
+        });
+
+        document.getElementById('btn-stop-extraction')?.addEventListener('click', async () => {
+            try {
+                await window.api.invoke('pje:stop-extraction', { sessionId: currentSession });
+                addLog('⏹ Parando extração...', 'warn');
+            } catch (e) {}
         });
 
         document.getElementById('btn-copy-log')?.addEventListener('click', () => {
@@ -675,14 +1345,16 @@
                 });
             });
             modal.querySelectorAll('.theme-btn').forEach(btn => { btn.addEventListener('click', () => { if (window.themeConfig) window.themeConfig.apply(btn.dataset.theme); }); });
-            document.getElementById('btn-sel-log-dir')?.addEventListener('click', async () => { const dir = await ipcRenderer.invoke('dialog:openDirectory'); const inp = document.getElementById('inp-global-log'); if (dir && inp) inp.value = dir; });
+            document.getElementById('btn-sel-log-dir')?.addEventListener('click', async () => { const dir = await window.api.invoke('dialog:openDirectory'); const inp = document.getElementById('inp-global-log'); if (dir && inp) inp.value = dir; });
             document.getElementById('btn-save-settings')?.addEventListener('click', async () => {
                 try {
-                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    const state = await window.api.invoke('load-app-state') || {};
                     const inpLog = document.getElementById('inp-global-log');
                     if (inpLog) state.globalLogDir = inpLog.value;
-                    ipcRenderer.send('save-app-state', state);
-                    await ipcRenderer.invoke('set-general-config', { minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false, alwaysOnTop: document.getElementById('chk-always-top')?.checked || false, soundFinish: document.getElementById('chk-sound-finish')?.checked || false, notificationFinish: document.getElementById('chk-notification-finish')?.checked || false });
+                    (state.pje = state.pje || {}).noSaveLogs = !!document.getElementById('chk-no-save-logs')?.checked;
+                    if (state.pje.noSaveLogs) delete state.pje.logs;
+                    window.api.send('save-app-state', state);
+                    await window.api.invoke('set-general-config', { minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false, alwaysOnTop: document.getElementById('chk-always-top')?.checked || false, soundFinish: document.getElementById('chk-sound-finish')?.checked || false, notificationFinish: document.getElementById('chk-notification-finish')?.checked || false });
                     modal.classList.remove('active');
                 } catch(e) {}
             });

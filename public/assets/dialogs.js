@@ -15,21 +15,19 @@
  * Falls back to window.alert / window.confirm on non-Electron environments.
  */
 (function () {
-    const ipc = (typeof require === 'function')
-        ? require('electron').ipcRenderer
-        : null;
+    const api = window.api || null;
 
     window.ipcAlert = async function (message, title) {
-        if (ipc) {
-            await ipc.invoke('dialog:alert', message, title || 'EXTRATJUD');
+        if (api) {
+            await api.invoke('dialog:alert', message, title || 'EXTRATJUD');
         } else {
             window.alert(message);
         }
     };
 
     window.ipcConfirm = async function (message, title) {
-        if (ipc) {
-            return await ipc.invoke('dialog:confirm', message, title || 'EXTRATJUD');
+        if (api) {
+            return await api.invoke('dialog:confirm', message, title || 'EXTRATJUD');
         } else {
             return window.confirm(message);
         }

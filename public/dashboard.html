@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXTRATJUD - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/theme.css">
+    <script src="assets/theme.js"></script>
+    <script src="assets/status-bar.js"></script>
+    <style>
+        body { display: flex; flex-direction: column; min-height: 100vh; }
+
+        .dash-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .dash-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .dash-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .dash-header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card.success .stat-value { color: var(--success, #22c55e); }
+        .stat-card.error .stat-value { color: var(--error, #ef4444); }
+        .stat-card.running .stat-value { color: var(--primary, #2563eb); }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active {
+            color: var(--primary, #2563eb);
+            border-bottom-color: var(--primary, #2563eb);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Filters */
+        .filters-bar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .filter-select, .filter-input {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            padding: 8px 12px;
+            font-size: 0.8125rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* History Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: var(--surface);
+            border-bottom: 2px solid var(--border);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.6875rem;
+            position: sticky;
+            top: 0;
+        }
+
+        .history-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        .history-table tr:hover td {
+            background: var(--surface-hover, rgba(255,255,255,0.03));
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-success { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .badge-error { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .badge-running { background: rgba(37,99,235,0.15); color: #2563eb; }
+        .badge-stopped { background: rgba(234,179,8,0.15); color: #eab308; }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* Queue */
+        .queue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .queue-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .queue-item .queue-type {
+            font-weight: 600;
+            color: var(--text);
+            flex: 1;
+        }
+
+        .queue-item .queue-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--radius);
+            transition: all 0.15s;
+        }
+
+        .btn-icon:hover { color: var(--error, #ef4444); background: rgba(239,68,68,0.1); }
+
+        .table-wrapper {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .pagination .page-info {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        /* Detail Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .detail-item label {
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .detail-item span {
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+
+        .log-viewer {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            max-height: 350px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            color: #c9d1d9;
+        }
+
+        .log-viewer .log-line {
+            padding: 1px 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .log-viewer .log-line.error { color: #f85149; }
+        .log-viewer .log-line.success { color: #3fb950; }
+        .log-viewer .log-line.warning, .log-viewer .log-line.warn { color: #d29922; }
+        .log-viewer .log-line .log-time { color: #6e7681; margin-right: 8px; }
+
+        .history-table tr.clickable { cursor: pointer; }
+        .history-table tr.clickable:hover td { background: var(--surface-hover, rgba(37,99,235,0.05)); }
+    </style>
+</head>
+<body>
+    <div class="dash-container">
+        <div class="dash-header">
+            <h1><i class="fa-solid fa-chart-line"></i> Dashboard</h1>
+            <div class="dash-header-actions">
+                <a href="index.html" class="btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+                <button id="btn-clear-history" class="btn btn-ghost" style="color:var(--error,#ef4444)"><i class="fa-solid fa-trash"></i> Limpar Histórico</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row" id="stats-row">
+            <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total</div></div>
+            <div class="stat-card success"><div class="stat-value" id="stat-success">0</div><div class="stat-label">Sucesso</div></div>
+            <div class="stat-card error"><div class="stat-value" id="stat-error">0</div><div class="stat-label">Erros</div></div>
+            <div class="stat-card running"><div class="stat-value" id="stat-queued">0</div><div class="stat-label">Na Fila</div></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="history"><i class="fa-solid fa-clock-rotate-left"></i> Histórico</button>
+            <button class="tab-btn" data-tab="queue"><i class="fa-solid fa-list-check"></i> Fila</button>
+        </div>
+
+        <!-- History Tab -->
+        <div class="tab-content active" id="tab-history">
+            <div class="filters-bar">
+                <select id="filter-type" class="filter-select">
+                    <option value="">Todos os tipos</option>
+                    <option value="projudi">Projudi</option>
+                    <option value="arquivados">Arquivados</option>
+                    <option value="pje">PJE</option>
+                </select>
+                <select id="filter-status" class="filter-select">
+                    <option value="">Todos os status</option>
+                    <option value="success">Sucesso</option>
+                    <option value="error">Erro</option>
+                    <option value="stopped">Interrompido</option>
+                    <option value="running">Executando</option>
+                </select>
+                <button id="btn-refresh" class="btn btn-ghost"><i class="fa-solid fa-arrows-rotate"></i></button>
+            </div>
+            <div class="table-wrapper">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Duração</th>
+                            <th>Erro</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button id="btn-prev" class="btn btn-ghost btn-sm" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                <span class="page-info" id="page-info">0 de 0</span>
+                <button id="btn-next" class="btn btn-ghost btn-sm" disabled><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Queue Tab -->
+        <div class="tab-content" id="tab-queue">
+            <div class="queue-list" id="queue-list">
+                <div class="empty-state">
+                    <i class="fa-solid fa-list-check"></i>
+                    <p>Fila vazia</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="modal-title">Detalhes da Execução</h2>
+                <button class="btn btn-ghost btn-sm" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-grid" id="detail-grid"></div>
+                <h3 style="margin:0 0 8px;font-size:0.875rem;color:var(--text);"><i class="fa-solid fa-terminal" style="color:var(--primary);"></i> Logs da Execução</h3>
+                <div class="log-viewer" id="log-viewer">
+                    <div class="log-line" style="color:#6e7681;">Nenhum log registrado.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const PAGE_SIZE = 20;
+        let currentPage = 0;
+        let currentTotal = 0;
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+                if (btn.dataset.tab === 'queue') loadQueue();
+            });
+        });
+
+        // Type labels
+        const TYPE_LABELS = { projudi: 'Projudi', arquivados: 'Arquivados', pje: 'PJE', unknown: 'Desconhecido' };
+
+        function formatDuration(start, end) {
+            if (!start || !end) return '-';
+            const ms = new Date(end) - new Date(start);
+            if (ms < 1000) return ms + 'ms';
+            const s = Math.floor(ms / 1000);
+            if (s < 60) return s + 's';
+            const m = Math.floor(s / 60);
+            return m + 'min ' + (s % 60) + 's';
+        }
+
+        function formatTime(iso) {
+            if (!iso) return '-';
+            const d = new Date(iso);
+            return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        async function loadStats() {
+            try {
+                const stats = await window.api.invoke('history:get-stats');
+                document.getElementById('stat-total').textContent = stats.total || 0;
+                document.getElementById('stat-success').textContent = stats.success || 0;
+                document.getElementById('stat-error').textContent = stats.error || 0;
+                const qStats = await window.api.invoke('queue:get-stats');
+                document.getElementById('stat-queued').textContent = qStats.queued || 0;
+            } catch(e) { console.error('Stats load error:', e); }
+        }
+
+        async function loadHistory() {
+            const type = document.getElementById('filter-type').value;
+            const status = document.getElementById('filter-status').value;
+            const filter = { limit: PAGE_SIZE, offset: currentPage * PAGE_SIZE };
+            if (type) filter.type = type;
+            if (status) filter.status = status;
+
+            try {
+                const result = await window.api.invoke('history:get-records', filter);
+                const tbody = document.getElementById('history-body');
+                currentTotal = result.total || 0;
+
+                if (!result.records || result.records.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><p>Nenhum registro encontrado</p></td></tr>';
+                } else {
+                    tbody.innerHTML = result.records.map(r => {
+                        const statusClass = r.status === 'success' ? 'badge-success' :
+                                          r.status === 'error' ? 'badge-error' :
+                                          r.status === 'running' ? 'badge-running' : 'badge-stopped';
+                        const statusLabel = r.status === 'success' ? 'Sucesso' :
+                                          r.status === 'error' ? 'Erro' :
+                                          r.status === 'running' ? 'Executando' : 'Interrompido';
+                        return `<tr class="clickable" data-id="${r.id}">
+                            <td>${TYPE_LABELS[r.type] || r.type}</td>
+                            <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+                            <td>${formatTime(r.startedAt)}</td>
+                            <td>${formatTime(r.finishedAt)}</td>
+                            <td>${formatDuration(r.startedAt, r.finishedAt)}</td>
+                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.error || ''}">${r.error || '-'}</td>
+                        </tr>`;
+                    }).join('');
+                    tbody.querySelectorAll('tr.clickable').forEach(tr => {
+                        tr.addEventListener('click', () => openDetail(tr.dataset.id));
+                    });
+                }
+
+                // Pagination
+                const totalPages = Math.ceil(currentTotal / PAGE_SIZE);
+                document.getElementById('page-info').textContent = `${currentPage + 1} de ${totalPages || 1}`;
+                document.getElementById('btn-prev').disabled = currentPage === 0;
+                document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
+            } catch(e) { console.error('History load error:', e); }
+        }
+
+        async function loadQueue() {
+            try {
+                const jobs = await window.api.invoke('queue:get-jobs', {});
+                const list = document.getElementById('queue-list');
+                if (!jobs || jobs.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-list-check"></i><p>Fila vazia</p></div>';
+                    return;
+                }
+                list.innerHTML = jobs.map(j => {
+                    const canRemove = j.status === 'queued';
+                    return `<div class="queue-item">
+                        <span class="badge ${j.status === 'running' ? 'badge-running' : 'badge-stopped'}">${j.status === 'queued' ? 'Na Fila' : j.status === 'running' ? 'Executando' : j.status}</span>
+                        <span class="queue-type">${TYPE_LABELS[j.type] || j.type}</span>
+                        <span class="queue-time">${formatTime(j.addedAt)}</span>
+                        ${canRemove ? `<button class="btn-icon" onclick="removeJob('${j.id}')"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                    </div>`;
+                }).join('');
+            } catch(e) { console.error('Queue load error:', e); }
+        }
+
+        window.removeJob = async function(id) {
+            await window.api.invoke('queue:remove-job', id);
+            loadQueue();
+            loadStats();
+        };
+
+        // Events
+        document.getElementById('filter-type').addEventListener('change', () => { currentPage = 0; loadHistory(); });
+        document.getElementById('filter-status').addEventListener('change', () => { currentPage = 0; loadHistory(); });
+        document.getElementById('btn-refresh').addEventListener('click', () => { loadHistory(); loadStats(); });
+        document.getElementById('btn-prev').addEventListener('click', () => { if (currentPage > 0) { currentPage--; loadHistory(); } });
+        document.getElementById('btn-next').addEventListener('click', () => { currentPage++; loadHistory(); });
+        document.getElementById('btn-clear-history').addEventListener('click', async () => {
+            if (confirm('Limpar todo o histórico de execuções?')) {
+                await window.api.invoke('history:clear');
+                currentPage = 0;
+                loadHistory();
+                loadStats();
+            }
+        });
+
+        // Auto-refresh when automation finishes
+        window.api.on('script-finished', () => { loadHistory(); loadStats(); });
+        window.api.on('automation-status', (status) => { if (status === false) { loadHistory(); loadStats(); } });
+
+        // Refresh when tab becomes visible (user navigates back from robot page)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) { loadHistory(); loadStats(); }
+        });
+
+        // Detail modal
+        const modal = document.getElementById('detail-modal');
+        document.getElementById('btn-close-modal').addEventListener('click', () => modal.classList.remove('open'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+
+        async function openDetail(id) {
+            try {
+                const r = await window.api.invoke('history:get-record', id);
+                if (!r) return;
+                document.getElementById('modal-title').textContent = `Execução — ${TYPE_LABELS[r.type] || r.type}`;
+
+                const statusLabel = r.status === 'success' ? 'Sucesso' : r.status === 'error' ? 'Erro' : r.status === 'running' ? 'Executando' : 'Interrompido';
+                document.getElementById('detail-grid').innerHTML = `
+                    <div class="detail-item"><label>Tipo</label><span>${TYPE_LABELS[r.type] || r.type}</span></div>
+                    <div class="detail-item"><label>Status</label><span class="badge ${r.status === 'success' ? 'badge-success' : r.status === 'error' ? 'badge-error' : 'badge-stopped'}">${statusLabel}</span></div>
+                    <div class="detail-item"><label>Início</label><span>${formatTime(r.startedAt)}</span></div>
+                    <div class="detail-item"><label>Fim</label><span>${formatTime(r.finishedAt)}</span></div>
+                    <div class="detail-item"><label>Duração</label><span>${formatDuration(r.startedAt, r.finishedAt)}</span></div>
+                    <div class="detail-item"><label>Erro</label><span>${r.error || '-'}</span></div>
+                `;
+
+                const viewer = document.getElementById('log-viewer');
+                if (r.logs && r.logs.length > 0) {
+                    viewer.innerHTML = r.logs.map(l => {
+                        const time = l.timestamp ? new Date(l.timestamp).toLocaleTimeString('pt-BR') : '';
+                        const cls = l.type || 'info';
+                        const text = (l.msg || '').replace(/</g, '&lt;');
+                        return `<div class="log-line ${cls}"><span class="log-time">${time}</span>${text}</div>`;
+                    }).join('');
+                    viewer.scrollTop = viewer.scrollHeight;
+                } else {
+                    viewer.innerHTML = '<div class="log-line" style="color:#6e7681;">Nenhum log registrado.</div>';
+                }
+
+                modal.classList.add('open');
+            } catch(e) { console.error('Detail load error:', e); }
+        }
+
+        // Initial load
+        loadStats();
+        loadHistory();
+    })();
+    </script>
+</body>
+</html>

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/status-bar.js"></script>
     <script src="assets/dialogs.js"></script>
     <style>
         .extras-layout { display: flex; flex-direction: column; min-height: 100vh; }
@@ -320,8 +321,6 @@
     </div>
 
     <script>
-        const { ipcRenderer } = require('electron');
-
         (function(){
             const loader = document.getElementById('app-loader');
             function hide(){ if(loader){ loader.classList.add('hidden'); setTimeout(()=>loader.remove(), 500); } }
@@ -331,7 +330,7 @@
 
         (async function(){
             try {
-                const ver = await ipcRenderer.invoke('get-app-version') || '3.0.0';
+                const ver = await window.api.invoke('get-app-version') || '3.0.0';
                 document.getElementById('app-version').textContent = ver;
             } catch(e) {}
         })();
@@ -358,15 +357,15 @@
             btnOpen?.addEventListener('click', async () => {
                 modal.classList.add('active');
                 try {
-                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    const state = await window.api.invoke('load-app-state') || {};
                     const inpLog = document.getElementById('inp-global-log');
                     if (state.globalLogDir && inpLog) inpLog.value = state.globalLogDir;
-                    const gen = await ipcRenderer.invoke('get-general-config');
+                    const gen = await window.api.invoke('get-general-config');
                     document.getElementById('chk-minimize-tray').checked = gen.minimizeToTray || false;
                     document.getElementById('chk-always-top').checked = gen.alwaysOnTop || false;
                     document.getElementById('chk-sound-finish').checked = gen.soundFinish || false;
                     document.getElementById('chk-notification-finish').checked = gen.notificationFinish || false;
-                    const v = await ipcRenderer.invoke('get-app-version') || '3.0.0';
+                    const v = await window.api.invoke('get-app-version') || '3.0.0';
                     document.getElementById('settings-app-ver').textContent = v;
                     document.getElementById('env-node').textContent = process.versions.node;
                     document.getElementById('env-electron').textContent = process.versions.electron;
@@ -392,18 +391,18 @@
             });
 
             document.getElementById('btn-sel-log-dir')?.addEventListener('click', async () => {
-                const dir = await ipcRenderer.invoke('dialog:openDirectory');
+                const dir = await window.api.invoke('dialog:openDirectory');
                 const inp = document.getElementById('inp-global-log');
                 if (dir && inp) inp.value = dir;
             });
 
             btnSave?.addEventListener('click', async () => {
                 try {
-                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    const state = await window.api.invoke('load-app-state') || {};
                     const inpLog = document.getElementById('inp-global-log');
                     if (inpLog) state.globalLogDir = inpLog.value;
-                    ipcRenderer.send('save-app-state', state);
-                    await ipcRenderer.invoke('set-general-config', {
+                    window.api.send('save-app-state', state);
+                    await window.api.invoke('set-general-config', {
                         minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false,
                         alwaysOnTop: document.getElementById('chk-always-top')?.checked || false,
                         soundFinish: document.getElementById('chk-sound-finish')?.checked || false,

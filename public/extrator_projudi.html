@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/status-bar.js"></script>
     <script src="assets/dialogs.js"></script>
     <script src="assets/terminal-logger.js"></script>
     <style>
@@ -55,11 +56,11 @@
         <div class="sidebar-section-label">Credenciais</div>
         <div class="input-group">
             <label class="input-label">Usuário</label>
-            <input type="text" id="inp-user" class="input" value="05296357558.rep">
+            <input type="text" id="inp-user" class="input" placeholder="CPF.rep">
         </div>
         <div class="input-group">
             <label class="input-label">Senha</label>
-            <input type="password" id="inp-pass" class="input" value="neocoelba@2023">
+            <input type="password" id="inp-pass" class="input" placeholder="Senha do PROJUDI">
         </div>
 
         <div class="sidebar-section-label">Período</div>
@@ -183,12 +184,6 @@
     </div>
 
     <script>
-        let ipcRenderer = null;
-        try {
-            if (window.ipcRenderer) ipcRenderer = window.ipcRenderer;
-            else if (typeof require === 'function') { const electron = require('electron'); if (electron && electron.ipcRenderer) ipcRenderer = electron.ipcRenderer; }
-        } catch (e) {}
-
         const statusBadge = document.getElementById('status-badge');
         const statusText = document.getElementById('status-text');
         const btnStart = document.getElementById('btn-start');
@@ -204,12 +199,12 @@
             document.getElementById('inp-date-start').value = str;
             document.getElementById('inp-date-end').value = str;
 
-            // Restore state
             (async () => {
                 try {
-                    const state = await ipcRenderer?.invoke('load-app-state');
+                    const state = await window.api.invoke('load-app-state');
                     if (state) {
                         if (state.user) document.getElementById('inp-user').value = state.user;
+                        if (state.pass) document.getElementById('inp-pass').value = state.pass;
                         if (state.outputDir) { document.getElementById('inp-output-dir').value = state.outputDir; }
                         if (state.dateStart) document.getElementById('inp-date-start').value = state.dateStart;
                         if (state.dateEnd) document.getElementById('inp-date-end').value = state.dateEnd;
@@ -218,17 +213,15 @@
             })();
         });
 
-        // Back button
         document.getElementById('btn-back').addEventListener('click', (e) => {
             e.preventDefault();
             document.body.style.opacity = '0';
             setTimeout(() => { window.location.href = 'hub_servicos.html'; }, 300);
         });
 
-        // Directory selector
         document.getElementById('btn-select-dir').addEventListener('click', async () => {
             try {
-                const dir = await ipcRenderer?.invoke('dialog:openDirectory');
+                const dir = await window.api.invoke('dialog:openDirectory');
                 if (dir) { document.getElementById('inp-output-dir').value = dir; }
             } catch(e) {}
         });
@@ -260,8 +253,9 @@
 
         function saveAppState() {
             try {
-                ipcRenderer?.send('save-app-state', {
+                window.api.send('save-app-state', {
                     user: document.getElementById('inp-user').value,
+                    pass: document.getElementById('inp-pass').value,
                     outputDir: document.getElementById('inp-output-dir').value,
                     dateStart: document.getElementById('inp-date-start').value,
                     dateEnd: document.getElementById('inp-date-end').value
@@ -269,12 +263,12 @@
             } catch(e) {}
         }
 
-        ['inp-user','inp-output-dir','inp-date-start','inp-date-end'].forEach(id => {
+        ['inp-user','inp-pass','inp-output-dir','inp-date-start','inp-date-end'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.addEventListener('change', saveAppState);
         });
 
-        btnStart.addEventListener('click', () => {
+        btnStart.addEventListener('click', async () => {
             saveAppState();
             const user = document.getElementById('inp-user').value;
             const pass = document.getElementById('inp-pass').value;
@@ -282,17 +276,20 @@
             const dateEnd = document.getElementById('inp-date-end').value;
             const outputDir = document.getElementById('inp-output-dir').value;
 
-            ipcRenderer?.send('run-script', { user, pass, dateStart, dateEnd, outputDir });
             btnStart.disabled = true;
             btnStop.disabled = false;
             logsDiv.innerHTML = '';
             fullLogs = [];
             addLog({ msg: 'Iniciando automação...', type: 'info' });
             updateStatus('running', 'Executando...');
+
+            window.setAutomationType('projudi');
+            try { await window.api.invoke('history:start', { type: 'projudi', args: { user, dateStart, dateEnd } }); } catch(_) {}
+            window.api.send('run-script', { user, pass, dateStart, dateEnd, outputDir });
         });
 
         btnStop.addEventListener('click', () => {
-            ipcRenderer?.send('stop-script');
+            window.api.send('stop-script');
             btnStop.disabled = true;
             updateStatus('stopped', 'Parando...');
         });
@@ -307,14 +304,20 @@
             isUserScrolling = logsDiv.scrollTop + logsDiv.clientHeight < logsDiv.scrollHeight - 50;
         });
 
-        ipcRenderer?.on('log-message', (event, message) => {
-            if (typeof message === 'string') { message.split('\n').forEach(l => { if(l.trim()) addLog(l); }); }
-            else addLog(message);
+        window.api.on('log-message', (message) => {
+            if (typeof message === 'string') {
+                message.split('\n').forEach(l => { if(l.trim()) addLog(l); });
+                try { window.api.invoke('history:add-log', { msg: message }); } catch(_) {}
+            } else {
+                addLog(message);
+                try { window.api.invoke('history:add-log', message); } catch(_) {}
+            }
         });
 
-        ipcRenderer?.on('script-finished', (event, code) => {
+        window.api.on('script-finished', async (code) => {
             btnStart.disabled = false;
             btnStop.disabled = true;
+            try { await window.api.invoke('history:finish', { status: code === 0 ? 'success' : 'error' }); } catch(_) {}
             if (code === 0) {
                 updateStatus('waiting', 'Finalizado com sucesso');
                 addLog({ msg: 'Processo finalizado com sucesso.', type: 'success' });
@@ -324,7 +327,7 @@
             }
         });
 
-        ipcRenderer?.on('automation-status', (event, status) => {
+        window.api.on('automation-status', (status) => {
             if (status === true) { updateStatus('running', 'Executando...'); btnStart.disabled = true; btnStop.disabled = false; }
             else if (status === false) { updateStatus('waiting', 'Pronto'); btnStart.disabled = false; btnStop.disabled = true; }
             else if (status === 'stopping') { updateStatus('stopped', 'Parando...'); btnStop.disabled = true; }
@@ -356,11 +359,11 @@
 
             btnSave?.addEventListener('click', async () => {
                 try {
-                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    const state = await window.api.invoke('load-app-state') || {};
                     const inpLog = document.getElementById('inp-global-log');
                     if (inpLog) state.globalLogDir = inpLog.value;
-                    ipcRenderer.send('save-app-state', state);
-                    await ipcRenderer.invoke('set-general-config', {
+                    window.api.send('save-app-state', state);
+                    await window.api.invoke('set-general-config', {
                         minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false,
                         alwaysOnTop: document.getElementById('chk-always-top')?.checked || false,
                         soundFinish: document.getElementById('chk-sound-finish')?.checked || false,

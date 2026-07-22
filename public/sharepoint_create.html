@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/status-bar.js"></script>
     <script src="assets/dialogs.js"></script>
     <script src="assets/terminal-logger.js"></script>
     <style>
@@ -146,14 +147,21 @@
 
     <!-- Login Modal -->
     <div id="loginModal" class="modal-overlay">
-        <div class="modal">
+        <div class="modal" style="max-width:420px;">
             <div class="modal-body" style="text-align:center; padding:32px;">
-                <div style="font-size:2.5rem; color:var(--primary); margin-bottom:12px;"><i class="fa-solid fa-user-lock"></i></div>
-                <h3 style="margin:0 0 8px;">Aguardando Login</h3>
-                <p class="text-sm">Realize o login da Microsoft na janela do navegador que foi aberta.</p>
-                <div class="flex gap-2" style="justify-content:center; margin-top:20px;">
+                <div id="loginIcon" style="font-size:2.5rem; color:var(--primary); margin-bottom:12px;"><i class="fa-solid fa-user-lock"></i></div>
+                <h3 id="loginTitle" style="margin:0 0 8px;">Login SharePoint</h3>
+                <p id="loginDesc" class="text-sm" style="margin-bottom:16px;">Digite seu e-mail corporativo e clique em Confirmar. O app preencherá automaticamente no navegador.</p>
+                <div id="loginEmailGroup" style="margin-bottom:12px;">
+                    <input id="loginEmailInput" type="email" class="input" placeholder="seu.email@neoenergia.com" style="text-align:center;">
+                </div>
+                <div id="loginSpinner" style="display:none; margin:12px 0;">
+                    <div style="width:24px;height:24px;margin:0 auto;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                    <p class="text-sm mt-2" style="color:var(--text-muted);">Aguardando redirecionamento... Digite sua senha no navegador.</p>
+                </div>
+                <div id="loginButtons" class="flex gap-2" style="justify-content:center; margin-top:16px;">
                     <button id="loginCancel" class="btn btn-ghost">Cancelar</button>
-                    <button id="loginDone" class="btn btn-primary">Login Concluído</button>
+                    <button id="loginDone" class="btn btn-primary">Confirmar</button>
                 </div>
             </div>
         </div>
@@ -210,7 +218,6 @@
     </div>
 
     <script>
-        const { ipcRenderer } = require('electron');
         const DEFAULT_SP_URL = "https://iberdrola.sharepoint.com/sites/JUDCOELBA/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FJUDCOELBA%2FShared%20Documents%2FCria%C3%A7%C3%A3o%20de%20Pastas&viewid=b0389131%2Db788%2D4354%2D8edd%2Dcfe27a229f93";
 
         const btnStart = document.getElementById('btnStart');
@@ -256,7 +263,7 @@
             showLoading('Iniciando SharePoint...');
             try {
                 const selectedEmail = (emailSelect.style.display !== 'none' && emailSelect.value) ? emailSelect.value : (emailInput.value ? emailInput.value.trim() : null);
-                const res = await ipcRenderer.invoke('sharepoint:start-session', { url: DEFAULT_SP_URL, email: selectedEmail });
+                const res = await window.api.invoke('sharepoint:start-session', { url: DEFAULT_SP_URL, email: selectedEmail });
                 hideLoading();
                 if (!res?.ok) { addLog('Falha: ' + (res?.error || 'Unknown'), 'error'); btnStart.disabled = false; return; }
                 currentSession = res.sessionId;
@@ -270,16 +277,38 @@
             if(!currentSession) return;
             addLog('Cancelando sessão...', 'warning');
             showLoading('Cancelando...');
-            try { await ipcRenderer.invoke('sharepoint:cancel-session', { sessionId: currentSession }); addLog('Sessão encerrada.', 'info'); } catch(e) { addLog('Erro ao cancelar: ' + e.message, 'error'); }
+            try { await window.api.invoke('sharepoint:cancel-session', { sessionId: currentSession }); addLog('Sessão encerrada.', 'info'); } catch(e) { addLog('Erro ao cancelar: ' + e.message, 'error'); }
             resetState();
         });
 
         document.getElementById('btnCopyLog').onclick = () => { navigator.clipboard.writeText(fullLogs.map(l => l.msg).join('\n')); };
 
-        ipcRenderer.on('sharepoint:waiting-for-login', () => { addLog('Necessário login manual.', 'warning'); loginModal.classList.add('active'); });
-        ipcRenderer.on('sharepoint:login-completed', () => { addLog('Login detectado.', 'success'); loginModal.classList.remove('active'); });
+        window.api.on('sharepoint:waiting-for-login', () => {
+            addLog('Login necessário. Informe seu e-mail.', 'warning');
+            document.getElementById('loginIcon').innerHTML = '<i class="fa-solid fa-user-lock"></i>';
+            document.getElementById('loginTitle').textContent = 'Login SharePoint';
+            document.getElementById('loginDesc').textContent = 'Digite seu e-mail corporativo e clique em Confirmar.';
+            document.getElementById('loginEmailGroup').style.display = 'block';
+            document.getElementById('loginSpinner').style.display = 'none';
+            document.getElementById('loginButtons').style.display = 'flex';
+            document.getElementById('loginEmailInput').value = '';
+            document.getElementById('loginEmailInput').focus();
+            loginModal.classList.add('active');
+        });
+        window.api.on('sharepoint:login-waiting', () => {
+            document.getElementById('loginIcon').innerHTML = '<i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite;"></i>';
+            document.getElementById('loginTitle').textContent = 'Aguardando Redirecionamento...';
+            document.getElementById('loginDesc').textContent = 'Digite sua senha no navegador e aguarde o redirecionamento.';
+            document.getElementById('loginEmailGroup').style.display = 'none';
+            document.getElementById('loginSpinner').style.display = 'block';
+            document.getElementById('loginButtons').style.display = 'none';
+        });
+        window.api.on('sharepoint:login-completed', () => {
+            addLog('Login detectado com sucesso.', 'success');
+            loginModal.classList.remove('active');
+        });
 
-        ipcRenderer.on('sharepoint:prompt-create', (ev, payload) => {
+        window.api.on('sharepoint:prompt-create', (payload) => {
             if(payload?.previewHTML) { previewEl.innerHTML = payload.previewHTML; document.getElementById('modalPreview').innerHTML = payload.previewHTML; }
             else if (payload?.preview) {
                 let folders = [];
@@ -292,8 +321,11 @@
                     const html = `<div style="font-weight:600; margin-bottom:6px;">${folders.length} pastas encontradas:</div><ul style="margin:0; padding-left:18px; max-height:80px; overflow-y:auto;">${folders.map(f => `<li>${f}</li>`).join('')}</ul>${lastMsg}`;
                     previewEl.innerHTML = html; document.getElementById('modalPreview').innerHTML = html;
                 } else { previewEl.innerHTML = '<em class="text-muted">Nenhuma pasta encontrada. Contagem iniciará de 1.</em>'; document.getElementById('modalPreview').innerHTML = previewEl.innerHTML; }
+            } else {
+                previewEl.innerHTML = '<em class="text-muted">Pronto para criar pastas. A numeração iniciará automaticamente.</em>';
+                document.getElementById('modalPreview').innerHTML = previewEl.innerHTML;
             }
-            addLog('Preview carregado. Solicitando confirmação...', 'info');
+            addLog('Solicitando quantidade de pastas...', 'info');
             dynamicModal.classList.add('active');
         });
 
@@ -304,7 +336,7 @@
             addLog(`Criando ${count} pastas...`, 'info');
             showLoading(`Criando ${count} pastas...`);
             try {
-                const res = await ipcRenderer.invoke('sharepoint:create-session', { sessionId: currentSession, count });
+                const res = await window.api.invoke('sharepoint:create-session', { sessionId: currentSession, count });
                 if(res?.ok) { addLog('Sucesso! Pastas criadas.', 'success'); addLog(JSON.stringify(res.result), 'info'); }
                 else addLog('Falha: ' + res?.error, 'error');
             } catch(e) { addLog('Erro: ' + e.message, 'error'); }
@@ -313,10 +345,21 @@
 
         document.getElementById('modalCancel').onclick = () => { dynamicModal.classList.remove('active'); addLog('Operação cancelada.', 'warning'); resetState(); };
         document.getElementById('modalCloseX').onclick = () => { dynamicModal.classList.remove('active'); };
-        document.getElementById('loginDone').onclick = () => { loginModal.classList.remove('active'); ipcRenderer.send('sharepoint:login-action', { sessionId: currentSession, action: 'done' }); };
+        document.getElementById('loginDone').onclick = () => {
+            const email = document.getElementById('loginEmailInput').value.trim();
+            if (!email || !email.includes('@')) {
+                document.getElementById('loginEmailInput').focus();
+                document.getElementById('loginEmailInput').style.borderColor = 'var(--danger)';
+                setTimeout(() => { document.getElementById('loginEmailInput').style.borderColor = ''; }, 2000);
+                return;
+            }
+            loginModal.classList.remove('active');
+            window.api.send('sharepoint:login-action', { sessionId: currentSession, action: 'done', email });
+            saveEmail(email);
+        };
         document.getElementById('loginCancel').onclick = () => { loginModal.classList.remove('active'); btnStop.click(); };
 
-        ipcRenderer.on('log-message', (event, data) => {
+        window.api.on('log-message', (data) => {
             if (data?.msg) {
                 let cls = 'info';
                 if (data.type === 'warn') cls = 'warning';
@@ -346,8 +389,8 @@
             modal.querySelectorAll('.theme-btn').forEach(btn => { btn.addEventListener('click', () => { if (window.themeConfig) window.themeConfig.apply(btn.dataset.theme); }); });
             document.getElementById('btn-save-settings')?.addEventListener('click', async () => {
                 try {
-                    const state = await ipcRenderer.invoke('load-app-state') || {};
-                    await ipcRenderer.invoke('set-general-config', { minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false, alwaysOnTop: document.getElementById('chk-always-top')?.checked || false, soundFinish: document.getElementById('chk-sound-finish')?.checked || false, notificationFinish: document.getElementById('chk-notification-finish')?.checked || false });
+                    const state = await window.api.invoke('load-app-state') || {};
+                    await window.api.invoke('set-general-config', { minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false, alwaysOnTop: document.getElementById('chk-always-top')?.checked || false, soundFinish: document.getElementById('chk-sound-finish')?.checked || false, notificationFinish: document.getElementById('chk-notification-finish')?.checked || false });
                     modal.classList.remove('active');
                 } catch(e) {}
             });

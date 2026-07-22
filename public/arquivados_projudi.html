@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/theme.css">
     <script src="assets/theme.js"></script>
+    <script src="assets/status-bar.js"></script>
     <script src="assets/dialogs.js"></script>
     <script src="assets/terminal-logger.js"></script>
     <style>
@@ -157,7 +158,6 @@
     </div>
 
     <script>
-        const { ipcRenderer } = require('electron');
         const btnStart = document.getElementById('btn-start');
         const btnStop = document.getElementById('btn-stop');
         const logsDiv = document.getElementById('logs');
@@ -169,7 +169,7 @@
         window.addEventListener('DOMContentLoaded', async () => {
             document.body.classList.add('loaded');
             try {
-                const state = await ipcRenderer.invoke('load-app-state');
+                const state = await window.api.invoke('load-app-state');
                 const s = state?.arquivados;
                 if (s) {
                     if (s.user) document.getElementById('inp-user').value = s.user;
@@ -189,7 +189,7 @@
         });
 
         document.getElementById('btn-select-dir').addEventListener('click', async () => {
-            const dir = await ipcRenderer.invoke('dialog:openDirectory');
+            const dir = await window.api.invoke('dialog:openDirectory');
             if (dir) document.getElementById('inp-output-dir').value = dir;
         });
 
@@ -206,7 +206,7 @@
             if (saveTimer) clearTimeout(saveTimer);
             saveTimer = setTimeout(async () => {
                 try {
-                    const cur = await ipcRenderer.invoke('load-app-state') || {};
+                    const cur = await window.api.invoke('load-app-state') || {};
                     cur.arquivados = cur.arquivados || {};
                     cur.arquivados.user = document.getElementById('inp-user').value;
                     cur.arquivados.outputDir = document.getElementById('inp-output-dir').value;
@@ -215,7 +215,7 @@
                     cur.arquivados.logs = fullLogs.slice(-300);
                     cur.arquivados.isRunning = !btnStop.disabled;
                     cur.arquivados.scrollTop = logsDiv.scrollTop;
-                    ipcRenderer.send('save-app-state', cur);
+                    window.api.send('save-app-state', cur);
                 } catch (e) {}
             }, 800);
         }
@@ -245,38 +245,45 @@
             isUserScrolling = logsDiv.scrollTop + logsDiv.clientHeight < logsDiv.scrollHeight - 50;
         });
 
-        btnStart.addEventListener('click', () => {
+        btnStart.addEventListener('click', async () => {
             const user = document.getElementById('inp-user').value;
             const pass = document.getElementById('inp-pass').value;
             const outputDir = document.getElementById('inp-output-dir').value;
             const rangeStart = document.getElementById('inp-page-start').value;
             const rangeEnd = document.getElementById('inp-page-end').value;
 
-            ipcRenderer.send('run-archived-script', { type: 'arquivados', user, pass, outputDir, filterMode: 'pages', rangeStart: parseInt(rangeStart), rangeEnd: parseInt(rangeEnd) });
             btnStart.disabled = true;
             btnStop.disabled = false;
             logsDiv.innerHTML = '';
             fullLogs = [];
             addLog({ msg: 'Iniciando extração de arquivados...', type: 'info' });
             updateStatus('running', 'Processando...');
+
+            window.setAutomationType('arquivados');
+            try { await window.api.invoke('history:start', { type: 'arquivados', args: { user, rangeStart, rangeEnd } }); } catch(_) {}
+            window.api.send('run-archived-script', { type: 'arquivados', user, pass, outputDir, filterMode: 'pages', rangeStart: parseInt(rangeStart), rangeEnd: parseInt(rangeEnd) });
         });
 
         btnStop.addEventListener('click', () => {
-            ipcRenderer.send('stop-script');
+            window.api.send('stop-script');
             btnStop.disabled = true;
             updateStatus('stopped', 'Cancelando...');
         });
 
-        ipcRenderer.on('log-message', (event, message) => addLog(message));
+        window.api.on('log-message', (message) => {
+            addLog(message);
+            try { window.api.invoke('history:add-log', typeof message === 'string' ? { msg: message } : message); } catch(_) {}
+        });
 
-        ipcRenderer.on('script-finished', async (event, code) => {
+        window.api.on('script-finished', async (code) => {
             btnStart.disabled = false;
             btnStop.disabled = true;
+            try { await window.api.invoke('history:finish', { status: code === 0 ? 'success' : 'error' }); } catch(_) {}
             const msgText = code === 0 ? 'Finalizado com sucesso' : 'Abortado/Erro';
             updateStatus(code === 0 ? 'waiting' : 'stopped', msgText);
             scheduleSave();
             try {
-                const config = await ipcRenderer.invoke('get-general-config');
+                const config = await window.api.invoke('get-general-config');
                 if (config.notificationFinish) new Notification('Extratjud', { body: `Arquivados: ${msgText}` });
                 if (config.soundFinish) {
                     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -291,7 +298,7 @@
             } catch(e) {}
         });
 
-        ipcRenderer.on('automation-status', (event, status) => {
+        window.api.on('automation-status', (status) => {
             if (status === true) { btnStart.disabled = true; btnStop.disabled = false; updateStatus('running','Executando...'); }
             else if (status === false) { btnStart.disabled = false; btnStop.disabled = true; updateStatus('waiting','Pronto'); }
             else if (status === 'stopping') { btnStop.disabled = true; updateStatus('stopped','Cancelando...'); }
@@ -327,14 +334,14 @@
                 });
             });
             modal.querySelectorAll('.theme-btn').forEach(btn => { btn.addEventListener('click', () => { if (window.themeConfig) window.themeConfig.apply(btn.dataset.theme); }); });
-            document.getElementById('btn-sel-log-dir')?.addEventListener('click', async () => { const dir = await ipcRenderer.invoke('dialog:openDirectory'); const inp = document.getElementById('inp-global-log'); if (dir && inp) inp.value = dir; });
+            document.getElementById('btn-sel-log-dir')?.addEventListener('click', async () => { const dir = await window.api.invoke('dialog:openDirectory'); const inp = document.getElementById('inp-global-log'); if (dir && inp) inp.value = dir; });
             document.getElementById('btn-save-settings')?.addEventListener('click', async () => {
                 try {
-                    const state = await ipcRenderer.invoke('load-app-state') || {};
+                    const state = await window.api.invoke('load-app-state') || {};
                     const inpLog = document.getElementById('inp-global-log');
                     if (inpLog) state.globalLogDir = inpLog.value;
-                    ipcRenderer.send('save-app-state', state);
-                    await ipcRenderer.invoke('set-general-config', { minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false, alwaysOnTop: document.getElementById('chk-always-top')?.checked || false, soundFinish: document.getElementById('chk-sound-finish')?.checked || false, notificationFinish: document.getElementById('chk-notification-finish')?.checked || false });
+                    window.api.send('save-app-state', state);
+                    await window.api.invoke('set-general-config', { minimizeToTray: document.getElementById('chk-minimize-tray')?.checked || false, alwaysOnTop: document.getElementById('chk-always-top')?.checked || false, soundFinish: document.getElementById('chk-sound-finish')?.checked || false, notificationFinish: document.getElementById('chk-notification-finish')?.checked || false });
                     modal.classList.remove('active');
                 } catch(e) {}
             });

@@ -35,9 +35,8 @@ window.themeConfig = themeConfig;
 document.addEventListener('DOMContentLoaded', async () => {
     themeConfig.init();
     try {
-        if (typeof require !== 'undefined') {
-            const { ipcRenderer } = require('electron');
-            const v = await ipcRenderer.invoke('get-app-version');
+        if (window.api) {
+            const v = await window.api.invoke('get-app-version');
             if (v) {
                 document.querySelectorAll('.app-version, .version-tag, .version-info, #app-version, #settings-app-ver').forEach(el => {
                     if (el.tagName === 'SPAN' || el.classList.contains('version-tag')) el.textContent = v;
