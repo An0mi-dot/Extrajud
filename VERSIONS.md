@@ -277,3 +277,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: 36d12a4
 - Notes: fix(app): rename Site card to Portal, remove GitHub Releases button
+## v3.1.4 - 2026-07-22
+
+- Commit: abf0257
+- Notes: feat(pje): auto-executar script de extração sem F12 [release]
