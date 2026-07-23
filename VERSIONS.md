@@ -281,3 +281,7 @@ Iberdrola corporate proxy (ADFS/SAML) intercepting CDN and Supabase API calls.
 
 - Commit: abf0257
 - Notes: feat(pje): auto-executar script de extração sem F12 [release]
+## v3.1.5 - 2026-07-23
+
+- Commit: de587e1
+- Notes: fix: untrack node_bin/ (should be gitignored)
